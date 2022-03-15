@@ -1,0 +1,52 @@
+Package: gruffi
+Title: gruffi is the fastest way to create, annotate and export plots in R
+Version: 0.6.0
+Authors@R: 
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Author: Julia Naas <julia.naas@meduniwien.ac.at> [aut, cre]Abel Vertesy
+    <abel.vertesy@imba.oeaw.ac.at> [aut, cre]
+Description: The Gruffi R package helps you (1) to identify stressed cells
+    in single-cell RNA-seq datasets using *granular funcitonal filtering*,
+    and (2) you can use it to calculate any GO-term defined gene set's
+    pathway activity. Gruffi integrates into single-cell analysis with
+    Seurat and comes with a graphical user interface.
+License: GPL-3 + file LICENSE
+BugReports: https://github.com/jn-goe/gruffi/issues/
+Depends: 
+    magrittr,
+    Stringendo
+Imports: 
+    AnnotationDbi,
+    biomaRt,
+    clipr,
+    CodeAndRoll2,
+    cowplot,
+    ggExpress,
+    ggpubr,
+    graphics,
+    grDevices,
+    htmlwidgets,
+    IRanges,
+    MarkdownHelpers,
+    MarkdownReports,
+    Matrix,
+    methods,
+    org.Hs.eg.db,
+    raster,
+    RColorBrewer,
+    rgl,
+    rlang,
+    sessioninfo,
+    Seurat,
+    Seurat.utils,
+    shiny,
+    sm,
+    stats,
+    tictoc,
+    tidyverse,
+    viridis
+Encoding: UTF-8
+Packaged: 2022-03-15 09:51:05
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2

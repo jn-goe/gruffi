@@ -17,7 +17,7 @@ require('Stringendo')
 
 
 # Setup ------------------------
-PackageName = "gruffiDev"
+PackageName = "gruffi"
 package.version = "0.6.0"
 setwd("~/GitHub/Packages/")
 
