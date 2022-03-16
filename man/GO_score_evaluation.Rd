@@ -32,8 +32,7 @@ GO_score_evaluation(
 
 \item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 
-\item{clustering}{Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)\link{1} else GetClusteringRuns(obj)\link[=grepl(".reassigned",
-GetClusteringRuns(obj))]{grepl(".reassigned", GetClusteringRuns(obj))}}
+\item{clustering}{Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)\link{1} else GetClusteringRuns(obj)\link{grepl(".reassigned", GetClusteringRuns(obj))}}
 }
 \description{
 GO-score evaluation for filtering.

@@ -348,8 +348,7 @@ FilterStressedCells <- function(obj = combined.obj
 #' @param plot.each.gene Plot each gene's expression, Default: FALSE
 #' @param assay Which assay to use?, Default: 'RNA'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
-#' @param clustering Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned",
-#'    GetClusteringRuns(obj))]
+#' @param clustering Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned", GetClusteringRuns(obj))]
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}
 #'  \code{\link[Stringendo]{iprint}}
@@ -858,13 +857,22 @@ aut.res.clustering <- function(obj = combined.obj,
 
   metadata.backup <- obj@meta.data
 
-  if (assay %in% names(obj@assays)) { Seurat::DefaultAssay(obj) <- assay } else {
-    Stringendo::iprint("Assay:", assay,  "is not found in the object.")
+  assays.present <- names(obj@assays)
+  if (assay %in% assays.present) { Seurat::DefaultAssay(obj) <- assay } else {
+    Stringendo::iprint("Assay: (", assay,  ") is not found in the object. Replaced by: (", assays.present[1],")")
+    assay <- assays.present[1]
   }
 
   r.current <- lower.res
   r.lower <- lower.res
   r.upper <- upper.res
+
+  obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = F)
+  m.up <- median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.upper)]]))
+  if(m.up >= upper.median){
+    Stringendo::iprint("ERROR: Define a higher 'upper.res'-parameter. Current maximum gives granules of", m.up, "cells, above the 'upper.median' target of", upper.median)
+    stop()
+  }
 
   obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F)
   m <- median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.current)]]))
