@@ -2,8 +2,8 @@
 
 
 #### 1. Setup ------------------------------------------------------------
-# devtools::load_all(path = "~/GitHub/Packages/gruffi/")
-require(gruffi)
+devtools::load_all(path = "~/GitHub/Packages/gruffi/")
+require(gruffiDev)
 
 go1 <- "GO:0006096" # Glyco
 go2 <- "GO:0034976" # ER
@@ -43,9 +43,9 @@ combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go3, save.UMAP
 
 #### 4. Stress filtering<  ------------------------------------------------------------
 
-i1 <- kppu(granule.res.4.gruffi, go1)
-i2 <- kppu(granule.res.4.gruffi, go2)
-i3 <- kppu(granule.res.4.gruffi, go3)
+i1 <- kppu(granule.res.4.gruffi, 'cl.av', go1)
+i2 <- kppu(granule.res.4.gruffi, 'cl.av', go2)
+i3 <- kppu(granule.res.4.gruffi, 'cl.av', go3)
 
 combined.obj <- Shiny.GO.thresh(obj = combined.obj,
                                 stress.ident1 = i1,
