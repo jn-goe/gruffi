@@ -41,13 +41,15 @@ devtools::install_github(repo = "jn-goe/gruffi", upgrade = F)
 
 ```
 
-...then simply load the package:
+### Currently you have to load the package, not simply `require()`
 
-```R
-require("gruffi")
+```r
+devtools::load_all("~/example/path/to/gruffi")
 ```
 
-*If gruffi is not compiled and installed, load all functions of the repository via ```devtools::load_all("~/example/path/gruffi")```.*
+Otherwise the Shiny scripts will not be found. *You also can skip installing **Gruffi**,  but then function help won't work.*
+
+
 
 ## Usage
 
