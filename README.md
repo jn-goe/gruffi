@@ -58,7 +58,9 @@ Otherwise the Shiny scripts will not be found. *You also can skip installing **G
 Load your Seurat single-cell object of interest (in the following `combined.obj`), perform basic analysis steps (Integration, PCA, Clustering) and calculate 2D and 3D umaps.
 
 ```R
-combined.obj <- Seurat.utils::SetupReductionsNtoKdimensions(obj = combined.obj, nPCs = p$'n.PC', dimensions=3:2, reduction="umap")
+combined.obj <- Seurat.utils::SetupReductionsNtoKdimensions(obj = combined.obj, nPCs = 50, dimensions=3:2, reduction="umap")
+# Note that this will recalculate 2D and 3D umaps, and back them up in combined.obj@misc$reductions.backup. 
+# See FAQ.md, if you don't want to overwrite the 2D UMAP.
 ```
 
 If you want to store multiple UMAP's, you have to keep them in backup slot (in combined.obj@misc). Use `combined.obj <- RecallReduction(obj = combined.obj, dim = 2, reduction="umap")` to access them.
@@ -141,6 +143,8 @@ combined.obj <- Shiny.GO.thresh(obj = combined.obj,
                                 stress.ident2 = i2,
                                 notstress.ident3 = i3,
                                 plot.cluster.shiny = "orig.ident")
+
+"Dont forget to click the button in the app: Save New Thresholds"
 
 ```
 The interfacte allows automatic estimation and manual adjustment of thresholds for stress scores: 
