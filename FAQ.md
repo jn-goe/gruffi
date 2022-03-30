@@ -23,3 +23,36 @@ combined.obj@reductions$umap <- combined.obj@misc$reductions.backup$umap2d
 
 # 4. Gruffi will find the 3D umap in @misc - it is needed for the reclassification step.
 ```
+
+
+
+
+## 2. How to use Gruffi with different integrations?
+
+Gruffi assumes that you used Seurat, thus granule clustering runs on `assays@RNA` or  `assays@integrated`. 
+
+Typically, integration methods simply provide an alternative reduction to `PCA` such as  `iNMF` for LIGER batch correction. Simply provide this reduction when calculateing the 3D UMAP (see 2.).
+
+If you integrated with a method that created a different assay (e.g.: `@BlaBla`), provide the assay name in `aut.res.clustering( , assay = "BlaBla")`.
+
+
+## 3. How to use Gruffi when providing a custom set of genes, instead of a GO-term?
+
+Gruffi can work with any set of genes to classify cells. In the current implementation you can provide 2 positive and 2 negative filtering terms (in the default implementation we use 2 positive and 1 negative terms).
+```r
+# You add scores of your gene set and calculate granule averages:
+heGENES <- c("TMSB4X", "NRXN3", "SNTG1","SOX4", "TUBA1A", "NRXN1", "TMSB10", "ACTG1", "ROBO2","ACTB")
+combined <- AddCustomScore(obj = combined.obj, genes = heGENES)
+# Scorename: 'Score.heGENES'
+
+# Then calculate granule averages
+combined.obj <- CustomScoreEvaluation(obj = combined.obj, custom.score.name = 'Score.heGENES')
+```
+
+Finally continue with the Gruffi pipeline as normal, by calling the Shiny app. This extension of the Gruffi workflow is less tested, so if you find bugs / encounter an error, [please let us know](https://github.com/jn-goe/gruffi/issues).
+
+
+
+
+
+

@@ -1,6 +1,6 @@
 Package: gruffi
 Title: gruffi is the fastest way to create, annotate and export plots in R
-Version: 0.6.0
+Version: 0.7.0
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
@@ -47,6 +47,6 @@ Imports:
     tidyverse,
     viridis
 Encoding: UTF-8
-Packaged: 2022-03-16 14:37:14
+Packaged: 2022-03-30 16:29:07
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2

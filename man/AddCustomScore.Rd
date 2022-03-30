@@ -4,12 +4,19 @@
 \alias{AddCustomScore}
 \title{AddCustomScore}
 \usage{
-AddCustomScore(obj = combined.obj, genes = "", FixName = TRUE)
+AddCustomScore(
+  obj = combined.obj,
+  genes = "",
+  assay.use = "RNA",
+  FixName = TRUE
+)
 }
 \arguments{
 \item{obj}{Seurat single cell object, Default: combined.obj}
 
 \item{genes}{Charcter vector of genes, Default: ""}
+
+\item{assay.use}{Which assay to use for getting the genes? Default: 'RNA'.}
 
 \item{FixName}{Shall trailing "1" ar the end of the new column name be removed? Default: TRUE}
 }

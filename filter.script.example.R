@@ -2,8 +2,8 @@
 
 
 #### 1. Setup ------------------------------------------------------------
+require(gruffi)
 devtools::load_all(path = "~/GitHub/Packages/gruffi/")
-require(gruffiDev)
 
 go1 <- "GO:0006096" # Glyco
 go2 <- "GO:0034976" # ER

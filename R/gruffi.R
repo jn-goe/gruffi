@@ -8,21 +8,66 @@
 #' @description Add a custom gene expression score from a set of genes provided to the Seurat single cell object
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param genes Charcter vector of genes, Default: ""
+#' @param assay.use Which assay to use for getting the genes? Default: 'RNA'.
 #' @param FixName Shall trailing "1" ar the end of the new column name be removed? Default: TRUE
 #' @seealso
 #'  \code{\link[Seurat]{AddModuleScore}}
 #' @export
 #' @importFrom Seurat AddModuleScore
 
-AddCustomScore <- function(obj = combined.obj, genes="", FixName = TRUE ) { # Call after GetGOTerms. Calculates Score for gene set. Fixes name.
+AddCustomScore <- function(obj = combined.obj, genes="", assay.use = 'RNA', FixName = TRUE) { # Call after GetGOTerms. Calculates Score for gene set. Fixes name.
   ls.genes <- list(genes)
   if (!is.list(ls.genes)) ls.genes <- list(ls.genes) # idk why this structure is not consistent...
   (ScoreName <- ppp("Score", substitute(genes)) )
-  obj <- Seurat::AddModuleScore(object = obj, features = ls.genes, name = ScoreName)
+  obj <- Seurat::AddModuleScore(object = obj, features = ls.genes, name = ScoreName, assay = assay.use)
 
   if (FixName) obj <- fix.metad.Colname.rm.trailing.1(obj = obj, colname = ScoreName)
   return(obj)
 }
+
+
+# _________________________________________________________________________________________________
+#' @title CustomScoreEvaluation
+#' @description Custom gene-set derived score evaluation for filtering.
+#' @param obj Seurat single cell object, Default: combined.obj
+#' @param custom.score.name Name of your custom gene set.
+#' @param clustering Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned", GetClusteringRuns(obj))]
+#' @param assay Which assay to use?, Default: 'RNA'
+#' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
+#' @seealso
+#'  \code{\link[Seurat]{reexports}}
+#'  \code{\link[Stringendo]{iprint}}
+#'  \code{\link[IRanges]{character(0)}}
+#' @export
+#' @importFrom Seurat Idents RenameIdents
+#' @importFrom Stringendo iprint
+#' @importFrom IRanges gsub
+
+CustomScoreEvaluation <- function(obj = combined.obj,
+                                    custom.score.name = 'Score.heGENES',
+                                    # plot.each.gene = FALSE,
+                                    clustering = "integrated_snn_res.48.reassigned" ,
+                                    assay = "RNA",
+                                    stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3]
+) {
+
+  Seurat::Idents(obj) <- obj@meta.data[clustering]
+  all.genes <- rownames(obj@assays[[assay]])
+
+  print("Calculating cl. average score")
+  cl.av <- calc.cluster.averages.gruffi(obj = obj,
+                                        stat = stat.av,
+                                        col_name = custom.score.name,
+                                        split_by = clustering)
+  names(cl.av) <- IRanges::gsub("cl.","",names(cl.av))
+  obj <- Seurat::RenameIdents(obj, cl.av)
+  mScoreColName <- paste0(clustering,"_cl.av_", custom.score.name)
+  obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
+  Seurat::Idents(obj) <- obj@meta.data[clustering]
+  print(mScoreColName)
+  return(obj)
+}
+
 
 # _________________________________________________________________________________________________
 #' @title AddGOGeneList.manual
@@ -375,8 +420,8 @@ GO_score_evaluation <- function(obj = combined.obj,
                             obj = obj, plot.each.gene = plot.each.gene)
   }
 
-  Stringendo::iprint("Calculating cl. average score")
-  cl.av <- calc.cluster.averages.new(obj = obj,
+  print("Calculating cl. average score")
+  cl.av <- calc.cluster.averages.gruffi(obj = obj,
                                      stat = stat.av,
                                      col_name = ww.convert.GO_term.2.score(GO_term),
                                      split_by = clustering)
@@ -628,7 +673,7 @@ PlotGoTermScores <- function(obj = combined.obj
 
     obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, use.ensemble = use.ensemble);
     GO.genes <- obj@misc$GO[[ GO.wDot ]]
-    if (verbose) Stringendo::iprint(head(GO.genes))
+    if (verbose) print(head(GO.genes))
     obj <- AddGOScore(obj = obj, GO = GO)
   }
 
@@ -678,10 +723,10 @@ Shiny.GO.thresh <- function(obj = combined.obj
   av.notstress.ident4 <- as.numeric(levels(meta[,notstress.ident4]))
 
   # compute proposals for thresholds
-  app_env$thresh.stress.ident1 <- plot_norm_and_skew(av.stress.ident1, q = quantile, tresholding = "fitted", plot.hist = F)
-  app_env$thresh.stress.ident2 <- plot_norm_and_skew(av.stress.ident2, q = quantile, tresholding = "fitted", plot.hist = F)
-  app_env$thresh.notstress.ident3 <- plot_norm_and_skew(av.notstress.ident3, q = quantile, tresholding = "fitted", plot.hist = F)
-  app_env$thresh.notstress.ident4 <- plot_norm_and_skew(av.notstress.ident4, q = quantile, tresholding = "fitted", plot.hist = F)
+  app_env$thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = "fitted", plot.hist = F)
+  app_env$thresh.stress.ident2 <- PlotNormAndSkew(av.stress.ident2, q = quantile, tresholding = "fitted", plot.hist = F)
+  app_env$thresh.notstress.ident3 <- PlotNormAndSkew(av.notstress.ident3, q = quantile, tresholding = "fitted", plot.hist = F)
+  app_env$thresh.notstress.ident4 <- PlotNormAndSkew(av.notstress.ident4, q = quantile, tresholding = "fitted", plot.hist = F)
 
   min.x.stress.ident1 <- floor(min(av.stress.ident1, app_env$thresh.stress.ident1))
   max.x.stress.ident1 <- ceiling(max(av.stress.ident1, app_env$thresh.stress.ident1))
@@ -918,7 +963,7 @@ aut.res.clustering <- function(obj = combined.obj,
 
 
 # _________________________________________________________________________________________________
-#' @title calc.cluster.averages.new
+#' @title calc.cluster.averages.gruffi
 #' @description Calculate granule (cluster) averages scores.
 #' @param col_name Numeric metadata column name, Default: 'Score.GO.0006096'
 #' @param obj Seurat single cell object, Default: combined.obj
@@ -954,7 +999,7 @@ aut.res.clustering <- function(obj = combined.obj,
 #' @importFrom rlang sym
 #' @importFrom CodeAndRoll2 sem sortbyitsnames
 
-calc.cluster.averages.new <- function(col_name = "Score.GO.0006096"
+calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
                                       , obj = combined.obj
                                       , split_by = GetClusteringRuns(obj)[1]
                                       , stat = c("mean", "median", "normalized.mean", "normalized.median")[3]
@@ -1006,7 +1051,7 @@ calc.cluster.averages.new <- function(col_name = "Score.GO.0006096"
 
     if (plotit) {
       if(length(av.score) > max.bin.plot) {
-        Stringendo::iprint("Too many clusters for histogram plot.")
+        print("Too many clusters for histogram plot.")
       }
       else {
         p <- qbarplot(vec = av.score, save = F
@@ -1085,7 +1130,7 @@ clUMAP.thresholding <- function(q.meta.col = 'Score.GO.0034976', c.meta.col =  "
 
 
 # _________________________________________________________________________________________________
-#' @title clean.duplicate.scorenames
+#' @title CleanDuplicateScorenames
 #' @description Remove duplicate scorenames from obj@mata.data.
 #' @param obj Seurat single cell object, Default: obj
 #' @seealso
@@ -1095,7 +1140,7 @@ clUMAP.thresholding <- function(q.meta.col = 'Score.GO.0034976', c.meta.col =  "
 #' @importFrom CodeAndRoll2 grepv
 #' @importFrom Stringendo iprint
 
-clean.duplicate.scorenames <- function(obj = obj) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
+CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
   obj <- combined.obj
   cn <- colnames(obj@meta.data)
 
@@ -1110,7 +1155,7 @@ clean.duplicate.scorenames <- function(obj = obj) { # Helper. When AddGOScore(),
 
   Stringendo::iprint(l(clean), "GO's are clean, ", l(appended), "GO's are suffixed by .1 etc, of which"
                      , l(fixed.keep), "GO's had no clean counterpart. All",l(uniqueGO), "scores, are cleaned, fixed and unique now.")
-  Stringendo::iprint("Metadata column order re-organized alphabetically, and GO-scores at the end.")
+  print("Metadata column order re-organized alphabetically, and GO-scores at the end.")
   return(obj)
 }
 
@@ -1172,7 +1217,7 @@ plot.clust.size.distr <- function(obj = combined.obj,
 }
 
 # _________________________________________________________________________________________________
-#' @title plot_norm_and_skew
+#' @title PlotNormAndSkew
 #' @description Plot normal distribution and skew.
 #' @param x Distribution
 #' @param q Quantile
@@ -1181,7 +1226,7 @@ plot.clust.size.distr <- function(obj = combined.obj,
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
 #' @export
 
-plot_norm_and_skew <- function(x, q,
+PlotNormAndSkew <- function(x, q,
                                tresholding = c("fitted", "empirical")[1],
                                plot.hist = TRUE, ...
 ) {
@@ -1245,7 +1290,7 @@ reassign.small.clusters <- function(obj = combined.obj,
 
     if(reduction == "3d_umap") {
       if(!is.null(obj@misc$'reductions.backup')) {
-        Stringendo::iprint("THE 3D UMAP IN @misc$'reductions.backup WILL BE USED")
+        print("THE 3D UMAP IN @misc$'reductions.backup WILL BE USED.")
         embedding <- obj@misc$'reductions.backup'$umap3d@cell.embeddings
       }
       if(is.null(obj@misc$'reductions.backup')) {
@@ -1280,7 +1325,7 @@ reassign.small.clusters <- function(obj = combined.obj,
     obj@meta.data[[name.id.reassigned]] <- Seurat::Idents(obj)
   }
   print(name.id.reassigned)
-  Stringendo::iprint('Call plot.clust.size.distr() to check results')
+  print('Call plot.clust.size.distr() to check results.')
   return(obj)
 }
 

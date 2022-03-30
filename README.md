@@ -110,13 +110,13 @@ After finding the right granule resolution, first GO scores per cells, then aver
 
 ```R
 # Glycolytic process	GO:0006096
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
+combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # ER stress 	GO:0034976
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
+combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # Gliogenesis		GO:0042063
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
+combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 ```
 
 These functions store the resulting scores in `combined.obj@meta.data`.
