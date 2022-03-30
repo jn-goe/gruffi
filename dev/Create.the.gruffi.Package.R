@@ -30,7 +30,7 @@ dir.create(BackupDir)
 
 
 # devtools::use_package("vioplot")
-DESCRIPTION <- list("Title" = "gruffi is the fastest way to create, annotate and export plots in R"
+DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets."
     , "Author" = c(
       person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),
       person(given = "Abel", family = "Vertesy", email = "abel.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )
