@@ -7,7 +7,7 @@
 calc.cluster.averages.gruffi(
   col_name = "Score.GO.0006096",
   obj = combined.obj,
-  split_by = GetClusteringRuns(obj)[1],
+  split_by = Seurat.utils::GetClusteringRuns(obj)[1],
   stat = c("mean", "median", "normalized.mean", "normalized.median")[3],
   scale.zscore = FALSE,
   quantile.thr = 0.99,
@@ -35,7 +35,7 @@ calc.cluster.averages.gruffi(
 
 \item{obj}{Seurat single cell object, Default: combined.obj}
 
-\item{split_by}{Clustering to split by (categorical metadata column name), Default: GetClusteringRuns(obj)\link{1}}
+\item{split_by}{Clustering to split by (categorical metadata column name), Default: Seurat.utils::GetClusteringRuns(obj)\link{1}}
 
 \item{stat}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 

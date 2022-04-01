@@ -31,7 +31,7 @@ AddCustomScore <- function(obj = combined.obj, genes="", assay.use = 'RNA', FixN
 #' @description Custom gene-set derived score evaluation for filtering.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param custom.score.name Name of your custom gene set.
-#' @param clustering Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned", GetClusteringRuns(obj))]
+#' @param clustering Which clustering to use (from metadata)? Default: "integrated_snn_res.48.reassigned"
 #' @param assay Which assay to use?, Default: 'RNA'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @seealso
@@ -221,7 +221,7 @@ FeaturePlotSaveGO <- function(obj = combined.obj
                               , save.plot = TRUE
                               , title_ = paste(GO.score, name_desc)
                               , h=7, PNG = T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
-  proper.GO <- paste(sstrsplit(GO.score, pattern = "\\.", n = 3)[2:3], collapse = ":")
+  proper.GO <- paste(stringr::str_split_fixed(string = GO.score, pattern = "\\.", n = 3)[2:3], collapse = ":")
   (genes.GO = obj@misc$GO[[make.names(proper.GO)]])
 
   ggplot.obj <-
@@ -393,7 +393,7 @@ FilterStressedCells <- function(obj = combined.obj
 #' @param plot.each.gene Plot each gene's expression, Default: FALSE
 #' @param assay Which assay to use?, Default: 'RNA'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
-#' @param clustering Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned", GetClusteringRuns(obj))]
+#' @param clustering Which clustering to use (from metadata)? Default: '`if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))])`'
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}
 #'  \code{\link[Stringendo]{iprint}}
@@ -410,7 +410,7 @@ GO_score_evaluation <- function(obj = combined.obj,
                                 plot.each.gene = FALSE,
                                 assay = "RNA",
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-                                clustering = if(is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned", GetClusteringRuns(obj))]) {#combined.obj@meta.data[,GetClusteringRuns(obj)[1]]) {
+                                clustering = if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
 
   Seurat::Idents(obj) <- obj@meta.data[clustering]
   all.genes <- rownames(obj@assays[[assay]])
@@ -463,27 +463,6 @@ GetAllGOTerms <- function(obj=combined.obj, return.obj = TRUE) {
 }
 
 
-
-
-# _________________________________________________________________________________________________
-#' @title GetClusteringRuns
-#' @description Get clustering resolutions present in a Seurat single cell object.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param res Specific resolution to use? Default: FALSE
-#' @param pat Search pattern to match in the name of the clustering run. Default: '*snn_res.*[0-9]'
-#' @seealso
-#'  \code{\link[CodeAndRoll2]{grepv}}
-#' @export
-#' @importFrom CodeAndRoll2 grepv
-
-GetClusteringRuns <- function(obj = combined.obj
-                              , res = FALSE
-                              , pat = "*snn_res.*[0-9]") {
-  if (res) pat <- gsub(x = pat, pattern = '\\[.*\\]', replacement = res)
-  clustering.results <- CodeAndRoll2::grepv(x = colnames(obj@meta.data), pattern = pat)
-  if (identical(clustering.results, character(0)) ) warning("No matching column found!")
-  return(clustering.results)
-}
 
 
 
@@ -569,8 +548,8 @@ GetNamedClusteringRuns <- function(obj = combined.obj  # Get Clustering Runs: me
   if (topgene) pat = gsub(x = pat, pattern = 'Known', replacement = 'top')
   clustering.results <- CodeAndRoll2::grepv(x = colnames(obj@meta.data), pattern = pat)
   if ( identical(clustering.results, character(0)) ) {
-    print("Warning: NO matching column found! Trying GetClusteringRuns(..., pat = '*_res.*[0,1]\\.[0-9]$)")
-    clustering.results <- GetClusteringRuns(obj = obj, res = F, pat = "*_res.*[0,1]\\.[0-9]$")
+    print("Warning: NO matching column found! Trying Seurat.utils::GetClusteringRuns(..., pat = '*_res.*[0,1]\\.[0-9]$)")
+    clustering.results <- Seurat.utils::GetClusteringRuns(obj = obj, res = F, pat = "*_res.*[0,1]\\.[0-9]$")
   }
   return(clustering.results)
 }
@@ -691,11 +670,11 @@ PlotGoTermScores <- function(obj = combined.obj
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param proposed.method proposed estimation method, Default: c("fitted", "empirical")[1]
 #' @param quantile quantile cutoff to use, Default: c(0.99, 0.9)[1]
-#' @param stress.ident1 stress identity 1, Default: paste0(GetClusteringRuns(obj)[1], "_cl.av_GO:0006096")
-#' @param stress.ident2 stress identity 1, Default: paste0(GetClusteringRuns(obj)[1], "_cl.av_GO:0034976")
-#' @param notstress.ident3 Negative stress filter, notstress identity 3, Default: paste0(GetClusteringRuns(obj)[1], "_cl.av_GO:0042063")
+#' @param stress.ident1 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096")
+#' @param stress.ident2 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976")
+#' @param notstress.ident3 Negative stress filter, notstress identity 3, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063")
 #' @param notstress.ident4 Negative stress filter, notstress identity 4, Default: NULL
-#' @param plot.cluster.shiny plot.cluster.shiny, Default: GetClusteringRuns(obj)[1]
+#' @param plot.cluster.shiny plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)[1]
 #' @seealso
 #'  \code{\link[shiny]{runApp}}, \code{\link[shiny]{shinyApp}}
 #' @export
@@ -704,11 +683,11 @@ PlotGoTermScores <- function(obj = combined.obj
 Shiny.GO.thresh <- function(obj = combined.obj
                             , proposed.method = c("fitted","empirical")[1]
                             , quantile = c(.99,.9)[1]
-                            , stress.ident1 = paste0(GetClusteringRuns(obj)[1],"_cl.av_GO:0006096")
-                            , stress.ident2 = paste0(GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
-                            , notstress.ident3 = paste0(GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
+                            , stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0006096")
+                            , stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
+                            , notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
                             , notstress.ident4 = NULL
-                            , plot.cluster.shiny = GetClusteringRuns(obj)[1])  {
+                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
   app_env <- new.env()
   meta <- obj@meta.data
 
@@ -780,7 +759,7 @@ Shiny.GO.thresh <- function(obj = combined.obj
 #' @param plot Plot results? Default: FALSE
 #' @param save.plot Save plot into a file. Default: FALSE
 #' @param reduction Which dim. reduction to use? Default: c("umap", "pca", "tsne")[1]
-#' @param ident Identity (metadata), Default: GetClusteringRuns(obj)[1]
+#' @param ident Identity (metadata), Default: Seurat.utils::GetClusteringRuns(obj)[1]
 #' @param PCA_dim PCA dimensions, Default: 50
 #' @seealso
 #'  \code{\link[Seurat]{RunUMAP}}, \code{\link[Seurat]{RunTSNE}}, \code{\link[Seurat]{reexports}}
@@ -800,7 +779,7 @@ Shiny.GO.thresh <- function(obj = combined.obj
 UMAP.3d.cubes <- function(obj = combined.obj,
                           n_bin = 10, plot = FALSE, save.plot = FALSE,
                           reduction = c("umap", "pca", "tsne")[1],
-                          ident = GetClusteringRuns(obj)[1],
+                          ident = Seurat.utils::GetClusteringRuns(obj)[1],
                           PCA_dim = 50) {
 
   if(dim(obj[[reduction]]@cell.embeddings)[2] < 3) {
@@ -967,7 +946,7 @@ aut.res.clustering <- function(obj = combined.obj,
 #' @description Calculate granule (cluster) averages scores.
 #' @param col_name Numeric metadata column name, Default: 'Score.GO.0006096'
 #' @param obj Seurat single cell object, Default: combined.obj
-#' @param split_by Clustering to split by (categorical metadata column name), Default: GetClusteringRuns(obj)[1]
+#' @param split_by Clustering to split by (categorical metadata column name), Default: Seurat.utils::GetClusteringRuns(obj)[1]
 #' @param stat How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @param scale.zscore Scale as zscore?, Default: FALSE
 #' @param quantile.thr Quantile threshold for cutoff, Default: 0.99
@@ -1001,7 +980,7 @@ aut.res.clustering <- function(obj = combined.obj,
 
 calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
                                       , obj = combined.obj
-                                      , split_by = GetClusteringRuns(obj)[1]
+                                      , split_by = Seurat.utils::GetClusteringRuns(obj)[1]
                                       , stat = c("mean", "median", "normalized.mean", "normalized.median")[3]
                                       , scale.zscore = FALSE
                                       , quantile.thr = 0.99
@@ -1187,8 +1166,8 @@ fix.metad.Colname.rm.trailing.1 <- function(obj = obj, colname=ScoreName) { # He
 #' @title plot.clust.size.distr
 #' @description Plot cluster size distribution.
 #' @param obj Seurat single cell object, Default: combined.obj
-#' @param category Clustering or any categorical metadata column name, Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned",
-#'    GetClusteringRuns(obj))]
+#' @param category Clustering or any categorical metadata column name, Default: if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned",
+#'    Seurat.utils::GetClusteringRuns(obj))]
 #' @param plot Plot results? Default: T
 #' @param thr.hist Plot histogram or a barplot? If less than X categories, it draws a barplot. If more, a histogram, Default: 30
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
@@ -1198,7 +1177,7 @@ fix.metad.Colname.rm.trailing.1 <- function(obj = obj, colname=ScoreName) { # He
 #' @importFrom ggExpress qbarplot qhistogram
 
 plot.clust.size.distr <- function(obj = combined.obj,
-                                  category = if(is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned", GetClusteringRuns(obj))],
+                                  category = if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))],
                                   plot = T,
                                   thr.hist = 30, ...) {
   clust.size.distr <- table(obj@meta.data[,category])

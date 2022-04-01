@@ -17,7 +17,7 @@ CustomScoreEvaluation(
 
 \item{custom.score.name}{Name of your custom gene set.}
 
-\item{clustering}{Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)\link{1} else GetClusteringRuns(obj)\link{grepl(".reassigned", GetClusteringRuns(obj))}}
+\item{clustering}{Which clustering to use (from metadata)? Default: "integrated_snn_res.48.reassigned"}
 
 \item{assay}{Which assay to use?, Default: 'RNA'}
 

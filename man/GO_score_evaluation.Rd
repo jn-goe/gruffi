@@ -12,9 +12,10 @@ GO_score_evaluation(
   plot.each.gene = FALSE,
   assay = "RNA",
   stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-  clustering = if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj)))))
-    GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned",
-    GetClusteringRuns(obj))]
+  clustering = if (is.null(sum(grepl(".reassigned",
+    Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else
+    Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned",
+    Seurat.utils::GetClusteringRuns(obj))]
 )
 }
 \arguments{
@@ -32,7 +33,7 @@ GO_score_evaluation(
 
 \item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 
-\item{clustering}{Which clustering to use (from metadata)? Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)\link{1} else GetClusteringRuns(obj)\link{grepl(".reassigned", GetClusteringRuns(obj))}}
+\item{clustering}{Which clustering to use (from metadata)? Default: '\verb{if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))])}'}
 }
 \description{
 GO-score evaluation for filtering.

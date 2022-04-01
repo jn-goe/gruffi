@@ -6,9 +6,10 @@
 \usage{
 \method{plot}{clust.size.distr}(
   obj = combined.obj,
-  category = if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj)))))
-    GetClusteringRuns(obj)[1] else GetClusteringRuns(obj)[grepl(".reassigned",
-    GetClusteringRuns(obj))],
+  category = if (is.null(sum(grepl(".reassigned",
+    Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else
+    Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned",
+    Seurat.utils::GetClusteringRuns(obj))],
   plot = T,
   thr.hist = 30,
   ...
@@ -17,8 +18,7 @@
 \arguments{
 \item{obj}{Seurat single cell object, Default: combined.obj}
 
-\item{category}{Clustering or any categorical metadata column name, Default: if (is.null(sum(grepl(".reassigned", GetClusteringRuns(obj))))) GetClusteringRuns(obj)\link{1} else GetClusteringRuns(obj)\link[=grepl(".reassigned",
-GetClusteringRuns(obj))]{grepl(".reassigned", GetClusteringRuns(obj))}}
+\item{category}{Clustering or any categorical metadata column name, Default: if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)\link{1} else Seurat.utils::GetClusteringRuns(obj)\link[=GetClusteringRuns(obj))]{grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))}}
 
 \item{plot}{Plot results? Default: T}
 

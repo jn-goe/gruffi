@@ -8,11 +8,12 @@ Shiny.GO.thresh(
   obj = combined.obj,
   proposed.method = c("fitted", "empirical")[1],
   quantile = c(0.99, 0.9)[1],
-  stress.ident1 = paste0(GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
-  stress.ident2 = paste0(GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
-  notstress.ident3 = paste0(GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
+  stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
+  stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
+  notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],
+    "_cl.av_GO:0042063"),
   notstress.ident4 = NULL,
-  plot.cluster.shiny = GetClusteringRuns(obj)[1]
+  plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]
 )
 }
 \arguments{
@@ -22,15 +23,15 @@ Shiny.GO.thresh(
 
 \item{quantile}{quantile cutoff to use, Default: c(0.99, 0.9)\link{1}}
 
-\item{stress.ident1}{stress identity 1, Default: paste0(GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0006096")}
+\item{stress.ident1}{stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0006096")}
 
-\item{stress.ident2}{stress identity 1, Default: paste0(GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0034976")}
+\item{stress.ident2}{stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0034976")}
 
-\item{notstress.ident3}{Negative stress filter, notstress identity 3, Default: paste0(GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0042063")}
+\item{notstress.ident3}{Negative stress filter, notstress identity 3, Default: paste0(Seurat.utils::GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0042063")}
 
 \item{notstress.ident4}{Negative stress filter, notstress identity 4, Default: NULL}
 
-\item{plot.cluster.shiny}{plot.cluster.shiny, Default: GetClusteringRuns(obj)\link{1}}
+\item{plot.cluster.shiny}{plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)\link{1}}
 }
 \description{
 GO-thresholding for the Shiny app.

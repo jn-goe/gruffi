@@ -18,7 +18,7 @@ require('Stringendo')
 
 # Setup ------------------------
 PackageName = "gruffi"
-package.version = "0.7.0"
+package.version = "0.7.1"
 setwd("~/GitHub/Packages/")
 
 RepositoryDir = kollapse("~/GitHub/Packages/", PackageName, "/")
@@ -43,10 +43,10 @@ DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from
     , "License" = "GPL-3 + file LICENSE"
     , "Version" = package.version
     , "Packaged" =  Sys.time()
-    , "Depends" =  "Stringendo, magrittr"
-    , "Imports" = "tidyverse, cowplot, ggpubr, graphics, grDevices, raster
+    , "Depends" =  "Stringendo, magrittr, Seurat"
+    , "Imports" = "tidyverse, cowplot, ggpubr, graphics, grDevices, raster, Seurat.utils
       , MarkdownHelpers, MarkdownReports, CodeAndRoll2, Seurat.utils, ggExpress
-      , methods, RColorBrewer, sessioninfo, Seurat, sm, stats, AnnotationDbi, IRanges
+      , methods, RColorBrewer, sessioninfo, stringr, sm, stats, AnnotationDbi, IRanges
       , Matrix,biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
     # , 'dplyr'
     # , "Suggests" = ""
@@ -83,12 +83,12 @@ install(RepositoryDir, upgrade = F)
 # cat("\014")
 # devtools::run_examples()
 
-{
-  "update cff version"
-  citpath <- paste0(RepositoryDir, 'CITATION.cff')
-  xfun::gsub_file(file = citpath, perl = T
-                  , "^version: v.+", paste0("version: v", package.version))
-}
+# {
+#   "update cff version"
+#   citpath <- paste0(RepositoryDir, 'CITATION.cff')
+#   xfun::gsub_file(file = citpath, perl = T
+#                   , "^version: v.+", paste0("version: v", package.version))
+# }
 
 # Test if you can install from github ------------------------------------------------
 # devtools::install_github(repo = "vertesy/gruffi")

@@ -15,7 +15,6 @@ Once the paper is published, we will provide a standalone version, for now, you 
 
 ```R
 
-
 # Install CRAN & Bioconductor dependencies
 install.packages('pdist')
 install.packages('raster')

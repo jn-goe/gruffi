@@ -10,7 +10,7 @@ UMAP.3d.cubes(
   plot = FALSE,
   save.plot = FALSE,
   reduction = c("umap", "pca", "tsne")[1],
-  ident = GetClusteringRuns(obj)[1],
+  ident = Seurat.utils::GetClusteringRuns(obj)[1],
   PCA_dim = 50
 )
 }
@@ -25,7 +25,7 @@ UMAP.3d.cubes(
 
 \item{reduction}{Which dim. reduction to use? Default: c("umap", "pca", "tsne")\link{1}}
 
-\item{ident}{Identity (metadata), Default: GetClusteringRuns(obj)\link{1}}
+\item{ident}{Identity (metadata), Default: Seurat.utils::GetClusteringRuns(obj)\link{1}}
 
 \item{PCA_dim}{PCA dimensions, Default: 50}
 }
