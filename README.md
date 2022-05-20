@@ -23,6 +23,9 @@ install.packages('rgl')
 install.packages('BiocManager')
 BiocManager::install("clusterProfiler")
 BiocManager::install("org.Hs.eg.db")
+BiocManager::install("sparseMatrixStats")
+BiocManager::install("biomaRt")
+
 
 # Install custom dependencies
 install.packages('devtools')
@@ -39,6 +42,8 @@ devtools::install_github(repo = "vertesy/Seurat.utils", upgrade = F)
 devtools::install_github(repo = "jn-goe/gruffi", upgrade = F)
 
 ```
+
+**NOTE: If you type 'all' when R asks to update dependencies, you may get into installation errors / infinite loops. If updating fails, type 'no' when prompted. **
 
 ### Currently you have to load the package, not simply `require()`
 

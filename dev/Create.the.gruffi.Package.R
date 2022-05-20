@@ -47,7 +47,7 @@ DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from
     , "Imports" = "tidyverse, cowplot, ggpubr, graphics, grDevices, raster, Seurat.utils
       , MarkdownHelpers, MarkdownReports, CodeAndRoll2, Seurat.utils, ggExpress
       , methods, RColorBrewer, sessioninfo, stringr, sm, stats, AnnotationDbi, IRanges
-      , Matrix,biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
+      , Matrix, biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
     # , 'dplyr'
     # , "Suggests" = ""
     , "BugReports"= "https://github.com/jn-goe/gruffi/issues/"
