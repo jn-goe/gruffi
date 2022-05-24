@@ -56,6 +56,8 @@ Otherwise the Shiny scripts will not be found. *You also can skip installing **G
 
 
 ## Usage
+<img width="1000" alt="image" src="https://user-images.githubusercontent.com/5101911/170080428-7cacdc2b-c079-4383-a2ec-c9bb3e6271df.png">
+
 
 ### 1. <u>Setup</u>
 
