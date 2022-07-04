@@ -8,8 +8,8 @@ FilterStressedCells(
   obj = combined.obj,
   res = "integrated_snn_res.30",
   quantile.thr = 0.9,
-  GOterms = c(`glycolytic process` = "GO:0006096", `response to endoplasmic reticulum
-    stress` = "GO:0034976"),
+  GOterms = c(`glycolytic process` = "GO:0006096",
+    `response to endoplasmic reticulum stress` = "GO:0034976"),
   direction = "above",
   saveRDS = TRUE,
   saveRDS.Removed = FALSE,

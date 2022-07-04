@@ -11,6 +11,7 @@ GO_score_evaluation(
   save.UMAP = FALSE,
   plot.each.gene = FALSE,
   assay = "RNA",
+  description = NULL,
   stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
   clustering = if (is.null(sum(grepl(".reassigned",
     Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else
@@ -30,6 +31,8 @@ GO_score_evaluation(
 \item{plot.each.gene}{Plot each gene's expression, Default: FALSE}
 
 \item{assay}{Which assay to use?, Default: 'RNA'}
+
+\item{description}{Description to added to plot title, e.g. GO-terms name, Default: 'NULL'}
 
 \item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 

@@ -392,6 +392,7 @@ FilterStressedCells <- function(obj = combined.obj
 #' @param save.UMAP Save umap into a file. Default: FALSE
 #' @param plot.each.gene Plot each gene's expression, Default: FALSE
 #' @param assay Which assay to use?, Default: 'RNA'
+#' @param description Description to added to plot title, e.g. GO-terms name, Default: 'NULL'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @param clustering Which clustering to use (from metadata)? Default: '`if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))])`'
 #' @seealso
@@ -409,6 +410,7 @@ GO_score_evaluation <- function(obj = combined.obj,
                                 save.UMAP = FALSE,
                                 plot.each.gene = FALSE,
                                 assay = "RNA",
+                                description = NULL,
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                 clustering = if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
 
@@ -416,8 +418,8 @@ GO_score_evaluation <- function(obj = combined.obj,
   all.genes <- rownames(obj@assays[[assay]])
 
   if (new_GO_term_computation) {
-    obj <- PlotGoTermScores(GO = GO_term, save.UMAP = save.UMAP,
-                            obj = obj, plot.each.gene = plot.each.gene)
+    obj <- PlotGoTermScores(GO = GO_term, save.UMAP = save.UMAP, obj = obj
+                            , desc = description, plot.each.gene = plot.each.gene)
   }
 
   print("Calculating cl. average score")
