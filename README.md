@@ -50,6 +50,7 @@ devtools::install_github(repo = "jn-goe/gruffi", upgrade = F)
 ```r
 devtools::load_all("~/example/path/to/gruffi")
 ```
+*The path is where you cloned the package from github (where you saved Gruffi's code).
 
 Otherwise the Shiny scripts will not be found. *You also can skip installing **Gruffi**,  but then function help won't work.*
 
