@@ -9,6 +9,8 @@ GetGOTerms(
   GO = "GO:0034976",
   use.ensemble = T,
   web.open = F,
+  version = NULL,
+  GRCh = NULL,
   genes.shown = 10
 )
 }
@@ -20,6 +22,10 @@ GetGOTerms(
 \item{use.ensemble}{Use ensemble database, Default: TRUE}
 
 \item{web.open}{Open weblink for GO-term?, Default: FALSE}
+
+\item{version}{= Def: NULL, Ensembl version to connect to when wanting to connect to an archived Ensembl version (via useEnsembl())}
+
+\item{GRCh}{= Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())}
 
 \item{genes.shown}{Number of genes shown, Default: 10}
 }

@@ -474,6 +474,8 @@ GetAllGOTerms <- function(obj=combined.obj, return.obj = TRUE) {
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param GO GO-term; Default: 'GO:0034976'
 #' @param use.ensemble Use ensemble database, Default: TRUE
+#' @param version = Def: NULL, Ensembl version to connect to when wanting to connect to an archived Ensembl version (via useEnsembl())
+#' @param GRCh = Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())
 #' @param web.open Open weblink for GO-term?, Default: FALSE
 #' @param genes.shown Number of genes shown, Default: 10
 #' @seealso
@@ -491,30 +493,35 @@ GetGOTerms <- function(obj = combined.obj,
                        GO = 'GO:0034976',
                        use.ensemble = T,
                        web.open = F,
+                       version = NULL,
+                       GRCh = NULL,
                        genes.shown = 10) {
   print('GetGOTerms()')
 
   if (use.ensemble & is.null(obj@misc$enrichGO[['RNA']])) {
     if(!exists("ensembl")) {
-      ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
+      print('biomaRt::useEnsembl()')
+      ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh)
     }
-    #while (length(genes) == 0) {
+
     genes <- biomaRt::getBM(attributes = c('hgnc_symbol'), # 'ensembl_transcript_id', 'go_id'
                             filters = "go_parent_term", uniqueRows = TRUE,
                             values = GO, mart = ensembl)[,1]
-    iprint(length(genes), "Gene symbols downloaded:", head(genes, n = genes.shown))
-    #}
+    iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", head(genes, n = genes.shown))
+
   }
   if (!use.ensemble & !is.null(obj@misc$enrichGO[['RNA']])) {
     genes <- unlist(geneInCategory(obj@misc$enrichGO[['RNA']])[GO])
     iprint(length(genes), "Gene symbols from enrichGO[['RNA']]:", head(genes, n = genes.shown))
   }
   if(!use.ensemble & is.null(obj@misc$enrichGO[['RNA']])) {
-    # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
+    print('AnnotationDbi::select()')
     genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
-
-    iprint(length(genes), "Gene symbols AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", head(genes, n = genes.shown))
+    iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", head(genes, n = genes.shown))
   }
+  # if(F) {
+    # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
+  # }
 
   (GO.wDot <- make.names(GO))
   Stringendo::iprint(length(genes), "Gene symbols downloaded:", head(genes, n = genes.shown))
@@ -527,6 +534,7 @@ GetGOTerms <- function(obj = combined.obj,
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
   return(obj)
 }
+
 
 
 
