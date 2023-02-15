@@ -712,10 +712,10 @@ Shiny.GO.thresh <- function(obj = combined.obj
   av.notstress.ident4 <- as.numeric(levels(meta[,notstress.ident4]))
 
   # compute proposals for thresholds
-  app_env$thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = "fitted", plot.hist = F)
-  app_env$thresh.stress.ident2 <- PlotNormAndSkew(av.stress.ident2, q = quantile, tresholding = "fitted", plot.hist = F)
-  app_env$thresh.notstress.ident3 <- PlotNormAndSkew(av.notstress.ident3, q = quantile, tresholding = "fitted", plot.hist = F)
-  app_env$thresh.notstress.ident4 <- PlotNormAndSkew(av.notstress.ident4, q = quantile, tresholding = "fitted", plot.hist = F)
+  app_env$thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$thresh.stress.ident2 <- PlotNormAndSkew(av.stress.ident2, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$thresh.notstress.ident3 <- PlotNormAndSkew(av.notstress.ident3, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$thresh.notstress.ident4 <- PlotNormAndSkew(av.notstress.ident4, q = quantile, tresholding = proposed.method, plot.hist = F)
 
   min.x.stress.ident1 <- floor(min(av.stress.ident1, app_env$thresh.stress.ident1))
   max.x.stress.ident1 <- ceiling(max(av.stress.ident1, app_env$thresh.stress.ident1))
