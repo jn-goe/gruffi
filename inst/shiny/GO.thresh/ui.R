@@ -27,7 +27,7 @@ ui <- shiny::shinyUI(shiny::fluidPage(
                                                 min=sliders$min.x.notstress.ident4, max=sliders$max.x.notstress.ident4, value=thresh.notstress.ident4, step=sliders$step.notstress.ident4,
                                                 animate=shiny::animationOptions(100))
                         },
-                        shiny::actionButton('save_inputs', 'Save new thresholds')
+                        shiny::actionButton('save_inputs', 'Save asad thresholds')
                        ),
                 shiny::mainPanel(shiny::tabsetPanel(
                   if(!is.null(stress.ident1)) shiny::tabPanel(paste0("Histogram GO",substr(x = strsplit(stress.ident1, "GO")[[1]][2],1,8)), shiny::plotOutput("hist.stress.ident1")),
