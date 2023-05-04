@@ -697,7 +697,8 @@ Shiny.GO.thresh <- function(obj = combined.obj
                             , stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
                             , notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
                             , notstress.ident4 = NULL
-                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
+                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]
+                            , autostop = F)  {
   app_env <- new.env()
   meta <- obj@meta.data
 
