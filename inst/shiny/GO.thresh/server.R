@@ -267,7 +267,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   if(autostop == TRUE) {
     observe({
       click("save_inputs")
-      invalidateLater(0)
+      invalidateLater(10)
     })
   }
 })
