@@ -750,6 +750,7 @@ Shiny.GO.thresh <- function(obj = combined.obj
                               av.notstress.ident4 = av.notstress.ident4)
   app_env$obj <- obj
   app_env$plot.cluster.shiny <- plot.cluster.shiny
+  app_env$autostop <- autostop
 
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"), local=new.env(parent=app_env),
