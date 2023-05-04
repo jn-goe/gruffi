@@ -263,4 +263,10 @@ server <- shiny::shinyServer(function(input, output, session) {
 
     shiny::stopApp(returnValue = obj)
   })
+  
+  observe({
+    click("save_inputs")
+    invalidateLater(3000)
+  })
+  
 })
