@@ -32,6 +32,8 @@ Shiny.GO.thresh(
 \item{notstress.ident4}{Negative stress filter, notstress identity 4, Default: NULL}
 
 \item{plot.cluster.shiny}{plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)\link{1}}
+
+\item{autostop}{Stop Shiny app after initialization and get the output without manual threshold adjustments. Useful if you want to run gruffi automatically, Default: FALSE}
 }
 \description{
 GO-thresholding for the Shiny app.
