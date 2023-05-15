@@ -781,6 +781,8 @@ Auto.GO.thresh <- function(obj = combined.obj
                             , notstress.ident4 = NULL
                             , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
 
+    meta <- obj@meta.data
+
     if(!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
     if(!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
     if(!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
