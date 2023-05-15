@@ -265,9 +265,23 @@ server <- shiny::shinyServer(function(input, output, session) {
   })
 
   if(autostop == TRUE) {
-    observe({
-      click("save_inputs")
-      invalidateLater(10)
-    })
+      obj <- c.data()
+      if(!is.null(stress.ident1)) {
+          i.stress.ident1 <- input$t.stress.ident1
+          obj@misc$gruffi$thresh.stress.ident1 <- i.stress.ident1
+      }
+      if(!is.null(stress.ident2)) {
+          i.stress.ident2 <- input$t.stress.ident2
+          obj@misc$gruffi$thresh.stress.ident2 <- i.stress.ident2
+      }
+      if(!is.null(notstress.ident3)) {
+          i.notstress.ident3 <- input$t.notstress.ident3
+          obj@misc$gruffi$thresh.notstress.ident3 <- i.notstress.ident3
+      }
+      if(!is.null(notstress.ident4)) {
+          i.notstress.ident4 <- input$t.notstress.ident4
+          obj@misc$gruffi$thresh.notstress.ident4 <- i.notstress.ident4
+      }
+      shiny::stopApp(returnValue = obj)
   }
 })
