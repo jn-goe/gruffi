@@ -697,8 +697,7 @@ Shiny.GO.thresh <- function(obj = combined.obj
                             , stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
                             , notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
                             , notstress.ident4 = NULL
-                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]
-                            , autostop = F)  {
+                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
   app_env <- new.env()
   meta <- obj@meta.data
 
@@ -750,7 +749,6 @@ Shiny.GO.thresh <- function(obj = combined.obj
                               av.notstress.ident4 = av.notstress.ident4)
   app_env$obj <- obj
   app_env$plot.cluster.shiny <- plot.cluster.shiny
-  app_env$autostop <- autostop
 
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"), local=new.env(parent=app_env),
@@ -761,7 +759,125 @@ Shiny.GO.thresh <- function(obj = combined.obj
   return(obj)
 }
 
+# _________________________________________________________________________________________________
+#' @title Auto.GO.thresh
+#' @description GO-thresholding to run automatically.
+#' @param obj Seurat single cell object, Default: combined.obj
+#' @param proposed.method proposed estimation method, Default: c("fitted", "empirical")[1]
+#' @param quantile quantile cutoff to use, Default: c(0.99, 0.9)[1]
+#' @param stress.ident1 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096")
+#' @param stress.ident2 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976")
+#' @param notstress.ident3 Negative stress filter, notstress identity 3, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063")
+#' @param notstress.ident4 Negative stress filter, notstress identity 4, Default: NULL
+#' @param plot.cluster.shiny plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)[1]
+#' @export
 
+Auto.GO.thresh <- function(obj = combined.obj
+                            , proposed.method = c("fitted","empirical")[1]
+                            , quantile = c(.99,.9)[1]
+                            , stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0006096")
+                            , stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
+                            , notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
+                            , notstress.ident4 = NULL
+                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
+
+    if(!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
+    if(!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
+    if(!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
+    if(!is.null(notstress.ident4)) stopifnot(notstress.ident4 %in% colnames(meta))
+
+    av.stress.ident1 <- as.numeric(levels(meta[,stress.ident1]))
+    av.stress.ident2 <- as.numeric(levels(meta[,stress.ident2]))
+    av.notstress.ident3 <- as.numeric(levels(meta[,notstress.ident3]))
+    av.notstress.ident4 <- as.numeric(levels(meta[,notstress.ident4]))
+
+    # compute proposals for thresholds
+    thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = proposed.method, plot.hist = F)
+    thresh.stress.ident2 <- PlotNormAndSkew(av.stress.ident2, q = quantile, tresholding = proposed.method, plot.hist = F)
+    thresh.notstress.ident3 <- PlotNormAndSkew(av.notstress.ident3, q = quantile, tresholding = proposed.method, plot.hist = F)
+    thresh.notstress.ident4 <- PlotNormAndSkew(av.notstress.ident4, q = quantile, tresholding = proposed.method, plot.hist = F)
+
+    min.x.stress.ident1 <- floor(min(av.stress.ident1, thresh.stress.ident1))
+    max.x.stress.ident1 <- ceiling(max(av.stress.ident1, thresh.stress.ident1))
+    step.stress.ident1  <- 0.001
+
+    min.x.stress.ident2 <- floor(min(av.stress.ident2, thresh.stress.ident2))
+    max.x.stress.ident2 <- ceiling(max(av.stress.ident2, thresh.stress.ident2))
+    step.stress.ident2  <- 0.001
+
+    min.x.notstress.ident3 <- floor(min(av.notstress.ident3, thresh.notstress.ident3))
+    max.x.notstress.ident3 <- ceiling(max(av.notstress.ident3, thresh.notstress.ident3))
+    step.notstress.ident3  <- 0.001
+
+    min.x.notstress.ident4 <- floor(min(av.notstress.ident4, thresh.notstress.ident4))
+    max.x.notstress.ident4 <- ceiling(max(av.notstress.ident4, thresh.notstress.ident4))
+    step.notstress.ident4  <- 0.001
+
+    idents <- list(stress.ident1 = stress.ident1,
+                   stress.ident2 = stress.ident2,
+                   notstress.ident3 = notstress.ident3,
+                   notstress.ident4 = notstress.ident4)
+
+    sliders <- list(min.x.stress.ident1 = min.x.stress.ident1, max.x.stress.ident1 = max.x.stress.ident1, step.stress.ident1 = step.stress.ident1,
+                    min.x.stress.ident2 = min.x.stress.ident2, max.x.stress.ident2 = max.x.stress.ident2, step.stress.ident2 = step.stress.ident2,
+                    min.x.notstress.ident3 = min.x.notstress.ident3, max.x.notstress.ident3 = max.x.notstress.ident3, step.notstress.ident3 = step.notstress.ident3,
+                    min.x.notstress.ident4 = min.x.notstress.ident4, max.x.notstress.ident4 = max.x.notstress.ident4, step.notstress.ident4 = step.notstress.ident4)
+
+    average.vec <- list(av.stress.ident1 = av.stress.ident1,
+                        av.stress.ident2 = av.stress.ident2,
+                        av.notstress.ident3 = av.notstress.ident3,
+                        av.notstress.ident4 = av.notstress.ident4)
+
+    if(!is.null(stress.ident1)) i.stress.ident1 <- thresh.stress.ident1
+    if(!is.null(stress.ident2)) i.stress.ident2 <- thresh.stress.ident2
+    if(!is.null(notstress.ident3)) i.notstress.ident3 <- thresh.notstress.ident3
+    if(!is.null(notstress.ident4)) i.notstress.ident4 <- thresh.notstress.ident4
+
+    c <- obj
+
+    if(!is.null(stress.ident1)) {
+        i1.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident1]))[c@meta.data[,idents$stress.ident1]] > i.stress.ident1
+        if(!is.null(stress.ident2)) {
+            i2.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident2]))[c@meta.data[,idents$stress.ident2]] > i.stress.ident2
+            stress.bool <- i1.bool | i2.bool
+        }
+        else {
+            stress.bool <- i1.bool
+        }
+    } else {
+        if(!is.null(stress.ident2)) {
+            i2.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident2]))[c@meta.data[,idents$stress.ident2]] > i.stress.ident2
+            stress.bool <- i2.bool
+        }
+    }
+
+    notstress.bool <- NULL
+    if(!is.null(notstress.ident3)) {
+        i3.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident3]))[c@meta.data[,idents$notstress.ident3]] > i.notstress.ident3
+        if(!is.null(notstress.ident4)) {
+            i4.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident4]))[c@meta.data[,idents$notstress.ident4]] > i.notstress.ident4
+            notstress.bool <- i3.bool | i4.bool
+        }
+        else {
+            notstress.bool <- i3.bool
+        }
+    } else {
+        if(!is.null(notstress.ident4)) {
+            i4.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident4]))[c@meta.data[,idents$notstress.ident4]] > i.notstress.ident4
+            notstress.bool <- i4.bool
+        }
+    }
+
+    if(!is.null(notstress.bool)) {
+        c$is.Stressed <- stress.bool & !notstress.bool
+    } else {
+        c$is.Stressed <- stress.bool
+    }
+    # c$is.Stressed[c$is.Stressed == FALSE] <- F
+    # c$is.Stressed[c$is.Stressed == TRUE] <- T
+    c
+    return(c)
+}
 
 # _________________________________________________________________________________________________
 #' @title UMAP.3d.cubes
