@@ -264,8 +264,66 @@ server <- shiny::shinyServer(function(input, output, session) {
     shiny::stopApp(returnValue = obj)
   })
 
+  # if(autostop == TRUE) {
+  #     observe({
+  #         click("save_inputs")
+  #         invalidateLater(0)
+  #         invalidateLater(10)
+  #     })
+  # }
+
   if(autostop == TRUE) {
-      obj <- c.data()
+      #obj <- c.data()
+      if(!is.null(stress.ident1)) i.stress.ident1 <- input$t.stress.ident1
+      if(!is.null(stress.ident2)) i.stress.ident2 <- input$t.stress.ident2
+      if(!is.null(notstress.ident3)) i.notstress.ident3 <- input$t.notstress.ident3
+      if(!is.null(notstress.ident4)) i.notstress.ident4 <- input$t.notstress.ident4
+
+      c <- obj
+
+      if(!is.null(stress.ident1)) {
+          i1.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident1]))[c@meta.data[,idents$stress.ident1]] > i.stress.ident1
+          if(!is.null(stress.ident2)) {
+              i2.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident2]))[c@meta.data[,idents$stress.ident2]] > i.stress.ident2
+              stress.bool <- i1.bool | i2.bool
+          }
+          else {
+              stress.bool <- i1.bool
+          }
+      } else {
+          if(!is.null(stress.ident2)) {
+              i2.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident2]))[c@meta.data[,idents$stress.ident2]] > i.stress.ident2
+              stress.bool <- i2.bool
+          }
+      }
+
+      notstress.bool <- NULL
+      if(!is.null(notstress.ident3)) {
+          i3.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident3]))[c@meta.data[,idents$notstress.ident3]] > i.notstress.ident3
+          if(!is.null(notstress.ident4)) {
+              i4.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident4]))[c@meta.data[,idents$notstress.ident4]] > i.notstress.ident4
+              notstress.bool <- i3.bool | i4.bool
+          }
+          else {
+              notstress.bool <- i3.bool
+          }
+      } else {
+          if(!is.null(notstress.ident4)) {
+              i4.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident4]))[c@meta.data[,idents$notstress.ident4]] > i.notstress.ident4
+              notstress.bool <- i4.bool
+          }
+      }
+
+      if(!is.null(notstress.bool)) {
+          c$is.Stressed <- stress.bool & !notstress.bool
+      } else {
+          c$is.Stressed <- stress.bool
+      }
+      # c$is.Stressed[c$is.Stressed == FALSE] <- F
+      # c$is.Stressed[c$is.Stressed == TRUE] <- T
+      #c
+      obj <- c
+
       if(!is.null(stress.ident1)) {
           i.stress.ident1 <- input$t.stress.ident1
           obj@misc$gruffi$thresh.stress.ident1 <- i.stress.ident1
