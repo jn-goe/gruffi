@@ -757,7 +757,7 @@ Shiny.GO.thresh <- function(obj = combined.obj
                    echo=FALSE, keep.source=TRUE)$value
   app_server <- source(file.path(app_dir, "server.R"), local=new.env(parent=app_env),
                        echo=FALSE, keep.source=TRUE)$value
-  obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server), launch.browser = T)
+  obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
   return(obj)
 }
 
