@@ -1,5 +1,4 @@
 ui <- shiny::shinyUI(shiny::fluidPage(
-  shinyjs::useShinyjs(),
   shiny::titlePanel(
     paste0("Threshold proposal:",
            if(!is.null(stress.ident1)) paste0(" GO",substr(x = strsplit(stress.ident1, "GO")[[1]][2], 1,8),": ", round(thresh.stress.ident1,2)),
