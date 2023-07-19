@@ -23,10 +23,10 @@ calc.cluster.averages.gruffi(
   subtitle = NULL,
   width = 8,
   height = 6,
-  xlb = if (absolute.thr) paste("Threshold at", absolute.thr) else
-    paste("Black lines: ", kppd(Stringendo::percentage_formatter(quantile.thr)),
-    "quantiles |", "Cl. >", Stringendo::percentage_formatter(quantile.thr),
-    "are highlighted. |", split_by),
+  xlb = if (absolute.thr) paste("Threshold at", absolute.thr) else paste("Black lines: ",
+    Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
+    "Cl. >", Stringendo::percentage_formatter(quantile.thr), "are highlighted. |",
+    split_by),
   ...
 )
 }
@@ -68,7 +68,7 @@ calc.cluster.averages.gruffi(
 \item{height}{Plot height, Default: 6}
 
 \item{xlb}{X-axis label, Default: if (absolute.thr) paste("Threshold at", absolute.thr) else paste("Black lines: ",
-kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
+Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
 "Cl. >", Stringendo::percentage_formatter(quantile.thr),
 "are highlighted. |", split_by)}
 

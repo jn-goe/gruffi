@@ -10,8 +10,7 @@ Shiny.GO.thresh(
   quantile = c(0.99, 0.9)[1],
   stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
   stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
-  notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],
-    "_cl.av_GO:0042063"),
+  notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
   notstress.ident4 = NULL,
   plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]
 )

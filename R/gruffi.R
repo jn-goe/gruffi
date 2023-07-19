@@ -2,6 +2,7 @@
 # Gruffi - finding stressed cells.
 ##########################################################################################
 
+`%!in%` = Negate(`%in%`)
 
 # _________________________________________________________________________________________________
 #' @title AddCustomScore
@@ -18,7 +19,7 @@
 AddCustomScore <- function(obj = combined.obj, genes="", assay.use = 'RNA', FixName = TRUE) { # Call after GetGOTerms. Calculates Score for gene set. Fixes name.
   ls.genes <- list(genes)
   if (!is.list(ls.genes)) ls.genes <- list(ls.genes) # idk why this structure is not consistent...
-  (ScoreName <- ppp("Score", substitute(genes)) )
+  (ScoreName <- Stringendo::ppp("Score", substitute(genes)) )
   obj <- Seurat::AddModuleScore(object = obj, features = ls.genes, name = ScoreName, assay = assay.use)
 
   if (FixName) obj <- fix.metad.Colname.rm.trailing.1(obj = obj, colname = ScoreName)
@@ -83,7 +84,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 
 AddGOGeneList.manual <- function(obj = combined.obj, GO = 'GO:0034976', web.open = F  # Add GO terms via Biomart package.
                                  , genes =  c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")) {
-  print(head(genes, n = 15))
+  print(utils::head(genes, n = 15))
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
   if (is.null(obj@misc$GO)) obj@misc$GO <- list()
@@ -182,13 +183,13 @@ CalcTranscriptomePercentage <- function(obj = combined.obj, genes = genes.GO.006
 #' @importFrom cowplot save_plot
 
 FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes ="", name_desc=NULL, h=7, PNG =T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
-  ScoreName <- p0('Score.',substitute(genes))
+  ScoreName <- paste0('Score.',substitute(genes))
 
   ggplot.obj <-
     Seurat::FeaturePlot(obj, features = ScoreName, min.cutoff = "q05", max.cutoff = "q95", reduction = 'umap', ...) +
     ggplot2::labs(title = paste(ScoreName, name_desc), caption = paste("Score calc. from",length(genes), "expr. genes ."))
   pname <- paste0("FeaturePlot.",ScoreName)
-  fname <- Stringendo::ww.FnP_parser(kpp(pname,name_desc), if (PNG) "png" else "pdf")
+  fname <- Stringendo::ww.FnP_parser(Stringendo::kpp(pname,name_desc), if (PNG) "png" else "pdf")
   cowplot::save_plot(filename = fname,  plot = ggplot.obj, base_height = h)
   ggplot.obj
 }
@@ -228,7 +229,7 @@ FeaturePlotSaveGO <- function(obj = combined.obj
     Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95", reduction = 'umap', ...) +
     ggplot2::labs(title = title_, caption = paste("Score calc. from",length(genes.GO), "expr. genes from BioMart.", paste0("https://www.ebi.ac.uk/QuickGO/search/", proper.GO)))
   pname <- paste0("FeaturePlot.",(GO.score))
-  fname <- Stringendo::ww.FnP_parser(kpp(pname, name_desc), if (PNG) "png" else "pdf")
+  fname <- Stringendo::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
   if(save.plot) {
     cowplot::save_plot(filename = fname, plot = ggplot.obj, base_height = h)
   }
@@ -278,10 +279,10 @@ FilterStressedCells <- function(obj = combined.obj
   ScoreNames <- ww.convert.GO_term.2.score(GOterms)
   if( ! all(ScoreNames %in% MetaVars) ) { Stringendo::iprint('Some of the GO-term scores were not found in the object:', ScoreNames, 'Please call first: PlotGoTermScores(), or the actual GetGOTerms()')}
 
-  cells.2.granules <- combined.obj[[res]][ ,1]
+  cells.2.granules <- obj[[res]][ ,1]
 
   # Exclude granules ------------------------------------------------------------
-  mScoresFiltPass <- mScores <-  matrix.fromNames(fill = NaN, rowname_vec = sort(unique(Meta[,res])), colname_vec = make.names(GOterms))
+  mScoresFiltPass <- mScores <-  CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = sort(unique(Meta[,res])), colname_vec = make.names(GOterms))
   for (i in 1:length(GOterms) ) {
     scoreX <- as.character(ScoreNames[i]); print(scoreX)
     scoreNameX <- names(ScoreNames)[i]
@@ -296,10 +297,10 @@ FilterStressedCells <- function(obj = combined.obj
     }
 
     if (PlotExclusionByEachScore) {
-      # CellsExcludedByScoreX <- which(cells.2.granules %in% which_names(mScoresFiltPass[,i]))
-      clUMAP(ident = res, highlight.clusters = which_names(mScoresFiltPass[,i])
-             , label = F, title = p0("Stressed cells removed by ", scoreX)
-             , plotname =  p0("Stressed cells removed by ", scoreX)
+      # CellsExcludedByScoreX <- which(cells.2.granules %in% CodeAndRoll2::which_names(mScoresFiltPass[,i]))
+      Seurat.utils::clUMAP(ident = res, highlight.clusters = CodeAndRoll2::which_names(mScoresFiltPass[,i])
+             , label = F, title = paste0("Stressed cells removed by ", scoreX)
+             , plotname =  paste0("Stressed cells removed by ", scoreX)
              , sub = scoreNameX
              , sizes.highlight = .5, raster = F)
     }
@@ -307,19 +308,20 @@ FilterStressedCells <- function(obj = combined.obj
 
   # PlotSingleCellExclusion ------------------------------------------------------------
   if (PlotSingleCellExclusion) {
-    mSC_ScoresFiltPass <- matrix.fromNames(fill = NaN, rowname_vec = rownames(Meta), colname_vec = make.names(GOterms))
+    mSC_ScoresFiltPass <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = rownames(Meta), colname_vec = make.names(GOterms))
     for (i in 1:length(GOterms) ) {
       scoreX <- as.character(ScoreNames[i]); print(scoreX)
       scoreNameX <- names(ScoreNames)[i]
       ScoreValuesSC <- Meta[,scoreX]
-      mSC_ScoresFiltPass[,i] <- MarkdownHelpers::filter_HP(numeric_vector = ScoreValuesSC, threshold = quantile(x = ScoreValuesSC, quantile.thr), breaks = 100)
+      mSC_ScoresFiltPass[,i] <- MarkdownHelpers::filter_HP(numeric_vector = ScoreValuesSC,
+                                                           threshold = stats::quantile(x = ScoreValuesSC, quantile.thr), breaks = 100)
     }
     cells.remove.SC <- rowSums(mSC_ScoresFiltPass)>0
     table(cells.remove.SC)
-    sc.filtered <- which_names(cells.remove.SC)
-    sc.kept <- which_names(!cells.remove.SC)
+    sc.filtered <- CodeAndRoll2::which_names(cells.remove.SC)
+    sc.kept <- CodeAndRoll2::which_names(!cells.remove.SC)
 
-    clUMAP(cells.highlight = sc.filtered, label = F
+    Seurat.utils::clUMAP(cells.highlight = sc.filtered, label = F
            , title = "Single-cell filtering is not robust to remove stressed cells"
            , plotname = "Single-cell filtering is not robust to remove stressed cells"
            , suffix = "Stress.Filtering", sizes.highlight = .5, raster = F)
@@ -342,8 +344,8 @@ FilterStressedCells <- function(obj = combined.obj
 
   # Plot excluded cells ------------------------------------------------------------
   PASS <- (rowSums(mScoresFiltPass) == 0)
-  granules.excluded <- which_names(!PASS)
-  clUMAP(ident = res, highlight.clusters = granules.excluded, label = F, title = "Stressed cells removed", suffix = "Stress.Filtering", sizes.highlight = .5, raster = F)
+  granules.excluded <- CodeAndRoll2::which_names(!PASS)
+  Seurat.utils::clUMAP(ident = res, highlight.clusters = granules.excluded, label = F, title = "Stressed cells removed", suffix = "Stress.Filtering", sizes.highlight = .5, raster = F)
 
   if (GranuleExclusionScatterPlot) {
     Av.GO.Scores <- dplyr::tibble("Average ER-stress score" = mScores[,2]
@@ -354,9 +356,9 @@ FilterStressedCells <- function(obj = combined.obj
 
     if (F) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
-    qscatter(Av.GO.Scores, cols = 'Stressed', w = 6, h = 6
-             , vline = quantile(mScores[,2], quantile.thr)
-             , hline = quantile(mScores[,1], quantile.thr)
+    ggExpress::qscatter(Av.GO.Scores, cols = 'Stressed', w = 6, h = 6
+             , vline = stats::quantile(mScores[,2], quantile.thr)
+             , hline = stats::quantile(mScores[,1], quantile.thr)
              , title = "Groups of Stressed cells have high scores."
              , subtitle = "Thresholded at 90th percentile"
              , label = 'name'
@@ -370,8 +372,8 @@ FilterStressedCells <- function(obj = combined.obj
 
   cells.discard <- which(cells.2.granules %in% granules.excluded)
   cells.keep <- which(cells.2.granules %!in% granules.excluded)
-  MarkdownHelpers::llprint(Stringendo::percentage_formatter(l(cells.keep) / l(cells.2.granules)), "cells kept.")
-  # clUMAP(highlight.clusters = filtered.out, ident = rgx, title = "Stressed cells removed", suffix = "Stress.Filtering.cl", sizes.highlight = .5, raster = F
+  MarkdownHelpers::llprint(Stringendo::percentage_formatter(length(cells.keep) / length(cells.2.granules)), "cells kept.")
+  # Seurat.utils::clUMAP(highlight.clusters = filtered.out, ident = rgx, title = "Stressed cells removed", suffix = "Stress.Filtering.cl", sizes.highlight = .5, raster = F
   #        , MaxCategThrHP = 500, label = F, legend = F)
 
   obj.noStress <- subset(x = obj, cells = cells.keep) # remove stressed
@@ -457,7 +459,7 @@ GetAllGOTerms <- function(obj=combined.obj, return.obj = TRUE) {
   if (return.obj) {
     obj@misc$"GO.Lookup" <- GO.names
     print("GO IDs present in @meta.data are now saved in misc$GO.Lookup")
-    cat(head(GO.names), "...")
+    cat(utils::head(GO.names), "...")
     return(obj)
   } else {
     return(GO.names)
@@ -507,24 +509,24 @@ GetGOTerms <- function(obj = combined.obj,
     genes <- biomaRt::getBM(attributes = c('hgnc_symbol'), # 'ensembl_transcript_id', 'go_id'
                             filters = "go_parent_term", uniqueRows = TRUE,
                             values = GO, mart = ensembl)[,1]
-    iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", head(genes, n = genes.shown))
+    iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", utils::head(genes, n = genes.shown))
 
   }
   if (!use.ensemble & !is.null(obj@misc$enrichGO[['RNA']])) {
-    genes <- unlist(geneInCategory(obj@misc$enrichGO[['RNA']])[GO])
-    iprint(length(genes), "Gene symbols from enrichGO[['RNA']]:", head(genes, n = genes.shown))
+    genes <- unlist(DOSE::geneInCategory(obj@misc$enrichGO[['RNA']])[GO])
+    iprint(length(genes), "Gene symbols from enrichGO[['RNA']]:", utils::head(genes, n = genes.shown))
   }
   if(!use.ensemble & is.null(obj@misc$enrichGO[['RNA']])) {
     print('AnnotationDbi::select()')
     genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
-    iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", head(genes, n = genes.shown))
+    iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", utils::head(genes, n = genes.shown))
   }
   # if(F) {
     # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
   # }
 
   (GO.wDot <- make.names(GO))
-  Stringendo::iprint(length(genes), "Gene symbols downloaded:", head(genes, n = genes.shown))
+  Stringendo::iprint(length(genes), "Gene symbols downloaded:", utils::head(genes, n = genes.shown))
 
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
@@ -579,9 +581,9 @@ GetNamedClusteringRuns <- function(obj = combined.obj  # Get Clustering Runs: me
 
 IntersectWithExpressed <- function(genes, obj=combined.obj, genes.shown = 10) { # Intersect a set of genes with genes in the Seurat object.
   print('IntersectWithExpressed()')
-  # print(head(genes, n=15))
+  # print(utils::head(genes, n=15))
   diff = setdiff(genes, rownames(obj))
-  Stringendo::iprint(length(diff),"genes (of",length(genes), ") are MISSING from the Seurat object:",head(diff, genes.shown))
+  Stringendo::iprint(length(diff),"genes (of",length(genes), ") are MISSING from the Seurat object:",utils::head(diff, genes.shown))
   return(intersect(rownames(obj), genes))
 }
 
@@ -639,7 +641,8 @@ PlotGoTermScores <- function(obj = combined.obj
   if (grepl(x = GO, pattern = "^GO:", perl = T)) {
     MarkdownHelpers::stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
     GO.wDot <- make.names(GO)
-    ScoreName <- paste0("Score.", GO.wDot); print(ScoreName)
+    ScoreName <- paste0("Score.", GO.wDot)
+    print(ScoreName)
   } else {
     iprint("Assuming you provided direclty a score name in the 'GO' parameter ", ScoreName)
     ScoreName <- GO
@@ -662,12 +665,12 @@ PlotGoTermScores <- function(obj = combined.obj
 
     obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, use.ensemble = use.ensemble);
     GO.genes <- obj@misc$GO[[ GO.wDot ]]
-    if (verbose) print(head(GO.genes))
+    if (verbose) print(utils::head(GO.genes))
     obj <- AddGOScore(obj = obj, GO = GO)
   }
 
   plot <- FeaturePlotSaveGO(obj = obj, GO.score = ScoreName, save.plot = save.UMAP, name_desc = desc, ...)
-  if (plot.each.gene) multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = ppp(GO.wDot, 'UMAPs'))
+  if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, 'UMAPs'))
   Seurat::DefaultAssay(obj) <- backup.assay
   if (only.draw.plot) return(plot) else return(obj)
 }
@@ -902,14 +905,14 @@ aut.res.clustering <- function(obj = combined.obj,
   r.upper <- upper.res
 
   obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = F)
-  m.up <- median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.upper)]]))
+  m.up <- stats::median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.upper)]]))
   if(m.up >= upper.median){
     Stringendo::iprint("ERROR: Define a higher 'upper.res'-parameter. Current maximum gives granules of", m.up, "cells, above the 'upper.median' target of", upper.median)
     stop()
   }
 
   obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F)
-  m <- median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.current)]]))
+  m <- stats::median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.current)]]))
 
   loop.count <- 1
   while(m > upper.median | m < lower.median) {
@@ -928,7 +931,7 @@ aut.res.clustering <- function(obj = combined.obj,
     print(paste0("Search between ", r.lower, " and ", r.upper, "."))
     obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F)
     res.name <- paste0(assay,"_snn_res.",r.current)
-    m <- median(table(obj@meta.data[[res.name]]))
+    m <- stats::median(table(obj@meta.data[[res.name]]))
 
     loop.count <- loop.count + 1
     if(loop.count > max.loop) {
@@ -973,7 +976,7 @@ aut.res.clustering <- function(obj = combined.obj,
 #' @param width Plot width, Default: 8
 #' @param height Plot height, Default: 6
 #' @param xlb X-axis label, Default: if (absolute.thr) paste("Threshold at", absolute.thr) else paste("Black lines: ",
-#'    kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
+#'    Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
 #'    "Cl. >", Stringendo::percentage_formatter(quantile.thr),
 #'    "are highlighted. |", split_by)
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
@@ -1006,7 +1009,7 @@ calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
                                       , subtitle = NULL
                                       , width = 8, height =6
                                       , xlb = if (absolute.thr) paste("Threshold at", absolute.thr) else paste(
-                                        "Black lines: " , kppd(Stringendo::percentage_formatter(quantile.thr)) ,"quantiles |"
+                                        "Black lines: " , Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)) ,"quantiles |"
                                         , "Cl. >",Stringendo::percentage_formatter(quantile.thr),"are highlighted. |", split_by
                                       )
                                       , ...
@@ -1021,13 +1024,13 @@ calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
                      , 'mean' = mean(!!rlang::sym(col_name), na.rm = TRUE)
                      , 'SEM' = CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE)
                      , 'normalized.mean' = mean(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'median' = median(!!rlang::sym(col_name), na.rm = TRUE)
+                     , 'median' = stats::median(!!rlang::sym(col_name), na.rm = TRUE)
                      , 'SE.median' = 1.2533 * CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'normalized.median' = median(!!rlang::sym(col_name), na.rm = TRUE)
+                     , 'normalized.median' = stats::median(!!rlang::sym(col_name), na.rm = TRUE)
     )
 
-  df.summary$normalized.mean <- sqrt(df.summary$nr.cells)*(df.summary$normalized.mean-median(df.summary$normalized.mean))
-  df.summary$normalized.median <- sqrt(df.summary$nr.cells)*(df.summary$normalized.median-median(df.summary$normalized.median))
+  df.summary$normalized.mean <- sqrt(df.summary$nr.cells)*(df.summary$normalized.mean-stats::median(df.summary$normalized.mean))
+  df.summary$normalized.median <- sqrt(df.summary$nr.cells)*(df.summary$normalized.median-stats::median(df.summary$normalized.median))
 
   if (simplify) {
     av.score <- df.summary[[stat]]
@@ -1036,7 +1039,7 @@ calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
 
     if (scale.zscore) av.score <- (scale(av.score)[,1])
 
-    cutoff <- if(absolute.thr) absolute.thr else quantile(av.score, quantile.thr)
+    cutoff <- if(absolute.thr) absolute.thr else stats::quantile(av.score, quantile.thr)
 
     if (plotit) {
       if(length(av.score) > max.bin.plot) {
@@ -1055,8 +1058,8 @@ calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
         )
         print(p)
         if(save.plot) {
-          title_ <- ppp(title, suffix, flag.nameiftrue(scale.zscore))
-          qqSave(ggobj = p, title = title_, fname = ppp(title_, split_by, "png"),  w = width, h = height)
+          title_ <- Stringendo::ppp(title, suffix, Stringendo::flag.nameiftrue(scale.zscore))
+          ggExpress::qqSave(ggobj = p, title = title_, fname = Stringendo::ppp(title_, split_by, "png"),  w = width, h = height)
         }
         if(return.plot) {
           return(p)
@@ -1106,8 +1109,8 @@ clUMAP.thresholding <- function(q.meta.col = 'Score.GO.0034976', c.meta.col =  "
 
   ttl <- paste('Cells above', 'quantile', quantile, 'in', q.meta.col)
   if (plotUMAP) {
-    clUMAP(obj = obj, cells.highlight = cells.highlight
-           , plotname = ppp("UMAP.thresholding_q", q.meta.col, quantile, c.meta.col)
+    Seurat.utils::clUMAP(obj = obj, cells.highlight = cells.highlight
+           , plotname = Stringendo::ppp("UMAP.thresholding_q", q.meta.col, quantile, c.meta.col)
            , title = ttl, sub = c.meta.col, raster = F, label.cex = 5, ...) # , shape.by = c.meta.col
   } else {
     # "Not sure about this"
@@ -1142,8 +1145,8 @@ CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a
   uniqueGO <- c(clean, fixed.keep)
   obj@meta.data <- obj@meta.data[ , c(nonGO, uniqueGO)]
 
-  Stringendo::iprint(l(clean), "GO's are clean, ", l(appended), "GO's are suffixed by .1 etc, of which"
-                     , l(fixed.keep), "GO's had no clean counterpart. All",l(uniqueGO), "scores, are cleaned, fixed and unique now.")
+  Stringendo::iprint(length(clean), "GO's are clean, ", length(appended), "GO's are suffixed by .1 etc, of which"
+                     , length(fixed.keep), "GO's had no clean counterpart. All",length(uniqueGO), "scores, are cleaned, fixed and unique now.")
   print("Metadata column order re-organized alphabetically, and GO-scores at the end.")
   return(obj)
 }
@@ -1183,7 +1186,7 @@ fix.metad.Colname.rm.trailing.1 <- function(obj = obj, colname=ScoreName) { # He
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
 #' @seealso
 #'  \code{\link[ggExpress]{qbarplot}}, \code{\link[ggExpress]{qhistogram}}
-#' @export
+#' @export plot.clust.size.distr
 #' @importFrom ggExpress qbarplot qhistogram
 
 plot.clust.size.distr <- function(obj = combined.obj,
@@ -1195,12 +1198,12 @@ plot.clust.size.distr <- function(obj = combined.obj,
   resX <- gsub(pattern = ".*res\\.", replacement = '',x = category)
 
   if (length(clust.size.distr) < thr.hist) {
-    ggExpress::qbarplot(clust.size.distr, plotname = ppp('clust.size.distr', (category))
-                        , subtitle = paste("Nr.clusters at res.",resX,":", length(clust.size.distr)," | CV:", percentage_formatter(cv(clust.size.distr)))
+    ggExpress::qbarplot(clust.size.distr, plotname = Stringendo::ppp('clust.size.distr', (category))
+                        , subtitle = paste("Nr.clusters at res.",resX,":", length(clust.size.distr)," | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr)))
                         , ...)
   } else {
-    ggExpress::qhistogram(vec = clust.size.distr, plotname = ppp('clust.size.distr', (category))
-                          , subtitle = paste("Nr.clusters at res.",resX,":", length(clust.size.distr)," | CV:", percentage_formatter(cv(clust.size.distr)))
+    ggExpress::qhistogram(vec = clust.size.distr, plotname = Stringendo::ppp('clust.size.distr', (category))
+                          , subtitle = paste("Nr.clusters at res.",resX,":", length(clust.size.distr)," | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr)))
                           , ...)
   }
 }
@@ -1220,22 +1223,22 @@ PlotNormAndSkew <- function(x, q,
                                plot.hist = TRUE, ...
 ) {
 
-  m <- median(x)
+  m <- stats::median(x)
   stde_skewed <- stand_dev_skewed(x, mean_x = m)
 
   thresh <-
     if (tresholding == "fitted") {
-      qnorm(q, mean = m, sd = stde_skewed)
+      stats::qnorm(q, mean = m, sd = stde_skewed)
     } else if (tresholding == "empirical") {
-      quantile(x, q)
+      stats::quantile(x, q)
     } else { print("Unknown tresholding method") }
 
   if (plot.hist) {
     Score.threshold.estimate <- x
-    sb <- print(paste("The computed", tresholding, p0("q", q), "threshold is:", signif(thresh, digits = 3), "\nValues above thr:", pc_TRUE(x > thresh)))
+    sb <- print(paste("The computed", tresholding, paste0("q", q), "threshold is:", signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)))
     qhistogram(Score.threshold.estimate
                , vline = thresh, subtitle = sb, xlab = "Score"
-               , plotname = ppp('Score.threshold.est',substitute(x), tresholding), suffix = ppp('q', q))
+               , plotname = Stringendo::ppp('Score.threshold.est',substitute(x), tresholding), suffix = Stringendo::ppp('q', q))
   }
   return(thresh)
 }
@@ -1301,7 +1304,7 @@ reassign.small.clusters <- function(obj = combined.obj,
 
     names(new_names) <- new_names <- levels(clustering)
 
-    dist.mat <- as.matrix(dist(cluster.means))
+    dist.mat <- as.matrix(stats::dist(cluster.means))
     diag(dist.mat) <- Inf
 
     for(r in cl.reassign) {
@@ -1394,9 +1397,9 @@ stand_dev_skewed <- function(x, mean_x = mean(x), plothist = F, breaks = 50) {
   x_mirror <- c(x_lower_eq, abs(mean_x - x_lower) + mean_x)
 
   if (plothist) {
-    hist(x_lower, xlim = range(x), breaks = breaks)
-    hist(x, xlim = range(x), breaks = breaks)
-    hist(x_mirror, xlim = range(x), breaks = breaks)
+    graphics::hist(x_lower, xlim = range(x), breaks = breaks)
+    graphics::hist(x, xlim = range(x), breaks = breaks)
+    graphics::hist(x_mirror, xlim = range(x), breaks = breaks)
   }
   res <- sum((x_mirror - mean_x) ^ 2) / (length(x_mirror) - 1)
   return(sqrt(res))

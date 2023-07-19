@@ -30,27 +30,26 @@ dir.create(BackupDir)
 
 
 # devtools::use_package("vioplot")
-DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets."
-    , "Author" = c(
-      person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),
-      person(given = "Abel", family = "Vertesy", email = "abel.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )
-      )
-    # , "Authors@R" = 'person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ), person(given = "Abel", family = "Vertesy", email = "a.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )'
-    , "Description" = "The Gruffi R package helps you (1) to identify stressed cells in single-cell
+DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets"
+                    , "Author" = c(
+                      person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),
+                      person(given = "Abel", family = "Vertesy", email = "abel.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )
+                    )
+                    # , "Authors@R" = 'person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ), person(given = "Abel", family = "Vertesy", email = "a.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )'
+                    , "Description" = "The Gruffi R package helps you (1) to identify stressed cells in single-cell
     RNA-seq datasets using  *granular funcitonal filtering*, and (2) you can use it to calculate any
     GO-term defined gene set's pathway activity. Gruffi integrates into single-cell analysis with
     Seurat and comes with a graphical user interface."
-    , "License" = "GPL-3 + file LICENSE"
-    , "Version" = package.version
-    , "Packaged" =  Sys.time()
-    , "Depends" =  "Stringendo, magrittr, Seurat"
-    , "Imports" = "tidyverse, cowplot, ggpubr, graphics, grDevices, raster, Seurat.utils
-      , MarkdownHelpers, MarkdownReports, CodeAndRoll2, Seurat.utils, ggExpress
-      , methods, RColorBrewer, sessioninfo, stringr, sm, stats, AnnotationDbi, IRanges
+                    , "License" = "GPL-3 + file LICENSE"
+                    , "Version" = package.version
+                    , "Packaged" =  Sys.time()
+                    , "Depends" =  "Stringendo, Seurat, magrittr, MarkdownReports"
+                    , "Imports" = "cowplot, dplyr, ggplot2, raster, stats, utils, graphics
+      , MarkdownHelpers, CodeAndRoll2, Seurat.utils, ggExpress, DOSE
+      , stringr, sm, AnnotationDbi, IRanges
       , Matrix, biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
-    # , 'dplyr'
-    # , "Suggests" = ""
-    , "BugReports"= "https://github.com/jn-goe/gruffi/issues/"
+                    # , "Suggests" = ""
+                    , "BugReports"= "https://github.com/jn-goe/gruffi/issues/"
 )
 
 

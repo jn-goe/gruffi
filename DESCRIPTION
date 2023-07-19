@@ -1,6 +1,6 @@
 Package: gruffi
 Title: Gruffi identifies and removes stressed cells from brain organoid
-    single-cell datasets.
+    single-cell datasets
 Version: 0.7.4
 Authors@R: 
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
@@ -16,6 +16,7 @@ License: GPL-3 + file LICENSE
 BugReports: https://github.com/jn-goe/gruffi/issues/
 Depends: 
     magrittr,
+    MarkdownReports,
     Seurat,
     Stringendo
 Imports: 
@@ -24,32 +25,28 @@ Imports:
     clipr,
     CodeAndRoll2,
     cowplot,
+    DOSE,
+    dplyr,
     ggExpress,
-    ggpubr,
+    ggplot2,
     graphics,
-    grDevices,
     htmlwidgets,
     IRanges,
     MarkdownHelpers,
-    MarkdownReports,
     Matrix,
-    methods,
     org.Hs.eg.db,
     raster,
-    RColorBrewer,
     rgl,
     rlang,
-    sessioninfo,
-    Seurat.utils,
     Seurat.utils,
     shiny,
     sm,
     stats,
     stringr,
     tictoc,
-    tidyverse,
+    utils,
     viridis
 Encoding: UTF-8
-Packaged: 2023-02-15 10:33:12
+Packaged: 2023-07-19 16:55:09.230509
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
