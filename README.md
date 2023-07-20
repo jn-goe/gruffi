@@ -2,22 +2,18 @@
 
 #### _Published in [Gruffi: an algorithm for computational removal of stressed cells from brain organoid transcriptomic datasets](https://www.embopress.org/doi/full/10.15252/embj.2022111118)_ 
 
-The Gruffi R package helps you (1) to identify stressed cells in single-cell RNA-seq datasets using  *granular funcitonal filtering*, or (2) you can use it to analyze any gene set's pathway activity (GO-term or custom defined) , and define a cell population based on their combined activity.
+The Gruffi R package helps you (1) to identify stressed cells in single-cell RNA-seq datasets using  *granular funcitonal filtering*, or (2) you can use it to analyze any gene set's pathway activity (GO-term or custom defined), and define a cell population based on their combined activity.
 
 `Gruffi` integrates into any `Seurat` analysis pipelione & it comes with a graphical user interface.
 
 
 ## Installation
 
-Once the paper is published, we will provide a standalone version, for now, you can install dependencies from **CRAN, Bioconductor and GitHub** via **devtools**:
+You can install dependencies from **CRAN, Bioconductor and GitHub** via **devtools**:
 
 ```R
 
 # Install CRAN & Bioconductor dependencies
-install.packages('pdist')
-install.packages('raster')
-install.packages('rgl')
-
 install.packages('BiocManager')
 BiocManager::install("DOSE")
 BiocManager::install("org.Hs.eg.db")
@@ -41,17 +37,7 @@ devtools::install_github(repo = "jn-goe/gruffi", upgrade = F)
 
 ```
 
-**NOTE: If you type 'all' when R asks to update dependencies, you may get into installation errors / infinite loops. If updating fails, type 'no' when prompted. **
-
-### Currently you have to load the package, not simply `require()`
-
-```r
-devtools::load_all("~/example/path/to/gruffi")
-```
-*The path is where you cloned the package from github (where you saved Gruffi's code).
-
-Otherwise the Shiny scripts will not be found. *You also can skip installing **Gruffi**,  but then function help won't work.*
-
+*NOTE: If you type 'all' when R asks to update dependencies, you may get into installation errors / infinite loops. If updating fails, type 'no' when prompted.*
 
 
 ## Usage
@@ -63,6 +49,8 @@ Otherwise the Shiny scripts will not be found. *You also can skip installing **G
 Load your Seurat single-cell object of interest (in the following `combined.obj`), perform basic analysis steps (Integration, PCA, Clustering) and calculate 2D and 3D umaps.
 
 ```R
+library(gruffi)
+
 combined.obj <- Seurat.utils::SetupReductionsNtoKdimensions(obj = combined.obj, nPCs = 50, dimensions=3:2, reduction="umap")
 # Note that this will recalculate 2D and 3D umaps, and back them up in combined.obj@misc$reductions.backup. 
 # See FAQ.md, if you don't want to overwrite the 2D UMAP.
