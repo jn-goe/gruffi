@@ -52,7 +52,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
                                     stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3]
 ) {
 
-  Seurat::Idents(obj) <- obj@meta.data[clustering]
+  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
   print("Calculating cl. average score")
@@ -64,7 +64,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
   obj <- Seurat::RenameIdents(obj, cl.av)
   mScoreColName <- paste0(clustering,"_cl.av_", custom.score.name)
   obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
-  Seurat::Idents(obj) <- obj@meta.data[clustering]
+  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   print(mScoreColName)
   return(obj)
 }
@@ -416,7 +416,7 @@ GO_score_evaluation <- function(obj = combined.obj,
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                 clustering = if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
 
-  Seurat::Idents(obj) <- obj@meta.data[clustering]
+  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
   if (new_GO_term_computation) {
@@ -433,7 +433,7 @@ GO_score_evaluation <- function(obj = combined.obj,
   obj <- Seurat::RenameIdents(obj, cl.av)
   mScoreColName <- paste0(clustering,"_cl.av_", GO_term)
   obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
-  Seurat::Idents(obj) <- obj@meta.data[clustering]
+  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   print(mScoreColName)
   return(obj)
 }
