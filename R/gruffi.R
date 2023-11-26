@@ -297,7 +297,6 @@ FilterStressedCells <- function(obj = combined.obj
     }
 
     if (PlotExclusionByEachScore) {
-      # CellsExcludedByScoreX <- which(cells.2.granules %in% CodeAndRoll2::which_names(mScoresFiltPass[,i]))
       Seurat.utils::clUMAP(ident = res, highlight.clusters = CodeAndRoll2::which_names(mScoresFiltPass[,i])
              , label = F, title = paste0("Stressed cells removed by ", scoreX)
              , plotname =  paste0("Stressed cells removed by ", scoreX)
@@ -373,8 +372,6 @@ FilterStressedCells <- function(obj = combined.obj
   cells.discard <- which(cells.2.granules %in% granules.excluded)
   cells.keep <- which(cells.2.granules %!in% granules.excluded)
   MarkdownHelpers::llprint(Stringendo::percentage_formatter(length(cells.keep) / length(cells.2.granules)), "cells kept.")
-  # Seurat.utils::clUMAP(highlight.clusters = filtered.out, ident = rgx, title = "Stressed cells removed", suffix = "Stress.Filtering.cl", sizes.highlight = .5, raster = F
-  #        , MaxCategThrHP = 500, label = F, legend = F)
 
   obj.noStress <- subset(x = obj, cells = cells.keep) # remove stressed
   if (saveRDS) Seurat.utils::isave.RDS(obj.noStress, inOutDir = T, suffix = "Cleaned")
