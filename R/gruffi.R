@@ -179,7 +179,7 @@ CalcTranscriptomePercentage <- function(obj = combined.obj, genes = genes.GO.006
 #' @export
 #' @importFrom Seurat FeaturePlot
 #' @importFrom ggplot2 labs
-#' @importFrom Stringendo ww.FnP_parser
+#' @importFrom MarkdownHelpers ww.FnP_parser
 #' @importFrom cowplot save_plot
 
 FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes ="", name_desc=NULL, h=7, PNG =T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
@@ -189,7 +189,7 @@ FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes ="", name_desc=
     Seurat::FeaturePlot(obj, features = ScoreName, min.cutoff = "q05", max.cutoff = "q95", reduction = 'umap', ...) +
     ggplot2::labs(title = paste(ScoreName, name_desc), caption = paste("Score calc. from",length(genes), "expr. genes ."))
   pname <- paste0("FeaturePlot.",ScoreName)
-  fname <- Stringendo::ww.FnP_parser(Stringendo::kpp(pname,name_desc), if (PNG) "png" else "pdf")
+  fname <- MarkdownHelpers::ww.FnP_parser(Stringendo::kpp(pname,name_desc), if (PNG) "png" else "pdf")
   cowplot::save_plot(filename = fname,  plot = ggplot.obj, base_height = h)
   ggplot.obj
 }
@@ -213,7 +213,7 @@ FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes ="", name_desc=
 #' @export
 #' @importFrom Seurat FeaturePlot
 #' @importFrom ggplot2 labs
-#' @importFrom Stringendo ww.FnP_parser
+#' @importFrom MarkdownHelpers ww.FnP_parser
 #' @importFrom cowplot save_plot
 
 FeaturePlotSaveGO <- function(obj = combined.obj
@@ -229,7 +229,7 @@ FeaturePlotSaveGO <- function(obj = combined.obj
     Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95", reduction = 'umap', ...) +
     ggplot2::labs(title = title_, caption = paste("Score calc. from",length(genes.GO), "expr. genes from BioMart.", paste0("https://www.ebi.ac.uk/QuickGO/search/", proper.GO)))
   pname <- paste0("FeaturePlot.",(GO.score))
-  fname <- Stringendo::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
+  fname <- MarkdownHelpers::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
   if(save.plot) {
     cowplot::save_plot(filename = fname, plot = ggplot.obj, base_height = h)
   }
