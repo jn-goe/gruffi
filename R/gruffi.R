@@ -471,7 +471,7 @@ GO_score_evaluation <- function(obj = combined.obj,
 GetAllGOTerms <- function(obj = combined.obj, return.obj = TRUE) {
   x <- obj@meta.data
   GOz <- CodeAndRoll2::grepv(pattern = "^Score.GO", x = colnames(x), perl = TRUE)
-  GOx <- sort.natural(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE, invert = TRUE)))
+  GOx <- gtools::mixedsort(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE, invert = TRUE)))
   GO.names <- AnnotationDbi::Term(object = ww.convert.score.2.GO_term(GOx))
 
   if (return.obj) {

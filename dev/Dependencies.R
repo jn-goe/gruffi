@@ -37,7 +37,7 @@ $`character(0)`
 [35] "select_at"
 [36] "shade3d"
 [37] "shinyApp"
-[38] "sort.natural"
+[38] "gtools::mixedsort"
 [39] "stand_dev_skewed"
 [40] "summarize"
 [41] "sym"
