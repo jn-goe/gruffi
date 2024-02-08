@@ -6,26 +6,19 @@
 try(dev.off(), silent = TRUE)
 
 # Functions ------------------------
-# install_version("devtools", version = "2.0.2", repos = "http://cran.at.r-project.org") # install.packages("devtools")
 require("devtools")
-require("roxygen2")
-require("stringr")
-
-# devtools::install_github(repo = "vertesy/CodeAndRoll2")
-require('CodeAndRoll2')
-require('Stringendo')
 
 
 # Setup ------------------------
-PackageName = "gruffi"
-package.version = "0.7.5"
+PackageName <- "gruffi"
+package.version <- "1.0.2"
 setwd("~/GitHub/Packages/")
 
-RepositoryDir = kollapse("~/GitHub/Packages/", PackageName, "/")
-fname = 	kollapse(PackageName, ".R")
-Package_FnP = 	kollapse(RepositoryDir, "R/", fname)
+RepositoryDir <- kollapse("~/GitHub/Packages/", PackageName, "/")
+fname <- 	kollapse(PackageName, ".R")
+Package_FnP <- 	kollapse(RepositoryDir, "R/", fname)
 
-BackupDir = paste0("~/GitHub/Packages/",PackageName,"/dev/")
+BackupDir <- paste0("~/GitHub/Packages/",PackageName,"/dev/")
 dir.create(BackupDir)
 
 
@@ -35,7 +28,6 @@ DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from
                       person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),
                       person(given = "Abel", family = "Vertesy", email = "abel.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )
                     )
-                    # , "Authors@R" = 'person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ), person(given = "Abel", family = "Vertesy", email = "a.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )'
                     , "Description" = "The Gruffi R package helps you (1) to identify stressed cells in single-cell
     RNA-seq datasets using  *granular funcitonal filtering*, and (2) you can use it to calculate any
     GO-term defined gene set's pathway activity. Gruffi integrates into single-cell analysis with
@@ -43,44 +35,30 @@ DESCRIPTION <- list("Title" = "Gruffi identifies and removes stressed cells from
                     , "License" = "GPL-3 + file LICENSE"
                     , "Version" = package.version
                     , "Packaged" =  Sys.time()
-                    , "Depends" =  "Stringendo, Seurat, magrittr, MarkdownReports"
-                    , "Imports" = "cowplot, dplyr, ggplot2, raster, stats, utils, graphics
-      , MarkdownHelpers, CodeAndRoll2, Seurat.utils, ggExpress, DOSE
-      , stringr, sm, AnnotationDbi, IRanges
-      , Matrix, biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
+                    , "Depends" =  "Seurat, magrittr, Stringendo, MarkdownReports"
+                    , "Imports" = "cowplot, dplyr, ggplot2, raster, DOSE
+                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr, sm, AnnotationDbi
+                    , IRanges, Matrix, biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
                     # , "Suggests" = ""
                     , "BugReports"= "https://github.com/jn-goe/gruffi/issues/"
 )
 
 
+
 setwd(RepositoryDir)
-if ( !dir.exists(RepositoryDir) ) { create(path = RepositoryDir, description = DESCRIPTION, rstudio = TRUE)
+if ( !dir.exists(RepositoryDir) ) { devtools::create(path = RepositoryDir, description = DESCRIPTION, rstudio = rstudioapi::isAvailable())
 } else {
     getwd()
     try(file.remove(c("DESCRIPTION","NAMESPACE", "gruffi.Rproj")))
-    create_package(path = RepositoryDir, fields = DESCRIPTION, open = F, check_name = F)
+    usethis::create_package(path = RepositoryDir, fields = DESCRIPTION, open = F, check_name = F)
 }
 
-
-
-# file.copy(from = AnnotatedFile, to = Package_FnP, overwrite = TRUE)
 
 
 # Compile a package ------------------------------------------------
 setwd(RepositoryDir)
 getwd()
-document()
-
-# Install your package ------------------------------------------------
-# # setwd(RepositoryDir)
-install(RepositoryDir, upgrade = F)
-
-# require("gruffi")
-# # remove.packages("gruffi")
-# # Test your package ------------------------------------------------
-# help("wplot")
-# cat("\014")
-# devtools::run_examples()
+devtools::document()
 
 # {
 #   "update cff version"
@@ -89,10 +67,16 @@ install(RepositoryDir, upgrade = F)
 #                   , "^version: v.+", paste0("version: v", package.version))
 # }
 
-# Test if you can install from github ------------------------------------------------
-# devtools::install_github(repo = "vertesy/gruffi")
-
+# Install your package ------------------------------------------------
+devtools::install(RepositoryDir, upgrade = F)
 # require("gruffi")
+# remove.packages("gruffi")
+
+
+# Test if you can install from github ------------------------------------------------
+# devtools::install_github(repo = "jn-goe/gruffi")
+# require("gruffi")
+
 
 # Clean up if not needed anymore ------------------------------------------------
 # View(installed.packages())
@@ -111,7 +95,7 @@ check(RepositoryDir, cran = TRUE)
 # system("cd ~/GitHub/gruffi/; ls -a; open .Rbuildignore")
 #
 # Check package dependencies ------------------------------------------------
-depFile = paste0(RepositoryDir, 'dev/Dependencies.R')
+depFile <- paste0(RepositoryDir, 'dev/Dependencies.R')
 
 (f.deps <- NCmisc::list.functions.in.file(filename = Package_FnP))
 # clipr::write_clip(f.deps)

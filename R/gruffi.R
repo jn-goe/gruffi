@@ -2,7 +2,7 @@
 # Gruffi - finding stressed cells.
 ##########################################################################################
 
-`%!in%` = Negate(`%in%`)
+`%!in%` <- Negate(`%in%`)
 
 # _________________________________________________________________________________________________
 #' @title AddCustomScore
@@ -16,10 +16,10 @@
 #' @export
 #' @importFrom Seurat AddModuleScore
 
-AddCustomScore <- function(obj = combined.obj, genes="", assay.use = 'RNA', FixName = TRUE) { # Call after GetGOTerms. Calculates Score for gene set. Fixes name.
+AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", FixName = TRUE) { # Call after GetGOTerms. Calculates Score for gene set. Fixes name.
   ls.genes <- list(genes)
   if (!is.list(ls.genes)) ls.genes <- list(ls.genes) # idk why this structure is not consistent...
-  (ScoreName <- Stringendo::ppp("Score", substitute(genes)) )
+  (ScoreName <- Stringendo::ppp("Score", substitute(genes)))
   obj <- Seurat::AddModuleScore(object = obj, features = ls.genes, name = ScoreName, assay = assay.use)
 
   if (FixName) obj <- fix.metad.Colname.rm.trailing.1(obj = obj, colname = ScoreName)
@@ -45,24 +45,24 @@ AddCustomScore <- function(obj = combined.obj, genes="", assay.use = 'RNA', FixN
 #' @importFrom IRanges gsub
 
 CustomScoreEvaluation <- function(obj = combined.obj,
-                                    custom.score.name = 'Score.heGENES',
-                                    # plot.each.gene = FALSE,
-                                    clustering = "integrated_snn_res.48.reassigned" ,
-                                    assay = "RNA",
-                                    stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3]
-) {
-
+                                  custom.score.name = "Score.heGENES",
+                                  # plot.each.gene = FALSE,
+                                  clustering = "integrated_snn_res.48.reassigned",
+                                  assay = "RNA",
+                                  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3]) {
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
   print("Calculating cl. average score")
-  cl.av <- calc.cluster.averages.gruffi(obj = obj,
-                                        stat = stat.av,
-                                        col_name = custom.score.name,
-                                        split_by = clustering)
-  names(cl.av) <- IRanges::gsub("cl.","",names(cl.av))
+  cl.av <- calc.cluster.averages.gruffi(
+    obj = obj,
+    stat = stat.av,
+    col_name = custom.score.name,
+    split_by = clustering
+  )
+  names(cl.av) <- IRanges::gsub("cl.", "", names(cl.av))
   obj <- Seurat::RenameIdents(obj, cl.av)
-  mScoreColName <- paste0(clustering,"_cl.av_", custom.score.name)
+  mScoreColName <- paste0(clustering, "_cl.av_", custom.score.name)
   obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   print(mScoreColName)
@@ -82,8 +82,8 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 #' @export
 #' @importFrom Stringendo iprint
 
-AddGOGeneList.manual <- function(obj = combined.obj, GO = 'GO:0034976', web.open = F  # Add GO terms via Biomart package.
-                                 , genes =  c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")) {
+AddGOGeneList.manual <- function(obj = combined.obj, GO = "GO:0034976", web.open = F # Add GO terms via Biomart package.
+                                 , genes = c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")) {
   print(utils::head(genes, n = 15))
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
@@ -108,13 +108,13 @@ AddGOGeneList.manual <- function(obj = combined.obj, GO = 'GO:0034976', web.open
 #' @export
 #' @importFrom Seurat AddModuleScore
 
-AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE ) {
+AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE) {
   print("AddGOScore()")
   GO.wDot <- make.names(GO)
-  (genes.GO = list(obj@misc$GO[[GO.wDot]]))
+  (genes.GO <- list(obj@misc$GO[[GO.wDot]]))
   # print(genes.GO)
-  (ScoreName = paste0("Score.", make.names(GO)))
-  if (!is.list(genes.GO)) genes.GO <-  list(genes.GO) # idk why this structure is not consistent...
+  (ScoreName <- paste0("Score.", make.names(GO)))
+  if (!is.list(genes.GO)) genes.GO <- list(genes.GO) # idk why this structure is not consistent...
   obj <- Seurat::AddModuleScore(object = obj, features = genes.GO, name = ScoreName)
 
   if (FixName) obj <- fix.metad.Colname.rm.trailing.1(obj = obj, colname = ScoreName)
@@ -138,7 +138,7 @@ AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE ) {
 
 CalcTranscriptomePercentageGO <- function(obj = combined.obj, GO.score = "GO.0061621") {
   total_expr <- Matrix::colSums(Seurat::GetAssayData(object = obj))
-  Matrix::colSums(obj[ obj@misc$GO[[GO.score]], ]) / total_expr
+  Matrix::colSums(obj[obj@misc$GO[[GO.score]], ]) / total_expr
 }
 
 
@@ -158,7 +158,7 @@ CalcTranscriptomePercentageGO <- function(obj = combined.obj, GO.score = "GO.006
 
 CalcTranscriptomePercentage <- function(obj = combined.obj, genes = genes.GO.0061621.can.glyc) {
   total_expr <- Matrix::colSums(Seurat::GetAssayData(object = obj))
-  Matrix::colSums(obj[ genes, ]) / total_expr
+  Matrix::colSums(obj[genes, ]) / total_expr
 }
 
 
@@ -179,18 +179,18 @@ CalcTranscriptomePercentage <- function(obj = combined.obj, genes = genes.GO.006
 #' @export
 #' @importFrom Seurat FeaturePlot
 #' @importFrom ggplot2 labs
-#' @importFrom Stringendo ww.FnP_parser
+#' @importFrom MarkdownHelpers ww.FnP_parser
 #' @importFrom cowplot save_plot
 
-FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes ="", name_desc=NULL, h=7, PNG =T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
-  ScoreName <- paste0('Score.',substitute(genes))
+FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes = "", name_desc = NULL, h = 7, PNG = T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
+  ScoreName <- paste0("Score.", substitute(genes))
 
   ggplot.obj <-
-    Seurat::FeaturePlot(obj, features = ScoreName, min.cutoff = "q05", max.cutoff = "q95", reduction = 'umap', ...) +
-    ggplot2::labs(title = paste(ScoreName, name_desc), caption = paste("Score calc. from",length(genes), "expr. genes ."))
-  pname <- paste0("FeaturePlot.",ScoreName)
-  fname <- Stringendo::ww.FnP_parser(Stringendo::kpp(pname,name_desc), if (PNG) "png" else "pdf")
-  cowplot::save_plot(filename = fname,  plot = ggplot.obj, base_height = h)
+    Seurat::FeaturePlot(obj, features = ScoreName, min.cutoff = "q05", max.cutoff = "q95", reduction = "umap", ...) +
+    ggplot2::labs(title = paste(ScoreName, name_desc), caption = paste("Score calc. from", length(genes), "expr. genes ."))
+  pname <- paste0("FeaturePlot.", ScoreName)
+  fname <- MarkdownHelpers::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
+  cowplot::save_plot(filename = fname, plot = ggplot.obj, base_height = h)
   ggplot.obj
 }
 
@@ -213,24 +213,25 @@ FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes ="", name_desc=
 #' @export
 #' @importFrom Seurat FeaturePlot
 #' @importFrom ggplot2 labs
-#' @importFrom Stringendo ww.FnP_parser
+#' @importFrom MarkdownHelpers ww.FnP_parser
 #' @importFrom cowplot save_plot
 
-FeaturePlotSaveGO <- function(obj = combined.obj
-                              , GO.score = "Score.GO.0034976"
-                              , name_desc = NULL
-                              , save.plot = TRUE
-                              , title_ = paste(GO.score, name_desc)
-                              , h=7, PNG = T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
+FeaturePlotSaveGO <- function(
+    obj = combined.obj,
+    GO.score = "Score.GO.0034976",
+    name_desc = NULL,
+    save.plot = TRUE,
+    title_ = paste(GO.score, name_desc),
+    h = 7, PNG = T, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
   proper.GO <- paste(stringr::str_split_fixed(string = GO.score, pattern = "\\.", n = 3)[2:3], collapse = ":")
-  (genes.GO = obj@misc$GO[[make.names(proper.GO)]])
+  (genes.GO <- obj@misc$GO[[make.names(proper.GO)]])
 
   ggplot.obj <-
-    Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95", reduction = 'umap', ...) +
-    ggplot2::labs(title = title_, caption = paste("Score calc. from",length(genes.GO), "expr. genes from BioMart.", paste0("https://www.ebi.ac.uk/QuickGO/search/", proper.GO)))
-  pname <- paste0("FeaturePlot.",(GO.score))
-  fname <- Stringendo::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
-  if(save.plot) {
+    Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95", reduction = "umap", ...) +
+    ggplot2::labs(title = title_, caption = paste("Score calc. from", length(genes.GO), "expr. genes from BioMart.", paste0("https://www.ebi.ac.uk/QuickGO/search/", proper.GO)))
+  pname <- paste0("FeaturePlot.", (GO.score))
+  fname <- MarkdownHelpers::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
+  if (save.plot) {
     cowplot::save_plot(filename = fname, plot = ggplot.obj, base_height = h)
   }
   ggplot.obj
@@ -260,79 +261,93 @@ FeaturePlotSaveGO <- function(obj = combined.obj
 #' @importFrom MarkdownHelpers filter_HP llprint
 #' @importFrom dplyr tibble
 
-FilterStressedCells <- function(obj = combined.obj
-                                , res = "integrated_snn_res.30"
-                                , quantile.thr = 0.9
-                                , GOterms = c('glycolytic process' = 'GO:0006096', 'response to endoplasmic reticulum stress' = 'GO:0034976')
-                                , direction = "above"
-                                , saveRDS = TRUE, saveRDS.Removed = FALSE
-                                , PlotExclusionByEachScore = TRUE
-                                , PlotSingleCellExclusion = TRUE
-                                , GranuleExclusionScatterPlot = TRUE
-) {
-
+FilterStressedCells <- function(
+    obj = combined.obj,
+    res = "integrated_snn_res.30",
+    quantile.thr = 0.9,
+    GOterms = c("glycolytic process" = "GO:0006096", "response to endoplasmic reticulum stress" = "GO:0034976"),
+    direction = "above",
+    saveRDS = TRUE, saveRDS.Removed = FALSE,
+    PlotExclusionByEachScore = TRUE,
+    PlotSingleCellExclusion = TRUE,
+    GranuleExclusionScatterPlot = TRUE) {
   # Check arguments ------------------------------------------------------------
   Meta <- obj@meta.data
   MetaVars <- colnames(Meta)
-  if( ! res %in% MetaVars ) { Stringendo::iprint('res',res,'is not found in the object.')}
+  if (!res %in% MetaVars) {
+    Stringendo::iprint("res", res, "is not found in the object.")
+  }
 
   ScoreNames <- ww.convert.GO_term.2.score(GOterms)
-  if( ! all(ScoreNames %in% MetaVars) ) { Stringendo::iprint('Some of the GO-term scores were not found in the object:', ScoreNames, 'Please call first: PlotGoTermScores(), or the actual GetGOTerms()')}
+  if (!all(ScoreNames %in% MetaVars)) {
+    Stringendo::iprint("Some of the GO-term scores were not found in the object:", ScoreNames, "Please call first: PlotGoTermScores(), or the actual GetGOTerms()")
+  }
 
-  cells.2.granules <- obj[[res]][ ,1]
+  cells.2.granules <- obj[[res]][, 1]
 
   # Exclude granules ------------------------------------------------------------
-  mScoresFiltPass <- mScores <-  CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = sort(unique(Meta[,res])), colname_vec = make.names(GOterms))
-  for (i in 1:length(GOterms) ) {
-    scoreX <- as.character(ScoreNames[i]); print(scoreX)
+  mScoresFiltPass <- mScores <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = sort(unique(Meta[, res])), colname_vec = make.names(GOterms))
+  for (i in 1:length(GOterms)) {
+    scoreX <- as.character(ScoreNames[i])
+    print(scoreX)
     scoreNameX <- names(ScoreNames)[i]
-    mScoresFiltPass[,i] <- Seurat.utils::calc.cluster.averages(col_name = scoreX, split_by = res, quantile.thr = quantile.thr
-                                                               , histogram = T, subtitle = names(ScoreNames)[i]
-                                                               , filter =  direction, obj = obj)
+    mScoresFiltPass[, i] <- Seurat.utils::calc.cluster.averages(
+      col_name = scoreX, split_by = res, quantile.thr = quantile.thr,
+      histogram = T, subtitle = names(ScoreNames)[i],
+      filter = direction, obj = obj
+    )
 
     if (GranuleExclusionScatterPlot) {
-      mScores[,i] <- Seurat.utils::calc.cluster.averages(col_name = scoreX, split_by = res, quantile.thr = quantile.thr
-                                                         , plot.UMAP.too = F, plotit = F
-                                                         , filter = F)
+      mScores[, i] <- Seurat.utils::calc.cluster.averages(
+        col_name = scoreX, split_by = res, quantile.thr = quantile.thr,
+        plot.UMAP.too = F, plotit = F,
+        filter = F
+      )
     }
 
     if (PlotExclusionByEachScore) {
-      # CellsExcludedByScoreX <- which(cells.2.granules %in% CodeAndRoll2::which_names(mScoresFiltPass[,i]))
-      Seurat.utils::clUMAP(ident = res, highlight.clusters = CodeAndRoll2::which_names(mScoresFiltPass[,i])
-             , label = F, title = paste0("Stressed cells removed by ", scoreX)
-             , plotname =  paste0("Stressed cells removed by ", scoreX)
-             , sub = scoreNameX
-             , sizes.highlight = .5, raster = F)
+      Seurat.utils::clUMAP(
+        ident = res, highlight.clusters = CodeAndRoll2::which_names(mScoresFiltPass[, i]),
+        label = F, title = paste0("Stressed cells removed by ", scoreX),
+        plotname = paste0("Stressed cells removed by ", scoreX),
+        sub = scoreNameX,
+        sizes.highlight = .5, raster = F
+      )
     }
   }
 
   # PlotSingleCellExclusion ------------------------------------------------------------
   if (PlotSingleCellExclusion) {
     mSC_ScoresFiltPass <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = rownames(Meta), colname_vec = make.names(GOterms))
-    for (i in 1:length(GOterms) ) {
-      scoreX <- as.character(ScoreNames[i]); print(scoreX)
+    for (i in 1:length(GOterms)) {
+      scoreX <- as.character(ScoreNames[i])
+      print(scoreX)
       scoreNameX <- names(ScoreNames)[i]
-      ScoreValuesSC <- Meta[,scoreX]
-      mSC_ScoresFiltPass[,i] <- MarkdownHelpers::filter_HP(numeric_vector = ScoreValuesSC,
-                                                           threshold = stats::quantile(x = ScoreValuesSC, quantile.thr), breaks = 100)
+      ScoreValuesSC <- Meta[, scoreX]
+      mSC_ScoresFiltPass[, i] <- MarkdownHelpers::filter_HP(
+        numeric_vector = ScoreValuesSC,
+        threshold = stats::quantile(x = ScoreValuesSC, quantile.thr), breaks = 100
+      )
     }
-    cells.remove.SC <- rowSums(mSC_ScoresFiltPass)>0
+    cells.remove.SC <- rowSums(mSC_ScoresFiltPass) > 0
     table(cells.remove.SC)
     sc.filtered <- CodeAndRoll2::which_names(cells.remove.SC)
     sc.kept <- CodeAndRoll2::which_names(!cells.remove.SC)
 
-    Seurat.utils::clUMAP(cells.highlight = sc.filtered, label = F
-           , title = "Single-cell filtering is not robust to remove stressed cells"
-           , plotname = "Single-cell filtering is not robust to remove stressed cells"
-           , suffix = "Stress.Filtering", sizes.highlight = .5, raster = F)
+    Seurat.utils::clUMAP(
+      cells.highlight = sc.filtered, label = F,
+      title = "Single-cell filtering is not robust to remove stressed cells",
+      plotname = "Single-cell filtering is not robust to remove stressed cells",
+      suffix = "Stress.Filtering", sizes.highlight = .5, raster = F
+    )
 
     {
-      #"TEST"
+      # "TEST"
       MeanZ.ER.stress <- c(
-        'mean.stressed' = mean(Meta[sc.filtered, scoreX]),
-        'mean.kept' = mean(Meta[sc.kept, scoreX])
+        "mean.stressed" = mean(Meta[sc.filtered, scoreX]),
+        "mean.kept" = mean(Meta[sc.kept, scoreX])
       )
-      qbarplot(MeanZ.ER.stress, ylab= scoreNameX, xlab.angle = 45, xlab = '', col = as.logical(0:1))
+      qbarplot(MeanZ.ER.stress, ylab = scoreNameX, xlab.angle = 45, xlab = "", col = as.logical(0:1))
     }
 
     # saveRDS.Removed
@@ -348,22 +363,24 @@ FilterStressedCells <- function(obj = combined.obj
   Seurat.utils::clUMAP(ident = res, highlight.clusters = granules.excluded, label = F, title = "Stressed cells removed", suffix = "Stress.Filtering", sizes.highlight = .5, raster = F)
 
   if (GranuleExclusionScatterPlot) {
-    Av.GO.Scores <- dplyr::tibble("Average ER-stress score" = mScores[,2]
-                                  ,"Average Glycolysis score" = mScores[,1]
-                                  , 'Stressed' = !PASS
-                                  , 'name' = rownames(mScores)
+    Av.GO.Scores <- dplyr::tibble(
+      "Average ER-stress score" = mScores[, 2],
+      "Average Glycolysis score" = mScores[, 1],
+      "Stressed" = !PASS,
+      "name" = rownames(mScores)
     )
 
     if (F) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
-    ggExpress::qscatter(Av.GO.Scores, cols = 'Stressed', w = 6, h = 6
-             , vline = stats::quantile(mScores[,2], quantile.thr)
-             , hline = stats::quantile(mScores[,1], quantile.thr)
-             , title = "Groups of Stressed cells have high scores."
-             , subtitle = "Thresholded at 90th percentile"
-             , label = 'name'
-             , repel = T
-             , label.rectangle = T
+    ggExpress::qscatter(Av.GO.Scores,
+      cols = "Stressed", w = 6, h = 6,
+      vline = stats::quantile(mScores[, 2], quantile.thr),
+      hline = stats::quantile(mScores[, 1], quantile.thr),
+      title = "Groups of Stressed cells have high scores.",
+      subtitle = "Thresholded at 90th percentile",
+      label = "name",
+      repel = T,
+      label.rectangle = T
     )
   }
 
@@ -373,8 +390,6 @@ FilterStressedCells <- function(obj = combined.obj
   cells.discard <- which(cells.2.granules %in% granules.excluded)
   cells.keep <- which(cells.2.granules %!in% granules.excluded)
   MarkdownHelpers::llprint(Stringendo::percentage_formatter(length(cells.keep) / length(cells.2.granules)), "cells kept.")
-  # Seurat.utils::clUMAP(highlight.clusters = filtered.out, ident = rgx, title = "Stressed cells removed", suffix = "Stress.Filtering.cl", sizes.highlight = .5, raster = F
-  #        , MaxCategThrHP = 500, label = F, legend = F)
 
   obj.noStress <- subset(x = obj, cells = cells.keep) # remove stressed
   if (saveRDS) Seurat.utils::isave.RDS(obj.noStress, inOutDir = T, suffix = "Cleaned")
@@ -414,24 +429,27 @@ GO_score_evaluation <- function(obj = combined.obj,
                                 assay = "RNA",
                                 description = NULL,
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-                                clustering = if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
-
+                                clustering = if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
   if (new_GO_term_computation) {
-    obj <- PlotGoTermScores(GO = GO_term, save.UMAP = save.UMAP, obj = obj
-                            , desc = description, plot.each.gene = plot.each.gene)
+    obj <- PlotGoTermScores(
+      GO = GO_term, save.UMAP = save.UMAP, obj = obj,
+      desc = description, plot.each.gene = plot.each.gene
+    )
   }
 
   print("Calculating cl. average score")
-  cl.av <- calc.cluster.averages.gruffi(obj = obj,
-                                     stat = stat.av,
-                                     col_name = ww.convert.GO_term.2.score(GO_term),
-                                     split_by = clustering)
-  names(cl.av) <- IRanges::gsub("cl.","",names(cl.av))
+  cl.av <- calc.cluster.averages.gruffi(
+    obj = obj,
+    stat = stat.av,
+    col_name = ww.convert.GO_term.2.score(GO_term),
+    split_by = clustering
+  )
+  names(cl.av) <- IRanges::gsub("cl.", "", names(cl.av))
   obj <- Seurat::RenameIdents(obj, cl.av)
-  mScoreColName <- paste0(clustering,"_cl.av_", GO_term)
+  mScoreColName <- paste0(clustering, "_cl.av_", GO_term)
   obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   print(mScoreColName)
@@ -450,10 +468,10 @@ GO_score_evaluation <- function(obj = combined.obj,
 #' @importFrom CodeAndRoll2 grepv
 #' @importFrom AnnotationDbi Term
 
-GetAllGOTerms <- function(obj=combined.obj, return.obj = TRUE) {
+GetAllGOTerms <- function(obj = combined.obj, return.obj = TRUE) {
   x <- obj@meta.data
   GOz <- CodeAndRoll2::grepv(pattern = "^Score.GO", x = colnames(x), perl = TRUE)
-  GOx <- sort.natural(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE, invert = TRUE)))
+  GOx <- gtools::mixedsort(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE, invert = TRUE)))
   GO.names <- AnnotationDbi::Term(object = ww.convert.score.2.GO_term(GOx))
 
   if (return.obj) {
@@ -492,37 +510,38 @@ GetAllGOTerms <- function(obj=combined.obj, return.obj = TRUE) {
 #' @importFrom Stringendo iprint
 
 GetGOTerms <- function(obj = combined.obj,
-                       GO = 'GO:0034976',
+                       GO = "GO:0034976",
                        use.ensemble = T,
                        web.open = F,
                        version = NULL,
                        GRCh = NULL,
                        genes.shown = 10) {
-  print('GetGOTerms()')
+  print("GetGOTerms()")
 
-  if (use.ensemble & is.null(obj@misc$enrichGO[['RNA']])) {
-    if(!exists("ensembl")) {
-      print('biomaRt::useEnsembl()')
+  if (use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
+    if (!exists("ensembl")) {
+      print("biomaRt::useEnsembl()")
       ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh)
     }
 
-    genes <- biomaRt::getBM(attributes = c('hgnc_symbol'), # 'ensembl_transcript_id', 'go_id'
-                            filters = "go_parent_term", uniqueRows = TRUE,
-                            values = GO, mart = ensembl)[,1]
+    genes <- biomaRt::getBM(
+      attributes = c("hgnc_symbol"), # 'ensembl_transcript_id', 'go_id'
+      filters = "go_parent_term", uniqueRows = TRUE,
+      values = GO, mart = ensembl
+    )[, 1]
     iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", utils::head(genes, n = genes.shown))
-
   }
-  if (!use.ensemble & !is.null(obj@misc$enrichGO[['RNA']])) {
-    genes <- unlist(DOSE::geneInCategory(obj@misc$enrichGO[['RNA']])[GO])
+  if (!use.ensemble & !is.null(obj@misc$enrichGO[["RNA"]])) {
+    genes <- unlist(DOSE::geneInCategory(obj@misc$enrichGO[["RNA"]])[GO])
     iprint(length(genes), "Gene symbols from enrichGO[['RNA']]:", utils::head(genes, n = genes.shown))
   }
-  if(!use.ensemble & is.null(obj@misc$enrichGO[['RNA']])) {
-    print('AnnotationDbi::select()')
+  if (!use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
+    print("AnnotationDbi::select()")
     genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
     iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", utils::head(genes, n = genes.shown))
   }
   # if(F) {
-    # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
+  # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
   # }
 
   (GO.wDot <- make.names(GO))
@@ -531,7 +550,7 @@ GetGOTerms <- function(obj = combined.obj,
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
   if (is.null(obj@misc$GO)) obj@misc$GO <- list()
-  obj@misc$GO[[ GO.wDot ]] <- genes
+  obj@misc$GO[[GO.wDot]] <- genes
   Stringendo::iprint("Genes in", GO, "are saved under obj@misc$GO$", GO.wDot)
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
   return(obj)
@@ -552,14 +571,15 @@ GetGOTerms <- function(obj = combined.obj,
 #' @export
 #' @importFrom CodeAndRoll2 grepv
 
-GetNamedClusteringRuns <- function(obj = combined.obj  # Get Clustering Runs: metadata column names
-                                   , res = c(F, 0.5)[1]
-                                   , topgene = F
-                                   , pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
-  if (res) pat = gsub(x = pat, pattern = '\\[.*\\]', replacement = res)
-  if (topgene) pat = gsub(x = pat, pattern = 'Known', replacement = 'top')
+GetNamedClusteringRuns <- function(
+    obj = combined.obj # Get Clustering Runs: metadata column names
+    , res = c(F, 0.5)[1],
+    topgene = F,
+    pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
+  if (res) pat <- gsub(x = pat, pattern = "\\[.*\\]", replacement = res)
+  if (topgene) pat <- gsub(x = pat, pattern = "Known", replacement = "top")
   clustering.results <- CodeAndRoll2::grepv(x = colnames(obj@meta.data), pattern = pat)
-  if ( identical(clustering.results, character(0)) ) {
+  if (identical(clustering.results, character(0))) {
     print("Warning: NO matching column found! Trying Seurat.utils::GetClusteringRuns(..., pat = '*_res.*[0,1]\\.[0-9]$)")
     clustering.results <- Seurat.utils::GetClusteringRuns(obj = obj, res = F, pat = "*_res.*[0,1]\\.[0-9]$")
   }
@@ -579,11 +599,11 @@ GetNamedClusteringRuns <- function(obj = combined.obj  # Get Clustering Runs: me
 #' @export
 #' @importFrom Stringendo iprint
 
-IntersectWithExpressed <- function(genes, obj=combined.obj, genes.shown = 10) { # Intersect a set of genes with genes in the Seurat object.
-  print('IntersectWithExpressed()')
+IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) { # Intersect a set of genes with genes in the Seurat object.
+  print("IntersectWithExpressed()")
   # print(utils::head(genes, n=15))
-  diff = setdiff(genes, rownames(obj))
-  Stringendo::iprint(length(diff),"genes (of",length(genes), ") are MISSING from the Seurat object:",utils::head(diff, genes.shown))
+  diff <- setdiff(genes, rownames(obj))
+  Stringendo::iprint(length(diff), "genes (of", length(genes), ") are MISSING from the Seurat object:", utils::head(diff, genes.shown))
   return(intersect(rownames(obj), genes))
 }
 
@@ -618,28 +638,29 @@ PasteUniqueGeneList <- function() {
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}
-#'  \code{\link[MarkdownHelpers]{stopif}}
 #'  \code{\link[Stringendo]{iprint}}
 #' @export
 #' @importFrom Seurat DefaultAssay
-#' @importFrom MarkdownHelpers stopif
 #' @importFrom Stringendo iprint
 
-PlotGoTermScores <- function(obj = combined.obj
-                             , use.ensemble = T
-                             , only.draw.plot = F # Automate retrieving, processing and plotting GO term based gene scores.
-                             , openBrowser = F
-                             , plot.each.gene = F
-                             , desc = ""
-                             , save.UMAP = T
-                             , verbose = T
-                             , GO = "GO:0009651"
-                             , ...) {
-
+PlotGoTermScores <- function(
+    obj = combined.obj,
+    use.ensemble = T,
+    only.draw.plot = F # Automate retrieving, processing and plotting GO term based gene scores.
+    , openBrowser = F,
+    plot.each.gene = F,
+    desc = "",
+    save.UMAP = T,
+    verbose = T,
+    GO = "GO:0009651",
+    ...) {
   backup.assay <- Seurat::DefaultAssay(obj)
 
   if (grepl(x = GO, pattern = "^GO:", perl = T)) {
-    MarkdownHelpers::stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
+    # stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
+    stopifnot("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
+                !grepl(pattern = "Score.", x = GO))
+
     GO.wDot <- make.names(GO)
     ScoreName <- paste0("Score.", GO.wDot)
     print(ScoreName)
@@ -649,9 +670,9 @@ PlotGoTermScores <- function(obj = combined.obj
   }
 
 
-  if (Seurat::DefaultAssay(obj) != 'RNA') {
+  if (Seurat::DefaultAssay(obj) != "RNA") {
     print("For GO score computation assay is set to RNA. It will be reset to Seurat::DefaultAssay() afterwards.")
-    Seurat::DefaultAssay(obj) <-  'RNA'
+    Seurat::DefaultAssay(obj) <- "RNA"
   }
   if (ScoreName %in% colnames(obj@meta.data)) {
     print("GENE SCORE FOUND IN @meta.data")
@@ -661,18 +682,22 @@ PlotGoTermScores <- function(obj = combined.obj
 
   if (!only.draw.plot) {
     print("GENE SCORE WILL NOW BE SET / OVERWRITTEN")
-    obj@meta.data[ ,ScoreName] <- NULL
+    obj@meta.data[, ScoreName] <- NULL
 
-    obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, use.ensemble = use.ensemble);
-    GO.genes <- obj@misc$GO[[ GO.wDot ]]
+    obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, use.ensemble = use.ensemble)
+    GO.genes <- obj@misc$GO[[GO.wDot]]
     if (verbose) print(utils::head(GO.genes))
     obj <- AddGOScore(obj = obj, GO = GO)
   }
 
   plot <- FeaturePlotSaveGO(obj = obj, GO.score = ScoreName, save.plot = save.UMAP, name_desc = desc, ...)
-  if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, 'UMAPs'))
+  if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, "UMAPs"))
   Seurat::DefaultAssay(obj) <- backup.assay
-  if (only.draw.plot) return(plot) else return(obj)
+  if (only.draw.plot) {
+    return(plot)
+  } else {
+    return(obj)
+  }
 }
 
 
@@ -693,26 +718,27 @@ PlotGoTermScores <- function(obj = combined.obj
 #' @export
 #' @importFrom shiny runApp shinyApp
 
-Shiny.GO.thresh <- function(obj = combined.obj
-                            , proposed.method = c("fitted","empirical")[1]
-                            , quantile = c(.99,.9)[1]
-                            , stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0006096")
-                            , stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
-                            , notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
-                            , notstress.ident4 = NULL
-                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
+Shiny.GO.thresh <- function(
+    obj = combined.obj,
+    proposed.method = c("fitted", "empirical")[1],
+    quantile = c(.99, .9)[1],
+    stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
+    stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
+    notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
+    notstress.ident4 = NULL,
+    plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
   app_env <- new.env()
   meta <- obj@meta.data
 
-  if(!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
-  if(!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
-  if(!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
-  if(!is.null(notstress.ident4)) stopifnot(notstress.ident4 %in% colnames(meta))
+  if (!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
+  if (!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
+  if (!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
+  if (!is.null(notstress.ident4)) stopifnot(notstress.ident4 %in% colnames(meta))
 
-  av.stress.ident1 <- as.numeric(levels(meta[,stress.ident1]))
-  av.stress.ident2 <- as.numeric(levels(meta[,stress.ident2]))
-  av.notstress.ident3 <- as.numeric(levels(meta[,notstress.ident3]))
-  av.notstress.ident4 <- as.numeric(levels(meta[,notstress.ident4]))
+  av.stress.ident1 <- as.numeric(levels(meta[, stress.ident1]))
+  av.stress.ident2 <- as.numeric(levels(meta[, stress.ident2]))
+  av.notstress.ident3 <- as.numeric(levels(meta[, notstress.ident3]))
+  av.notstress.ident4 <- as.numeric(levels(meta[, notstress.ident4]))
 
   # compute proposals for thresholds
   app_env$thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = proposed.method, plot.hist = F)
@@ -722,42 +748,52 @@ Shiny.GO.thresh <- function(obj = combined.obj
 
   min.x.stress.ident1 <- floor(min(av.stress.ident1, app_env$thresh.stress.ident1))
   max.x.stress.ident1 <- ceiling(max(av.stress.ident1, app_env$thresh.stress.ident1))
-  step.stress.ident1  <- 0.001
+  step.stress.ident1 <- 0.001
 
   min.x.stress.ident2 <- floor(min(av.stress.ident2, app_env$thresh.stress.ident2))
   max.x.stress.ident2 <- ceiling(max(av.stress.ident2, app_env$thresh.stress.ident2))
-  step.stress.ident2  <- 0.001
+  step.stress.ident2 <- 0.001
 
   min.x.notstress.ident3 <- floor(min(av.notstress.ident3, app_env$thresh.notstress.ident3))
   max.x.notstress.ident3 <- ceiling(max(av.notstress.ident3, app_env$thresh.notstress.ident3))
-  step.notstress.ident3  <- 0.001
+  step.notstress.ident3 <- 0.001
 
   min.x.notstress.ident4 <- floor(min(av.notstress.ident4, app_env$thresh.notstress.ident4))
   max.x.notstress.ident4 <- ceiling(max(av.notstress.ident4, app_env$thresh.notstress.ident4))
-  step.notstress.ident4  <- 0.001
+  step.notstress.ident4 <- 0.001
 
-  app_env$idents <- list(stress.ident1 = stress.ident1,
-                         stress.ident2 = stress.ident2,
-                         notstress.ident3 = notstress.ident3,
-                         notstress.ident4 = notstress.ident4)
+  app_env$idents <- list(
+    stress.ident1 = stress.ident1,
+    stress.ident2 = stress.ident2,
+    notstress.ident3 = notstress.ident3,
+    notstress.ident4 = notstress.ident4
+  )
 
-  app_env$sliders <- list(min.x.stress.ident1 = min.x.stress.ident1, max.x.stress.ident1 = max.x.stress.ident1, step.stress.ident1 = step.stress.ident1,
-                          min.x.stress.ident2 = min.x.stress.ident2, max.x.stress.ident2 = max.x.stress.ident2, step.stress.ident2 = step.stress.ident2,
-                          min.x.notstress.ident3 = min.x.notstress.ident3, max.x.notstress.ident3 = max.x.notstress.ident3, step.notstress.ident3 = step.notstress.ident3,
-                          min.x.notstress.ident4 = min.x.notstress.ident4, max.x.notstress.ident4 = max.x.notstress.ident4, step.notstress.ident4 = step.notstress.ident4)
+  app_env$sliders <- list(
+    min.x.stress.ident1 = min.x.stress.ident1, max.x.stress.ident1 = max.x.stress.ident1, step.stress.ident1 = step.stress.ident1,
+    min.x.stress.ident2 = min.x.stress.ident2, max.x.stress.ident2 = max.x.stress.ident2, step.stress.ident2 = step.stress.ident2,
+    min.x.notstress.ident3 = min.x.notstress.ident3, max.x.notstress.ident3 = max.x.notstress.ident3, step.notstress.ident3 = step.notstress.ident3,
+    min.x.notstress.ident4 = min.x.notstress.ident4, max.x.notstress.ident4 = max.x.notstress.ident4, step.notstress.ident4 = step.notstress.ident4
+  )
 
-  app_env$average.vec <- list(av.stress.ident1 = av.stress.ident1,
-                              av.stress.ident2 = av.stress.ident2,
-                              av.notstress.ident3 = av.notstress.ident3,
-                              av.notstress.ident4 = av.notstress.ident4)
+  app_env$average.vec <- list(
+    av.stress.ident1 = av.stress.ident1,
+    av.stress.ident2 = av.stress.ident2,
+    av.notstress.ident3 = av.notstress.ident3,
+    av.notstress.ident4 = av.notstress.ident4
+  )
   app_env$obj <- obj
   app_env$plot.cluster.shiny <- plot.cluster.shiny
 
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
-  app_ui <- source(file.path(app_dir, "ui.R"), local=new.env(parent=app_env),
-                   echo=FALSE, keep.source=TRUE)$value
-  app_server <- source(file.path(app_dir, "server.R"), local=new.env(parent=app_env),
-                       echo=FALSE, keep.source=TRUE)$value
+  app_ui <- source(file.path(app_dir, "ui.R"),
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
+  )$value
+  app_server <- source(file.path(app_dir, "server.R"),
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
+  )$value
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
   return(obj)
 }
@@ -794,46 +830,45 @@ UMAP.3d.cubes <- function(obj = combined.obj,
                           reduction = c("umap", "pca", "tsne")[1],
                           ident = Seurat.utils::GetClusteringRuns(obj)[1],
                           PCA_dim = 50) {
-
-  if(dim(obj[[reduction]]@cell.embeddings)[2] < 3) {
-    if(reduction == "umap") {
+  if (dim(obj[[reduction]]@cell.embeddings)[2] < 3) {
+    if (reduction == "umap") {
       obj.3d <- Seurat::RunUMAP(obj, dims = 1:PCA_dim, n.components = 3)
-      obj@misc$'reductions.backup'$umap3d <- obj.3d@reductions$umap
+      obj@misc$"reductions.backup"$umap3d <- obj.3d@reductions$umap
     }
-    if(reduction == "tsne") {
-      obj.3d <- Seurat::RunTSNE(obj,dims = 1:PCA_dim, n.components = 3L)
-      obj@misc$'reductions.backup'$tsne3d <- obj.3d@reductions$tsne
+    if (reduction == "tsne") {
+      obj.3d <- Seurat::RunTSNE(obj, dims = 1:PCA_dim, n.components = 3L)
+      obj@misc$"reductions.backup"$tsne3d <- obj.3d@reductions$tsne
     }
   }
 
-  reduction <- paste0(reduction,"3d")
+  reduction <- paste0(reduction, "3d")
 
-  umap_1 <- obj@misc$'reductions.backup'[[reduction]]@cell.embeddings[,1]
-  umap_2 <- obj@misc$'reductions.backup'[[reduction]]@cell.embeddings[,2]
-  umap_3 <- obj@misc$'reductions.backup'[[reduction]]@cell.embeddings[,3]
+  umap_1 <- obj@misc$"reductions.backup"[[reduction]]@cell.embeddings[, 1]
+  umap_2 <- obj@misc$"reductions.backup"[[reduction]]@cell.embeddings[, 2]
+  umap_3 <- obj@misc$"reductions.backup"[[reduction]]@cell.embeddings[, 3]
 
-  xzy <- sm::binning(cbind(umap_1,umap_2,umap_3), nbins = n_bin)
+  xzy <- sm::binning(cbind(umap_1, umap_2, umap_3), nbins = n_bin)
   xzy$cube_ID <- 1:dim(xzy$x)[1]
 
-  x_width <- abs(sort(unique(xzy$x[,1]))[2]-sort(unique(xzy$x[,1]))[1])
-  y_width <- abs(sort(unique(xzy$x[,2]))[2]-sort(unique(xzy$x[,2]))[1])
-  z_width <- abs(sort(unique(xzy$x[,3]))[2]-sort(unique(xzy$x[,3]))[1])
+  x_width <- abs(sort(unique(xzy$x[, 1]))[2] - sort(unique(xzy$x[, 1]))[1])
+  y_width <- abs(sort(unique(xzy$x[, 2]))[2] - sort(unique(xzy$x[, 2]))[1])
+  z_width <- abs(sort(unique(xzy$x[, 3]))[2] - sort(unique(xzy$x[, 3]))[1])
 
   maj_l <- logical(length = dim(xzy$x)[1])
   cube_ID <- rep(NA, length(Seurat::Cells(obj)))
 
-  for(l in 1:dim(xzy$x)[1]){
-    cells_in_cube <- which(umap_1 <= (xzy$x[l,1]+x_width/2)  &
-                             umap_2 <= (xzy$x[l,2]+y_width/2) &
-                             umap_3 <= (xzy$x[l,3]+z_width/2) &
-                             umap_1 > (xzy$x[l,1]-x_width/2) &
-                             umap_2 > (xzy$x[l,2]-y_width/2) &
-                             umap_3 > (xzy$x[l,3]-z_width/2))
+  for (l in 1:dim(xzy$x)[1]) {
+    cells_in_cube <- which(umap_1 <= (xzy$x[l, 1] + x_width / 2) &
+      umap_2 <= (xzy$x[l, 2] + y_width / 2) &
+      umap_3 <= (xzy$x[l, 3] + z_width / 2) &
+      umap_1 > (xzy$x[l, 1] - x_width / 2) &
+      umap_2 > (xzy$x[l, 2] - y_width / 2) &
+      umap_3 > (xzy$x[l, 3] - z_width / 2))
 
     cube_ID[cells_in_cube] <- xzy$cube_ID[l]
 
-    val <- raster::modal(obj@meta.data[ident][cells_in_cube,])
-    if(length(val) > 1){
+    val <- raster::modal(obj@meta.data[ident][cells_in_cube, ])
+    if (length(val) > 1) {
       val <- sample(val, 1)
     }
     maj_l[l] <- val
@@ -841,27 +876,31 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 
   cols <- viridis::cividis(length(levels(factor(maj_l))))[factor(maj_l)]
 
-  positions <- data.frame(xzy$x, freq = xzy$x.freq/max(xzy$x.freq))
+  positions <- data.frame(xzy$x, freq = xzy$x.freq / max(xzy$x.freq))
 
-  positions$umap_1 <- positions$umap_1/x_width*2
-  positions$umap_2 <- positions$umap_2/y_width*2
-  positions$umap_3 <- positions$umap_3/z_width*2
+  positions$umap_1 <- positions$umap_1 / x_width * 2
+  positions$umap_2 <- positions$umap_2 / y_width * 2
+  positions$umap_3 <- positions$umap_3 / z_width * 2
 
-  if(plot) {
+  if (plot) {
     rgl::open3d()
-    for(i in 1:dim(positions)[1]) {
-      rgl::shade3d(rgl::translate3d(rgl::cube3d(col = cols[i]),
-                                    positions$umap_1[i],
-                                    positions$umap_2[i],
-                                    positions$umap_3[i]),
-                   alpha = positions[i,4])
+    for (i in 1:dim(positions)[1]) {
+      rgl::shade3d(
+        rgl::translate3d(
+          rgl::cube3d(col = cols[i]),
+          positions$umap_1[i],
+          positions$umap_2[i],
+          positions$umap_3[i]
+        ),
+        alpha = positions[i, 4]
+      )
     }
-    if(save.plot) {
+    if (save.plot) {
       htmlwidgets::saveWidget(rgl::rglwidget(), "3d_UMAP_cube.html")
     }
   }
   cube_ID <- as.factor(cube_ID)
-  obj@meta.data[paste0("cube_ID_",n_bin)] <- cube_ID
+  obj@meta.data[paste0("cube_ID_", n_bin)] <- cube_ID
   return(obj)
 }
 
@@ -887,16 +926,17 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 aut.res.clustering <- function(obj = combined.obj,
                                lower.median = 100,
                                upper.median = 200,
-                               lower.res = round(ncol(obj)/1e4),
-                               upper.res = round(ncol(obj)/1e3),
-                               assay = c('integrated', 'RNA')[1], # Seurat::DefaultAssay(obj),
+                               lower.res = round(ncol(obj) / 1e4),
+                               upper.res = round(ncol(obj) / 1e3),
+                               assay = c("integrated", "RNA")[1], # Seurat::DefaultAssay(obj),
                                max.loop = 20) {
-
   metadata.backup <- obj@meta.data
 
   assays.present <- names(obj@assays)
-  if (assay %in% assays.present) { Seurat::DefaultAssay(obj) <- assay } else {
-    Stringendo::iprint("Assay: (", assay,  ") is not found in the object. Replaced by: (", assays.present[1],")")
+  if (assay %in% assays.present) {
+    Seurat::DefaultAssay(obj) <- assay
+  } else {
+    Stringendo::iprint("Assay: (", assay, ") is not found in the object. Replaced by: (", assays.present[1], ")")
     assay <- assays.present[1]
   }
 
@@ -905,50 +945,52 @@ aut.res.clustering <- function(obj = combined.obj,
   r.upper <- upper.res
 
   obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = F)
-  m.up <- stats::median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.upper)]]))
-  if(m.up >= upper.median){
+  m.up <- stats::median(table(obj@meta.data[[paste0(assay, "_snn_res.", r.upper)]]))
+  if (m.up >= upper.median) {
     Stringendo::iprint("ERROR: Define a higher 'upper.res'-parameter. Current maximum gives granules of", m.up, "cells, above the 'upper.median' target of", upper.median)
     stop()
   }
 
   obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F)
-  m <- stats::median(table(obj@meta.data[[paste0(assay,"_snn_res.",r.current)]]))
+  m <- stats::median(table(obj@meta.data[[paste0(assay, "_snn_res.", r.current)]]))
 
   loop.count <- 1
-  while(m > upper.median | m < lower.median) {
+  while (m > upper.median | m < lower.median) {
     Stringendo::iprint("Current clustering resolution:", r.current)
     Stringendo::iprint("Current median cluster size:", m)
 
-    obj@meta.data[[paste0(assay,"_snn_res.",r.current)]] <- NULL
-    if(m > upper.median) {
+    obj@meta.data[[paste0(assay, "_snn_res.", r.current)]] <- NULL
+    if (m > upper.median) {
       r.lower <- r.current
-      r.current <- round((upper.res - r.current)/2+r.current)
+      r.current <- round((upper.res - r.current) / 2 + r.current)
     }
-    if(m < lower.median) {
+    if (m < lower.median) {
       r.upper <- r.current
-      r.current <- round((r.current - lower.res)/2+lower.res)
+      r.current <- round((r.current - lower.res) / 2 + lower.res)
     }
     print(paste0("Search between ", r.lower, " and ", r.upper, "."))
     obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F)
-    res.name <- paste0(assay,"_snn_res.",r.current)
+    res.name <- paste0(assay, "_snn_res.", r.current)
     m <- stats::median(table(obj@meta.data[[res.name]]))
 
     loop.count <- loop.count + 1
-    if(loop.count > max.loop) {
+    if (loop.count > max.loop) {
       next
     }
   }
-  res.name <- paste0(assay,"_snn_res.",r.current)
+  res.name <- paste0(assay, "_snn_res.", r.current)
   clustering <- obj@meta.data[[res.name]]
 
   # obj@meta.data <- metadata.backup
-  obj@misc$gruffi$'optimal.granule.res' <- res.name
+  obj@misc$gruffi$"optimal.granule.res" <- res.name
   Seurat::Idents(obj) <- clustering
 
-  print(paste0("Suggested resolution is ", r.current
-               , " and the respective clustering is stored in Idents(obj) and in @meta.data."
-               , " The median numbers of cells per cluster is ", m
-               , ". The number of clusters is ", length(unique(clustering))))
+  print(paste0(
+    "Suggested resolution is ", r.current,
+    " and the respective clustering is stored in Idents(obj) and in @meta.data.",
+    " The median numbers of cells per cluster is ", m,
+    ". The number of clusters is ", length(unique(clustering))
+  ))
   return(obj)
 }
 
@@ -991,84 +1033,88 @@ aut.res.clustering <- function(obj = combined.obj,
 #' @importFrom rlang sym
 #' @importFrom CodeAndRoll2 sem sortbyitsnames
 
-calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
-                                      , obj = combined.obj
-                                      , split_by = Seurat.utils::GetClusteringRuns(obj)[1]
-                                      , stat = c("mean", "median", "normalized.mean", "normalized.median")[3]
-                                      , scale.zscore = FALSE
-                                      , quantile.thr = 0.99
-                                      , absolute.thr = FALSE
-                                      , plotit = FALSE
-                                      , save.plot = FALSE
-                                      , return.plot = FALSE
-                                      , max.bin.plot = 200
-                                      , simplify = TRUE
-                                      , suffix = NULL
-                                      , ylab.text = paste("Cluster", stat, "score")
-                                      , title = paste("Cluster", stat, col_name)
-                                      , subtitle = NULL
-                                      , width = 8, height =6
-                                      , xlb = if (absolute.thr) paste("Threshold at", absolute.thr) else paste(
-                                        "Black lines: " , Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)) ,"quantiles |"
-                                        , "Cl. >",Stringendo::percentage_formatter(quantile.thr),"are highlighted. |", split_by
-                                      )
-                                      , ...
-) {
+calc.cluster.averages.gruffi <- function(
+    col_name = "Score.GO.0006096",
+    obj = combined.obj,
+    split_by = Seurat.utils::GetClusteringRuns(obj)[1],
+    stat = c("mean", "median", "normalized.mean", "normalized.median")[3],
+    scale.zscore = FALSE,
+    quantile.thr = 0.99,
+    absolute.thr = FALSE,
+    plotit = FALSE,
+    save.plot = FALSE,
+    return.plot = FALSE,
+    max.bin.plot = 200,
+    simplify = TRUE,
+    suffix = NULL,
+    ylab.text = paste("Cluster", stat, "score"),
+    title = paste("Cluster", stat, col_name),
+    subtitle = NULL,
+    width = 8, height = 6,
+    xlb = if (absolute.thr) {
+      paste("Threshold at", absolute.thr)
+    } else {
+      paste(
+        "Black lines: ", Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
+        "Cl. >", Stringendo::percentage_formatter(quantile.thr), "are highlighted. |", split_by
+      )
+    },
+    ...) {
   Stringendo::iprint(substitute(obj), "split by", split_by)
 
   df.summary <-
     obj@meta.data %>%
     dplyr::select_at(c(col_name, split_by)) %>%
     dplyr::group_by_at(split_by) %>%
-    dplyr::summarize('nr.cells' = dplyr::n()
-                     , 'mean' = mean(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'SEM' = CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'normalized.mean' = mean(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'median' = stats::median(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'SE.median' = 1.2533 * CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE)
-                     , 'normalized.median' = stats::median(!!rlang::sym(col_name), na.rm = TRUE)
+    dplyr::summarize(
+      "nr.cells" = dplyr::n(),
+      "mean" = mean(!!rlang::sym(col_name), na.rm = TRUE),
+      "SEM" = CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE),
+      "normalized.mean" = mean(!!rlang::sym(col_name), na.rm = TRUE),
+      "median" = stats::median(!!rlang::sym(col_name), na.rm = TRUE),
+      "SE.median" = 1.2533 * CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE),
+      "normalized.median" = stats::median(!!rlang::sym(col_name), na.rm = TRUE)
     )
 
-  df.summary$normalized.mean <- sqrt(df.summary$nr.cells)*(df.summary$normalized.mean-stats::median(df.summary$normalized.mean))
-  df.summary$normalized.median <- sqrt(df.summary$nr.cells)*(df.summary$normalized.median-stats::median(df.summary$normalized.median))
+  df.summary$normalized.mean <- sqrt(df.summary$nr.cells) * (df.summary$normalized.mean - stats::median(df.summary$normalized.mean))
+  df.summary$normalized.median <- sqrt(df.summary$nr.cells) * (df.summary$normalized.median - stats::median(df.summary$normalized.median))
 
   if (simplify) {
     av.score <- df.summary[[stat]]
     names(av.score) <- df.summary[[1]]
     av.score <- CodeAndRoll2::sortbyitsnames(av.score)
 
-    if (scale.zscore) av.score <- (scale(av.score)[,1])
+    if (scale.zscore) av.score <- (scale(av.score)[, 1])
 
-    cutoff <- if(absolute.thr) absolute.thr else stats::quantile(av.score, quantile.thr)
+    cutoff <- if (absolute.thr) absolute.thr else stats::quantile(av.score, quantile.thr)
 
     if (plotit) {
-      if(length(av.score) > max.bin.plot) {
+      if (length(av.score) > max.bin.plot) {
         print("Too many clusters for histogram plot.")
-      }
-      else {
-        p <- qbarplot(vec = av.score, save = F
-                      , hline = cutoff
-                      , plotname = title
-                      , suffix = quantile.thr
-                      , subtitle = subtitle
-                      , ylab = ylab.text
-                      , xlab = xlb # Abused
-                      , xlab.angle = 45
-                      #, ...
+      } else {
+        p <- qbarplot(
+          vec = av.score, save = F,
+          hline = cutoff,
+          plotname = title,
+          suffix = quantile.thr,
+          subtitle = subtitle,
+          ylab = ylab.text,
+          xlab = xlb # Abused
+          , xlab.angle = 45
+          # , ...
         )
         print(p)
-        if(save.plot) {
+        if (save.plot) {
           title_ <- Stringendo::ppp(title, suffix, Stringendo::flag.nameiftrue(scale.zscore))
-          ggExpress::qqSave(ggobj = p, title = title_, fname = Stringendo::ppp(title_, split_by, "png"),  w = width, h = height)
+          ggExpress::qqSave(ggobj = p, title = title_, fname = Stringendo::ppp(title_, split_by, "png"), w = width, h = height)
         }
-        if(return.plot) {
+        if (return.plot) {
           return(p)
         }
       }
     }
     return(av.score)
-  }
-  else {
+  } else {
     return(df.summary)
   }
 }
@@ -1092,13 +1138,16 @@ calc.cluster.averages.gruffi <- function(col_name = "Score.GO.0006096"
 #' @export
 #' @importFrom Seurat.utils calc.cluster.averages
 
-clUMAP.thresholding <- function(q.meta.col = 'Score.GO.0034976', c.meta.col =  "integrated_snn_res.30"
-                                , quantile = .95, absolute.cutoff = NULL
-                                , obj = combined.obj, plot.barplot = F
-                                , subt ="response to ER stress", plotUMAP =T, ... ) {
-  clusters.keep <- Seurat.utils::calc.cluster.averages(col_name = q.meta.col, split_by = c.meta.col, absolute.thr = absolute.cutoff
-                                                       , quantile.thr = quantile, plotit = plot.barplot)
-  cells.2.granules <- as.character(obj[[c.meta.col]][ ,1])
+clUMAP.thresholding <- function(
+    q.meta.col = "Score.GO.0034976", c.meta.col = "integrated_snn_res.30",
+    quantile = .95, absolute.cutoff = NULL,
+    obj = combined.obj, plot.barplot = F,
+    subt = "response to ER stress", plotUMAP = T, ...) {
+  clusters.keep <- Seurat.utils::calc.cluster.averages(
+    col_name = q.meta.col, split_by = c.meta.col, absolute.thr = absolute.cutoff,
+    quantile.thr = quantile, plotit = plot.barplot
+  )
+  cells.2.granules <- as.character(obj[[c.meta.col]][, 1])
 
 
   cluster.nrs.discard <- clusters.keep[which(!clusters.keep)]
@@ -1107,11 +1156,13 @@ clUMAP.thresholding <- function(q.meta.col = 'Score.GO.0034976', c.meta.col =  "
   idx.highlight.these <- which(is.2.highlight)
   cells.highlight <- colnames(obj)[idx.highlight.these]
 
-  ttl <- paste('Cells above', 'quantile', quantile, 'in', q.meta.col)
+  ttl <- paste("Cells above", "quantile", quantile, "in", q.meta.col)
   if (plotUMAP) {
-    Seurat.utils::clUMAP(obj = obj, cells.highlight = cells.highlight
-           , plotname = Stringendo::ppp("UMAP.thresholding_q", q.meta.col, quantile, c.meta.col)
-           , title = ttl, sub = c.meta.col, raster = F, label.cex = 5, ...) # , shape.by = c.meta.col
+    Seurat.utils::clUMAP(
+      obj = obj, cells.highlight = cells.highlight,
+      plotname = Stringendo::ppp("UMAP.thresholding_q", q.meta.col, quantile, c.meta.col),
+      title = ttl, sub = c.meta.col, raster = F, label.cex = 5, ...
+    ) # , shape.by = c.meta.col
   } else {
     # "Not sure about this"
     # x <- Seurat.utils::calc.cluster.averages(col_name = q.meta.col, split_by = c.meta.col, quantile.thr = quantile, plotit = plot.barplot, simplify = F)
@@ -1136,17 +1187,19 @@ CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a
   obj <- combined.obj
   cn <- colnames(obj@meta.data)
 
-  nonGO <- sort(CodeAndRoll2::grepv(x = cn, pattern = paste0('^Score.GO.[0-9]{7}.*'), invert = TRUE))
-  clean <- CodeAndRoll2::grepv(x = cn, pattern = paste0('^Score.GO.[0-9]{7}$'))
+  nonGO <- sort(CodeAndRoll2::grepv(x = cn, pattern = paste0("^Score.GO.[0-9]{7}.*"), invert = TRUE))
+  clean <- CodeAndRoll2::grepv(x = cn, pattern = paste0("^Score.GO.[0-9]{7}$"))
 
-  appended <- CodeAndRoll2::grepv(x = cn, pattern = paste0('^Score.GO.[0-9]{7}\\.[0-9]$'))
-  fixed <- gsub(x = appended, pattern = paste0('\\.[0-9]$'), replacement = "")
-  fixed.keep <- which( !(fixed %in% clean))
+  appended <- CodeAndRoll2::grepv(x = cn, pattern = paste0("^Score.GO.[0-9]{7}\\.[0-9]$"))
+  fixed <- gsub(x = appended, pattern = paste0("\\.[0-9]$"), replacement = "")
+  fixed.keep <- which(!(fixed %in% clean))
   uniqueGO <- c(clean, fixed.keep)
-  obj@meta.data <- obj@meta.data[ , c(nonGO, uniqueGO)]
+  obj@meta.data <- obj@meta.data[, c(nonGO, uniqueGO)]
 
-  Stringendo::iprint(length(clean), "GO's are clean, ", length(appended), "GO's are suffixed by .1 etc, of which"
-                     , length(fixed.keep), "GO's had no clean counterpart. All",length(uniqueGO), "scores, are cleaned, fixed and unique now.")
+  Stringendo::iprint(
+    length(clean), "GO's are clean, ", length(appended), "GO's are suffixed by .1 etc, of which",
+    length(fixed.keep), "GO's had no clean counterpart. All", length(uniqueGO), "scores, are cleaned, fixed and unique now."
+  )
   print("Metadata column order re-organized alphabetically, and GO-scores at the end.")
   return(obj)
 }
@@ -1163,11 +1216,12 @@ CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a
 #' @export
 #' @importFrom Stringendo iprint
 
-fix.metad.Colname.rm.trailing.1 <- function(obj = obj, colname=ScoreName) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
+fix.metad.Colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
   colnames(obj@meta.data) <-
-    gsub(x = colnames(obj@meta.data)
-         , pattern = paste0(colname,1)
-         , replacement = colname
+    gsub(
+      x = colnames(obj@meta.data),
+      pattern = paste0(colname, 1),
+      replacement = colname
     )
   Stringendo::iprint("Trailing '1' in metadata column name is removed. Column name:", colname)
   return(obj)
@@ -1190,21 +1244,25 @@ fix.metad.Colname.rm.trailing.1 <- function(obj = obj, colname=ScoreName) { # He
 #' @importFrom ggExpress qbarplot qhistogram
 
 plot.clust.size.distr <- function(obj = combined.obj,
-                                  category = if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))],
+                                  category = if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))],
                                   plot = T,
                                   thr.hist = 30, ...) {
-  clust.size.distr <- table(obj@meta.data[,category])
+  clust.size.distr <- table(obj@meta.data[, category])
   print(clust.size.distr)
-  resX <- gsub(pattern = ".*res\\.", replacement = '',x = category)
+  resX <- gsub(pattern = ".*res\\.", replacement = "", x = category)
 
   if (length(clust.size.distr) < thr.hist) {
-    ggExpress::qbarplot(clust.size.distr, plotname = Stringendo::ppp('clust.size.distr', (category))
-                        , subtitle = paste("Nr.clusters at res.",resX,":", length(clust.size.distr)," | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr)))
-                        , ...)
+    ggExpress::qbarplot(clust.size.distr,
+      plotname = Stringendo::ppp("clust.size.distr", (category)),
+      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+      ...
+    )
   } else {
-    ggExpress::qhistogram(vec = clust.size.distr, plotname = Stringendo::ppp('clust.size.distr', (category))
-                          , subtitle = paste("Nr.clusters at res.",resX,":", length(clust.size.distr)," | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr)))
-                          , ...)
+    ggExpress::qhistogram(
+      vec = clust.size.distr, plotname = Stringendo::ppp("clust.size.distr", (category)),
+      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+      ...
+    )
   }
 }
 
@@ -1219,10 +1277,8 @@ plot.clust.size.distr <- function(obj = combined.obj,
 #' @export
 
 PlotNormAndSkew <- function(x, q,
-                               tresholding = c("fitted", "empirical")[1],
-                               plot.hist = TRUE, ...
-) {
-
+                            tresholding = c("fitted", "empirical")[1],
+                            plot.hist = TRUE, ...) {
   m <- stats::median(x)
   stde_skewed <- stand_dev_skewed(x, mean_x = m)
 
@@ -1231,14 +1287,18 @@ PlotNormAndSkew <- function(x, q,
       stats::qnorm(q, mean = m, sd = stde_skewed)
     } else if (tresholding == "empirical") {
       stats::quantile(x, q)
-    } else { print("Unknown tresholding method") }
+    } else {
+      print("Unknown tresholding method")
+    }
 
   if (plot.hist) {
     Score.threshold.estimate <- x
-    sb <- print(paste("The computed", tresholding, paste0("q", q), "threshold is:", signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)))
-    qhistogram(Score.threshold.estimate
-               , vline = thresh, subtitle = sb, xlab = "Score"
-               , plotname = Stringendo::ppp('Score.threshold.est',substitute(x), tresholding), suffix = Stringendo::ppp('q', q))
+    sb <- print(paste("The computed", tresholding, paste0("q", q), "threshold is:"
+                      , signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)))
+    qhistogram(Score.threshold.estimate,
+      vline = thresh, subtitle = sb, xlab = "Score",
+      plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+    )
   }
   return(thresh)
 }
@@ -1261,45 +1321,43 @@ PlotNormAndSkew <- function(x, q,
 #' @importFrom Seurat RunUMAP Idents RenameIdents
 
 reassign.small.clusters <- function(obj = combined.obj,
-                                    ident = obj@misc$gruffi$'optimal.granule.res',
+                                    ident = obj@misc$gruffi$"optimal.granule.res",
                                     cell.num = 30,
-                                    reduction = c("pca","3d_umap")[2],
-                                    PCA_dim.recompution.umap.3d = ncol(obj@reductions$pca@cell.embeddings)
-) {
+                                    reduction = c("pca", "3d_umap")[2],
+                                    PCA_dim.recompution.umap.3d = ncol(obj@reductions$pca@cell.embeddings)) {
   name.id.reassigned <- paste0(ident, ".reassigned")
 
   obj@meta.data[[name.id.reassigned]] <- obj@meta.data[[ident]]
 
-  while(sum(table(obj@meta.data[[name.id.reassigned]]) < cell.num) > 0) {
-
+  while (sum(table(obj@meta.data[[name.id.reassigned]]) < cell.num) > 0) {
     cl.reassign <- names(which(table(obj@meta.data[[name.id.reassigned]]) < cell.num))
-    Stringendo::iprint(length(cl.reassign), 'clusters have <', cell.num, 'cells, which need to be reassigned.')
+    Stringendo::iprint(length(cl.reassign), "clusters have <", cell.num, "cells, which need to be reassigned.")
     clustering <- obj@meta.data[[name.id.reassigned]]
 
-    if(reduction == "pca") {
+    if (reduction == "pca") {
       embedding <- obj@reductions$pca@cell.embeddings
     }
 
-    if(reduction == "3d_umap") {
-      if(!is.null(obj@misc$'reductions.backup')) {
+    if (reduction == "3d_umap") {
+      if (!is.null(obj@misc$"reductions.backup")) {
         print("THE 3D UMAP IN @misc$'reductions.backup WILL BE USED.")
-        embedding <- obj@misc$'reductions.backup'$umap3d@cell.embeddings
+        embedding <- obj@misc$"reductions.backup"$umap3d@cell.embeddings
       }
-      if(is.null(obj@misc$'reductions.backup')) {
+      if (is.null(obj@misc$"reductions.backup")) {
         Stringendo::iprint("3D UMAP WILL BE COMPUTED AND STORED IN @misc$'reductions.backup. PC dimensions used:", PCA_dim.recompution.umap.3d)
 
 
         obj.3d <- Seurat::RunUMAP(obj, dims = 1:PCA_dim.recompution.umap.3d, n.components = 3)
-        obj@misc$'reductions.backup'$umap3d <- obj.3d@reductions$umap
-        embedding <- obj@misc$'reductions.backup'$umap3d@cell.embeddings
+        obj@misc$"reductions.backup"$umap3d <- obj.3d@reductions$umap
+        embedding <- obj@misc$"reductions.backup"$umap3d@cell.embeddings
       }
     }
 
     cluster.means <- matrix(NA, nrow = length(unique(clustering)), ncol = dim(embedding)[2])
     rownames(cluster.means) <- levels(clustering)
 
-    for(d in 1:dim(embedding)[2]) {
-      cluster.means[,d] <- by(embedding[,d], clustering, mean)
+    for (d in 1:dim(embedding)[2]) {
+      cluster.means[, d] <- by(embedding[, d], clustering, mean)
     }
 
     names(new_names) <- new_names <- levels(clustering)
@@ -1307,9 +1365,9 @@ reassign.small.clusters <- function(obj = combined.obj,
     dist.mat <- as.matrix(stats::dist(cluster.means))
     diag(dist.mat) <- Inf
 
-    for(r in cl.reassign) {
+    for (r in cl.reassign) {
       Stringendo::iprint("cluster:", r)
-      new_names[which(new_names == r)] <- names(which.min(dist.mat[r,]))
+      new_names[which(new_names == r)] <- names(which.min(dist.mat[r, ]))
     }
 
     Seurat::Idents(obj) <- obj@meta.data[[name.id.reassigned]]
@@ -1317,7 +1375,7 @@ reassign.small.clusters <- function(obj = combined.obj,
     obj@meta.data[[name.id.reassigned]] <- Seurat::Idents(obj)
   }
   print(name.id.reassigned)
-  print('Call plot.clust.size.distr() to check results.')
+  print("Call plot.clust.size.distr() to check results.")
   return(obj)
 }
 
@@ -1333,7 +1391,7 @@ reassign.small.clusters <- function(obj = combined.obj,
 
 saveData <- function(new.thresh.glycolytic, new.thresh.ER.stress, save.dir = OutDir) {
   thresholds <- list("glycolytic" = new.thresh.glycolytic, "ER.stress" = new.thresh.ER.stress)
-  saveRDS(thresholds, file = paste0(OutDir,'GO.thresholds.RDS'))
+  saveRDS(thresholds, file = paste0(OutDir, "GO.thresholds.RDS"))
 }
 
 
@@ -1354,7 +1412,7 @@ saveRDS.compress.in.BG <- function(obj, compr = FALSE, fname) {
   saveRDS(object = obj, compress = compr, file = fname)
   try(tictoc::toc(), silent = T)
   print(paste("Saved, being compressed", fname))
-  system(paste("gzip", fname),  wait = FALSE) # execute in the background
+  system(paste("gzip", fname), wait = FALSE) # execute in the background
   try(say(), silent = T)
 }
 
@@ -1369,10 +1427,10 @@ saveRDS.compress.in.BG <- function(obj, compr = FALSE, fname) {
 #' @export
 #' @importFrom Matrix colMeans
 
-sparse.cor <- function(smat){
+sparse.cor <- function(smat) {
   n <- nrow(smat)
   cMeans <- Matrix::colMeans(smat)
-  covmat <- (as.matrix(crossprod(smat)) - n * tcrossprod(cMeans))/(n - 1)
+  covmat <- (as.matrix(crossprod(smat)) - n * tcrossprod(cMeans)) / (n - 1)
   sdvec <- sqrt(diag(covmat))
   cormat <- covmat / tcrossprod(sdvec)
   list(cov = covmat, cor = cormat)
@@ -1390,8 +1448,7 @@ sparse.cor <- function(smat){
 #' @export
 
 stand_dev_skewed <- function(x, mean_x = mean(x), plothist = F, breaks = 50) {
-
-  #print(mean(x))
+  # print(mean(x))
   x_lower_eq <- x[x <= mean_x]
   x_lower <- x[x < mean_x]
   x_mirror <- c(x_lower_eq, abs(mean_x - x_lower) + mean_x)
@@ -1401,7 +1458,7 @@ stand_dev_skewed <- function(x, mean_x = mean(x), plothist = F, breaks = 50) {
     graphics::hist(x, xlim = range(x), breaks = breaks)
     graphics::hist(x_mirror, xlim = range(x), breaks = breaks)
   }
-  res <- sum((x_mirror - mean_x) ^ 2) / (length(x_mirror) - 1)
+  res <- sum((x_mirror - mean_x)^2) / (length(x_mirror) - 1)
   return(sqrt(res))
 }
 
@@ -1435,4 +1492,3 @@ ww.convert.GO_term.2.score <- function(GO_term = "GO:0006096") {
 ww.convert.score.2.GO_term <- function(ScoreNames = "Score.GO.0006096") {
   gsub(x = ScoreNames, pattern = "Score.GO.", replacement = "GO:")
 }
-
