@@ -638,11 +638,9 @@ PasteUniqueGeneList <- function() {
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}
-#'  \code{\link[MarkdownHelpers]{stopif}}
 #'  \code{\link[Stringendo]{iprint}}
 #' @export
 #' @importFrom Seurat DefaultAssay
-#' @importFrom MarkdownHelpers stopif
 #' @importFrom Stringendo iprint
 
 PlotGoTermScores <- function(
@@ -659,7 +657,10 @@ PlotGoTermScores <- function(
   backup.assay <- Seurat::DefaultAssay(obj)
 
   if (grepl(x = GO, pattern = "^GO:", perl = T)) {
-    MarkdownHelpers::stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
+    # stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
+    stopifnot("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
+                !grepl(pattern = "Score.", x = GO))
+
     GO.wDot <- make.names(GO)
     ScoreName <- paste0("Score.", GO.wDot)
     print(ScoreName)
