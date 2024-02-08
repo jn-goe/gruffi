@@ -174,7 +174,7 @@ CalcTranscriptomePercentage <- function(obj = combined.obj, genes = genes.GO.006
 #' @seealso
 #'  \code{\link[Seurat]{FeaturePlot}}
 #'  \code{\link[ggplot2]{labs}}
-#'  \code{\link[Stringendo]{ww.FnP_parser}}
+#'  \code{\link[MarkdownHelpers]{ww.FnP_parser}}
 #'  \code{\link[cowplot]{save_plot}}
 #' @export
 #' @importFrom Seurat FeaturePlot
@@ -208,7 +208,7 @@ FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes = "", name_desc
 #' @seealso
 #'  \code{\link[Seurat]{FeaturePlot}}
 #'  \code{\link[ggplot2]{labs}}
-#'  \code{\link[Stringendo]{ww.FnP_parser}}
+#'  \code{\link[MarkdownHelpers]{ww.FnP_parser}}
 #'  \code{\link[cowplot]{save_plot}}
 #' @export
 #' @importFrom Seurat FeaturePlot
