@@ -1,143 +1,85 @@
+Dependency file generated on Tue Feb 13 18:40:15 2024 
+
+#################################################################################################### 
+gruffi.R
+#################################################################################################### 
+$`c("package:gruffi", "devtools_shims", "package:PackageTools", "package:base")`
+[1] "system.file"
 
 $`character(0)`
- [1] "AddGOScore"
- [2] "binning"
- [3] "calc.cluster.averages"
- [4] "calc.cluster.averages.gruffi"
- [5] "cividis"
- [6] "clUMAP"
- [7] "cube3d"
- [8] "FeaturePlotSaveGO"
- [9] "fix.metad.Colname.rm.trailing.1"
-[10] "geneInCategory"
-[11] "getBM"
-[12] "GetClusteringRuns"
-[13] "GetGOTerms"
-[14] "group_by_at"
-[15] "IntersectWithExpressed"
-[16] "isave.RDS"
-[17] "labs"
-[18] "modal"
-[19] "multiFeaturePlot.A4"
-[20] "n"
-[21] "open3d"
-[22] "PlotGoTermScores"
-[23] "PlotNormAndSkew"
-[24] "qbarplot"
-[25] "qhistogram"
-[26] "qqSave"
-[27] "qscatter"
-[28] "read_clip"
-[29] "rglwidget"
-[30] "runApp"
-[31] "save_plot"
-[32] "saveWidget"
-[33] "say"
-[34] "select"
-[35] "select_at"
-[36] "shade3d"
-[37] "shinyApp"
-[38] "gtools::mixedsort"
-[39] "stand_dev_skewed"
-[40] "summarize"
-[41] "sym"
-[42] "Term"
-[43] "tibble"
-[44] "tic"
-[45] "toc"
-[46] "translate3d"
-[47] "useEnsembl"
-[48] "ww.convert.GO_term.2.score"
-[49] "ww.convert.score.2.GO_term"
+ [1] "AddModuleScore"              "as.numeric.wNames.character"
+ [3] "binning"                     "calc.cluster.averages"      
+ [5] "Cells"                       "cividis"                    
+ [7] "clUMAP"                      "cube3d"                     
+ [9] "cv"                          "DefaultAssay"               
+[11] "FeaturePlot"                 "filter_HP"                  
+[13] "FindClusters"                "flag.nameiftrue"            
+[15] "geneInCategory"              "GetAssayData"               
+[17] "getBM"                       "GetClusteringRuns"          
+[19] "grepv"                       "group_by_at"                
+[21] "Idents"                      "iprint"                     
+[23] "isave.RDS"                   "kpp"                        
+[25] "kppd"                        "labs"                       
+[27] "llprint"                     "matrix.fromNames"           
+[29] "mixedsort"                   "modal"                      
+[31] "multiFeaturePlot.A4"         "n"                          
+[33] "nbrOfWorkers"                "open3d"                     
+[35] "pc_TRUE"                     "percentage_formatter"       
+[37] "plan"                        "ppp"                        
+[39] "qbarplot"                    "qhistogram"                 
+[41] "qqSave"                      "qscatter"                   
+[43] "read_clip"                   "RenameIdents"               
+[45] "rglwidget"                   "runApp"                     
+[47] "RunTSNE"                     "RunUMAP"                    
+[49] "save_plot"                   "saveWidget"                 
+[51] "select"                      "select_at"                  
+[53] "sem"                         "shade3d"                    
+[55] "shinyApp"                    "sortbyitsnames"             
+[57] "str_split_fixed"             "summarize"                  
+[59] "sym"                         "Term"                       
+[61] "tibble"                      "tic"                        
+[63] "toc"                         "translate3d"                
+[65] "useEnsembl"                  "which_names"                
+[67] "ww.FnP_parser"              
 
 $`package:base`
- [1] "abs"          "all"
- [3] "as.character" "as.factor"
- [5] "as.logical"   "as.matrix"
- [7] "as.numeric"   "by"
- [9] "c"            "cat"
-[11] "cbind"        "ceiling"
-[13] "character"    "colnames"
-[15] "crossprod"    "data.frame"
-[17] "diag"         "dim"
-[19] "dput"         "exists"
-[21] "factor"       "file.path"
-[23] "floor"        "grepl"
-[25] "gsub"         "identical"
-[27] "is.list"      "is.null"
-[29] "length"       "levels"
-[31] "list"         "logical"
-[33] "make.names"   "matrix"
-[35] "max"          "mean"
-[37] "min"          "names"
-[39] "ncol"         "Negate"
-[41] "new.env"      "nrow"
-[43] "paste"        "paste0"
-[45] "print"        "range"
-[47] "rep"          "return"
-[49] "round"        "rownames"
-[51] "sample"       "saveRDS"
-[53] "scale"        "setdiff"
-[55] "signif"       "sort"
-[57] "source"       "sqrt"
-[59] "stop"         "stopifnot"
-[61] "subset"       "substitute"
-[63] "sum"          "system"
-[65] "table"        "tcrossprod"
-[67] "try"          "unique"
-[69] "unlist"       "which"
-[71] "which.min"
-
-$`package:CodeAndRoll2`
-[1] "cv"
-[2] "grepv"
-[3] "matrix.fromNames"
-[4] "pc_TRUE"
-[5] "sem"
-[6] "sortbyitsnames"
-[7] "which_names"
+ [1] ".Deprecated"  "abs"          "all"          "as.character" "as.factor"   
+ [6] "as.logical"   "as.matrix"    "as.numeric"   "by"           "c"           
+[11] "cat"          "cbind"        "ceiling"      "colnames"     "colSums"     
+[16] "data.frame"   "diag"         "dim"          "dput"         "exists"      
+[21] "factor"       "file.path"    "floor"        "grepl"        "gsub"        
+[26] "inherits"     "intersect"    "is.list"      "is.null"      "length"      
+[31] "levels"       "list"         "logical"      "make.names"   "matrix"      
+[36] "max"          "mean"         "message"      "min"          "names"       
+[41] "ncol"         "Negate"       "new.env"      "paste"        "paste0"      
+[46] "print"        "range"        "rep"          "require"      "return"      
+[51] "round"        "rownames"     "rowSums"      "sample"       "scale"       
+[56] "setdiff"      "signif"       "sort"         "source"       "sqrt"        
+[61] "stop"         "stopifnot"    "strsplit"     "subset"       "substitute"  
+[66] "sum"          "system"       "table"        "try"          "unique"      
+[71] "unlist"       "warning"      "which"        "which.min"   
 
 $`package:graphics`
 [1] "hist"
 
-$`package:MarkdownHelpers`
-[1] "filter_HP" "llprint"
-[3] "stopif"
-
-$`package:Seurat`
-[1] "AddModuleScore" "FeaturePlot"
-[3] "FindClusters"   "RunTSNE"
-[5] "RunUMAP"
+$`package:gruffi`
+ [1] "AddGOScore"                         "calc.cluster.averages.gruffi"      
+ [3] "calculateMedianClusterSize"         "FeaturePlotSaveGO"                 
+ [5] "GetGOTerms"                         "IntersectWithExpressed"            
+ [7] "PlotGoTermScores"                   "PlotNormAndSkew"                   
+ [9] "stand_dev_skewed"                   "ww.convert.GO_term.2.score"        
+[11] "ww.convert.score.2.GO_term"         "ww.fix.metad.colname.rm.trailing.1"
 
 $`package:stats`
-[1] "dist"     "median"   "qnorm"
-[4] "quantile"
-
-$`package:Stringendo`
-[1] "flag.nameiftrue"
-[2] "iprint"
-[3] "kpp"
-[4] "kppd"
-[5] "percentage_formatter"
-[6] "ppp"
-[7] "ww.FnP_parser"
-
-$`package:stringr`
-[1] "str_split_fixed"
+[1] "dist"     "median"   "qnorm"    "quantile"
 
 $`package:utils`
 [1] "head"
 
-c("devtools_shims", "base")
-c("Seurat", "SeuratObject")
-c("SeuratObject", "base")
+c("gruffi", "devtools_shims", "PackageTools", "base")
 character(0)
 base
-CodeAndRoll2
 graphics
-MarkdownHelpers
-Seurat
+gruffi
 stats
-Stringendo
-stringr
 utils
