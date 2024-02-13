@@ -1,0 +1,6 @@
+cff-version: 1.2.0
+title: Gruffi identifies and removes stressed cells from brain organoid single-cell datasets.
+version: v1.1.5
+message: >-
+  If you use this software, please cite: https://doi.org/10.15252/embj.2022111118 "Gruffi: an algorithm for computational removal of stressed cells from brain organoid transcriptomic datasets"
+

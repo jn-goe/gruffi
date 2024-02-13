@@ -43,6 +43,5 @@ Plot GO-term scores.
 }
 \seealso{
 \code{\link[Seurat]{reexports}}
-\code{\link[MarkdownHelpers]{stopif}}
 \code{\link[Stringendo]{iprint}}
 }

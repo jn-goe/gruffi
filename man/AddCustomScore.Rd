@@ -21,7 +21,8 @@ AddCustomScore(
 \item{FixName}{Shall trailing "1" ar the end of the new column name be removed? Default: TRUE}
 }
 \description{
-Add a custom gene expression score from a set of genes provided to the Seurat single cell object
+Add a custom gene expression score from a set of genes provided to the
+Seurat single cell object. Calculates Score for gene set. Fixes name.
 }
 \seealso{
 \code{\link[Seurat]{AddModuleScore}}

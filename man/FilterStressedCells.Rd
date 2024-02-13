@@ -2,7 +2,7 @@
 % Please edit documentation in R/gruffi.R
 \name{FilterStressedCells}
 \alias{FilterStressedCells}
-\title{FilterStressedCells}
+\title{Filter Stressed Cells from a Seurat Object}
 \usage{
 FilterStressedCells(
   obj = combined.obj,
@@ -29,18 +29,19 @@ FilterStressedCells(
 
 \item{direction}{filtering direction, above or below, Default: 'above'}
 
-\item{saveRDS}{save RDS file, Default: T}
+\item{saveRDS}{Logical indicating if the filtered object should be saved as an RDS file, default is TRUE.}
 
-\item{saveRDS.Removed}{PARAM_DESCRIPTION, Default: F}
+\item{saveRDS.Removed}{Logical indicating if a separate RDS file for removed cells should be saved, default is FALSE.}
 
-\item{PlotExclusionByEachScore}{PARAM_DESCRIPTION, Default: T}
+\item{PlotExclusionByEachScore}{Logical for plotting exclusion results by each score, default is TRUE.}
 
-\item{PlotSingleCellExclusion}{PARAM_DESCRIPTION, Default: T}
+\item{PlotSingleCellExclusion}{Logical for plotting single cell exclusion results, default is TRUE.}
 
-\item{GranuleExclusionScatterPlot}{PARAM_DESCRIPTION, Default: T}
+\item{GranuleExclusionScatterPlot}{Logical for plotting a scatter plot of granule exclusion, default is TRUE.}
 }
 \description{
-Filter stressed cells from a Seurat single cell object.
+Identifies and filters stressed cells based on specified GO terms and a quantile threshold.
+It supports optional plotting of exclusion results and saving of modified datasets.
 }
 \seealso{
 \code{\link[Stringendo]{iprint}}, \code{\link[Stringendo]{percentage_formatter}}

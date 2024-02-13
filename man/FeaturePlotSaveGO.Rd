@@ -38,6 +38,6 @@ Plot and save a Seurat FeaturePlot from a GO-score.
 \seealso{
 \code{\link[Seurat]{FeaturePlot}}
 \code{\link[ggplot2]{labs}}
-\code{\link[Stringendo]{ww.FnP_parser}}
+\code{\link[MarkdownHelpers]{ww.FnP_parser}}
 \code{\link[cowplot]{save_plot}}
 }

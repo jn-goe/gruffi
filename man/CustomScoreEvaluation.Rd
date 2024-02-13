@@ -29,5 +29,4 @@ Custom gene-set derived score evaluation for filtering.
 \seealso{
 \code{\link[Seurat]{reexports}}
 \code{\link[Stringendo]{iprint}}
-\code{\link[IRanges]{character(0)}}
 }

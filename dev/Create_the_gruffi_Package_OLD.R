@@ -1,7 +1,7 @@
 ######################################################################################################
-# Create_the_gruffi_Package.R
+# Create_the_gruffi_Package_OLD.R
 ######################################################################################################
-# source("~/GitHub/Packages/gruffiDev/dev/Create_the_gruffi_Package.R")
+# source("~/GitHub/Packages/gruffi/dev/Create_the_gruffi_Package_OLD.R")
 # rm(list = ls(all.names = TRUE));
 try(dev.off(), silent = TRUE)
 
@@ -11,7 +11,7 @@ require("devtools")
 
 # Setup ------------------------
 PackageName <- "gruffi"
-package.version <- "1.0.2"
+package.version <- "1.2.0"
 setwd("~/GitHub/Packages/")
 
 RepositoryDir <- kollapse("~/GitHub/Packages/", PackageName, "/")

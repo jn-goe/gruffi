@@ -32,6 +32,6 @@ Plot and save a Seurat FeaturePlot with a custom score in the meta data.
 \seealso{
 \code{\link[Seurat]{FeaturePlot}}
 \code{\link[ggplot2]{labs}}
-\code{\link[Stringendo]{ww.FnP_parser}}
+\code{\link[MarkdownHelpers]{ww.FnP_parser}}
 \code{\link[cowplot]{save_plot}}
 }
