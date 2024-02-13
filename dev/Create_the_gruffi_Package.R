@@ -24,12 +24,12 @@ PackageTools::document_and_create_package(repository.dir, config_file = 'config.
 # Install your package ------------------------------------------------
 "disable rprofile by"
 rprofile()
-devtools::install_local(repository.dir, upgrade = F)
+devtools::install_local(repository.dir, upgrade = F, force = T)
 
 
 # Test if you can install from github ------------------------------------------------
 remote.path <- file.path(DESCRIPTION$'github.user', package.name)
-pak::pkg_install(remote.path)
+# pak::pkg_install(remote.path)
 
 devtools::install_github(repo = "jn-goe/gruffi", upgrade = F)
 
@@ -85,7 +85,7 @@ PackageTools::copy_github_badge("active") # Add badge to readme via clipboard
 
 # Replaces T with TRUE and F with FALSE ------------------------------------------------
 for (scriptX in ls.scripts.full.path) {
-  PackageTools::replace_tf_with_true_false(scriptX, strict_mode = F)
+  PackageTools::replace_short_calls(scriptX, strict_mode = F)
 }
 
 
