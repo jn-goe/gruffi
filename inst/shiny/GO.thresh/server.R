@@ -45,7 +45,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   }
 
   # stress assignment
-  c.data <- shiny::reactive({
+  obj2.data <- shiny::reactive({
     if (!is.null(stress.ident1)) i.stress.ident1 <- input$"t.stress.ident1"
     if (!is.null(stress.ident2)) i.stress.ident2 <- input$"t.stress.ident2"
     if (!is.null(notstress.ident3)) i.notstress.ident3 <- input$"t.notstress.ident3"
@@ -93,7 +93,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     obj2
   })
 
-  c.data.part.GO <- shiny::reactive({
+  obj2.data.part.GO <- shiny::reactive({
     if (!is.null(stress.ident1)) i.stress.ident1 <- input$"t.stress.ident1"
     if (!is.null(stress.ident2)) i.stress.ident2 <- input$"t.stress.ident2"
     if (!is.null(notstress.ident3)) i.notstress.ident3 <- input$"t.notstress.ident3"
@@ -125,7 +125,7 @@ server <- shiny::shinyServer(function(input, output, session) {
       obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == TRUE] <- T
     }
 
-    c
+    obj2
   })
 
   #------ Output Plots --------#
@@ -133,7 +133,7 @@ server <- shiny::shinyServer(function(input, output, session) {
 
   # GO score histograms
   if (!is.null(stress.ident1)) {
-    output$hist.stress.ident1 <- shiny::renderPlot({
+    output$"hist.stress.ident1" <- shiny::renderPlot({
       df <- df.data.stress.ident1()
       ggplot2::ggplot(df, ggplot2::aes(x = av.stress.ident1, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = colorz) +
@@ -148,7 +148,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     })
   }
   if (!is.null(stress.ident2)) {
-    output$hist.stress.ident2 <- shiny::renderPlot({
+    output$"hist.stress.ident2" <- shiny::renderPlot({
       df <- df.data.stress.ident2()
       ggplot2::ggplot(df, ggplot2::aes(x = av.stress.ident2, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = colorz) +
@@ -163,7 +163,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     })
   }
   if (!is.null(notstress.ident3)) {
-    output$hist.notstress.ident3 <- shiny::renderPlot({
+    output$"hist.notstress.ident3" <- shiny::renderPlot({
       df <- df.data.notstress.ident3()
       ggplot2::ggplot(df, ggplot2::aes(x = av.notstress.ident3, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = rev(colorz)) +
@@ -178,7 +178,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     })
   }
   if (!is.null(notstress.ident4)) {
-    output$hist.notstress.ident4 <- shiny::renderPlot({
+    output$"hist.notstress.ident4" <- shiny::renderPlot({
       df <- df.data.notstress.ident4()
       ggplot2::ggplot(df, ggplot2::aes(x = av.notstress.ident4, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = rev(colorz)) +
@@ -195,14 +195,14 @@ server <- shiny::shinyServer(function(input, output, session) {
 
   # stress assignment UMAP
   output$stress.umap <- shiny::renderPlot({
-    c <- c.data()
-    Seurat.utils::clUMAP(obj = c, ident = "is.Stressed", save.plot = F) + Seurat::NoAxes() +
+    obj2 <- obj2.data()
+    Seurat.utils::clUMAP(obj = obj2, ident = "is.Stressed", save.plot = F) + Seurat::NoAxes() +
       ggplot2::scale_color_manual(values = colorz)
   })
 
   # stress assignment barplot cell numbers
   output$count.bar <- shiny::renderPlot({
-    c <- c.data()
+    obj2 <- obj2.data()
     ident.plot <- plot.cluster.shiny
     ggplot2::ggplot(obj2@meta.data, ggplot2::aes(x = ident.plot, fill = is.Stressed, stat = "count")) +
       ggplot2::scale_fill_manual(values = colorz) +
@@ -212,9 +212,9 @@ server <- shiny::shinyServer(function(input, output, session) {
       ggplot2::xlab("")
   })
 
-  output$go.score <- shiny::renderPlot(
+  output$"go.score" <- shiny::renderPlot(
     {
-      c <- c.data.part.GO()
+      obj2 <- obj2.data.part.GO()
       ptlist <- list()
       count <- 1
       if (!is.null(stress.ident1)) {
@@ -236,25 +236,25 @@ server <- shiny::shinyServer(function(input, output, session) {
 
       # colorz <- Seurat.utils::gg_color_hue(2)[2:1]
       if (!is.null(stress.ident1)) {
-        ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "stress.ident1.thresh_cluster", save.plot = F) +
+        ptlist[[count]] <- Seurat.utils::clUMAP(obj = obj2, ident = "stress.ident1.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
           ggplot2::scale_color_manual(values = colorz) + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(stress.ident2)) {
-        ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "stress.ident2.thresh_cluster", save.plot = F) +
+        ptlist[[count]] <- Seurat.utils::clUMAP(obj = obj2, ident = "stress.ident2.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
           ggplot2::scale_color_manual(values = colorz) + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(notstress.ident3)) {
-        ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "notstress.ident3.thresh_cluster", save.plot = F) +
+        ptlist[[count]] <- Seurat.utils::clUMAP(obj = obj2, ident = "notstress.ident3.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
           ggplot2::scale_color_manual(values = rev(colorz)) + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(notstress.ident4)) {
-        ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "notstress.ident4.thresh_cluster", save.plot = F) +
+        ptlist[[count]] <- Seurat.utils::clUMAP(obj = obj2, ident = "notstress.ident4.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
           ggplot2::scale_color_manual(values = rev(colorz)) + Seurat::NoAxes()
         count <- count + 1
@@ -266,7 +266,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   )
 
   shiny::observeEvent(input$save_inputs, {
-    obj <- c.data()
+    obj <- obj2.data()
     if (!is.null(stress.ident1)) {
       i.stress.ident1 <- input$"t.stress.ident1"
       obj@misc$gruffi$"thresh.stress.ident1" <- i.stress.ident1
