@@ -51,78 +51,78 @@ server <- shiny::shinyServer(function(input, output, session) {
     if (!is.null(notstress.ident3)) i.notstress.ident3 <- input$"t.notstress.ident3"
     if (!is.null(notstress.ident4)) i.notstress.ident4 <- input$"t.notstress.ident4"
 
-    c <- obj
+    obj2 <- obj
 
     if (!is.null(stress.ident1)) {
-      i1.bool <- as.numeric(levels(c@meta.data[ , idents$"stress.ident1"]))[c@meta.data[ , idents$"stress.ident1"]] > i.stress.ident1
+      i1.bool <- as.numeric(levels(obj2@meta.data[ , idents$"stress.ident1"]))[obj2@meta.data[ , idents$"stress.ident1"]] > i.stress.ident1
       if (!is.null(stress.ident2)) {
-        i2.bool <- as.numeric(levels(c@meta.data[ , idents$"stress.ident2"]))[c@meta.data[ , idents$"stress.ident2"]] > i.stress.ident2
+        i2.bool <- as.numeric(levels(obj2@meta.data[ , idents$"stress.ident2"]))[obj2@meta.data[ , idents$"stress.ident2"]] > i.stress.ident2
         stress.bool <- i1.bool | i2.bool
       } else {
         stress.bool <- i1.bool
       }
     } else {
       if (!is.null(stress.ident2)) {
-        i2.bool <- as.numeric(levels(c@meta.data[ , idents$"stress.ident2"]))[c@meta.data[ , idents$"stress.ident2"]] > i.stress.ident2
+        i2.bool <- as.numeric(levels(obj2@meta.data[ , idents$"stress.ident2"]))[obj2@meta.data[ , idents$"stress.ident2"]] > i.stress.ident2
         stress.bool <- i2.bool
       }
     }
 
     notstress.bool <- NULL
     if (!is.null(notstress.ident3)) {
-      i3.bool <- as.numeric(levels(c@meta.data[ , idents$"notstress.ident3"]))[c@meta.data[ , idents$"notstress.ident3"]] > i.notstress.ident3
+      i3.bool <- as.numeric(levels(obj2@meta.data[ , idents$"notstress.ident3"]))[obj2@meta.data[ , idents$"notstress.ident3"]] > i.notstress.ident3
       if (!is.null(notstress.ident4)) {
-        i4.bool <- as.numeric(levels(c@meta.data[ , idents$"notstress.ident4"]))[c@meta.data[ , idents$"notstress.ident4"]] > i.notstress.ident4
+        i4.bool <- as.numeric(levels(obj2@meta.data[ , idents$"notstress.ident4"]))[obj2@meta.data[ , idents$"notstress.ident4"]] > i.notstress.ident4
         notstress.bool <- i3.bool | i4.bool
       } else {
         notstress.bool <- i3.bool
       }
     } else {
       if (!is.null(notstress.ident4)) {
-        i4.bool <- as.numeric(levels(c@meta.data[ , idents$"notstress.ident4"]))[c@meta.data[ , idents$"notstress.ident4"]] > i.notstress.ident4
+        i4.bool <- as.numeric(levels(obj2@meta.data[ , idents$"notstress.ident4"]))[obj2@meta.data[ , idents$"notstress.ident4"]] > i.notstress.ident4
         notstress.bool <- i4.bool
       }
     }
 
     if (!is.null(notstress.bool)) {
-      c$is.Stressed <- stress.bool & !notstress.bool
+      obj2$"is.Stressed" <- stress.bool & !notstress.bool
     } else {
-      c$is.Stressed <- stress.bool
+      obj2$"is.Stressed" <- stress.bool
     }
-    # c$is.Stressed[c$is.Stressed == FALSE] <- F
-    # c$is.Stressed[c$is.Stressed == TRUE] <- T
-    c
+
+    obj2
   })
+
   c.data.part.GO <- shiny::reactive({
     if (!is.null(stress.ident1)) i.stress.ident1 <- input$"t.stress.ident1"
     if (!is.null(stress.ident2)) i.stress.ident2 <- input$"t.stress.ident2"
     if (!is.null(notstress.ident3)) i.notstress.ident3 <- input$"t.notstress.ident3"
     if (!is.null(notstress.ident4)) i.notstress.ident4 <- input$"t.notstress.ident4"
 
-    c <- obj
+    obj2 <- obj
 
     if (!is.null(stress.ident1)) {
-      c$"stress.ident1.thresh_cluster" <- as.numeric(levels(c@meta.data[ , idents$"stress.ident1"]))[c@meta.data[ , idents$"stress.ident1"]] > i.stress.ident1
-      c$"stress.ident1.thresh_cluster"[c$"stress.ident1.thresh_cluster" == FALSE] <- F
-      c$"stress.ident1.thresh_cluster"[c$"stress.ident1.thresh_cluster" == TRUE] <- T
+      obj2$"stress.ident1.thresh_cluster" <- as.numeric(levels(obj2@meta.data[ , idents$"stress.ident1"]))[obj2@meta.data[ , idents$"stress.ident1"]] > i.stress.ident1
+      obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == FALSE] <- F
+      obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(stress.ident2)) {
-      c$"stress.ident2.thresh_cluster" <- as.numeric(levels(c@meta.data[ , idents$"stress.ident2"]))[c@meta.data[ , idents$"stress.ident2"]] > i.stress.ident2
-      c$"stress.ident2.thresh_cluster"[c$"stress.ident2.thresh_cluster" == FALSE] <- F
-      c$"stress.ident2.thresh_cluster"[c$"stress.ident2.thresh_cluster" == TRUE] <- T
+      obj2$"stress.ident2.thresh_cluster" <- as.numeric(levels(obj2@meta.data[ , idents$"stress.ident2"]))[obj2@meta.data[ , idents$"stress.ident2"]] > i.stress.ident2
+      obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == FALSE] <- F
+      obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident3)) {
-      c$"notstress.ident3.thresh_cluster" <- as.numeric(levels(c@meta.data[ , idents$"notstress.ident3"]))[c@meta.data[ , idents$"notstress.ident3"]] > i.notstress.ident3
-      c$"notstress.ident3.thresh_cluster"[c$"notstress.ident3.thresh_cluster" == FALSE] <- F
-      c$"notstress.ident3.thresh_cluster"[c$"notstress.ident3.thresh_cluster" == TRUE] <- T
+      obj2$"notstress.ident3.thresh_cluster" <- as.numeric(levels(obj2@meta.data[ , idents$"notstress.ident3"]))[obj2@meta.data[ , idents$"notstress.ident3"]] > i.notstress.ident3
+      obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == FALSE] <- F
+      obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident4)) {
-      c$"notstress.ident4.thresh_cluster" <- as.numeric(levels(c@meta.data[ , idents$"notstress.ident4"]))[c@meta.data[ , idents$"notstress.ident4"]] > i.notstress.ident4
-      c$"notstress.ident4.thresh_cluster"[c$"notstress.ident4.thresh_cluster" == FALSE] <- F
-      c$"notstress.ident4.thresh_cluster"[c$"notstress.ident4.thresh_cluster" == TRUE] <- T
+      obj2$"notstress.ident4.thresh_cluster" <- as.numeric(levels(obj2@meta.data[ , idents$"notstress.ident4"]))[obj2@meta.data[ , idents$"notstress.ident4"]] > i.notstress.ident4
+      obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == FALSE] <- F
+      obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == TRUE] <- T
     }
 
     c
@@ -202,7 +202,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$count.bar <- shiny::renderPlot({
     c <- c.data()
     ident.plot <- plot.cluster.shiny
-    ggplot2::ggplot(c@meta.data, ggplot2::aes(x = ident.plot, fill = is.Stressed, stat = "count")) +
+    ggplot2::ggplot(obj2@meta.data, ggplot2::aes(x = ident.plot, fill = is.Stressed, stat = "count")) +
       ggplot2::scale_fill_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1])) +
       ggplot2::theme_minimal() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 0.5, hjust = 1)) +
@@ -265,19 +265,19 @@ server <- shiny::shinyServer(function(input, output, session) {
     obj <- c.data()
     if (!is.null(stress.ident1)) {
       i.stress.ident1 <- input$"t.stress.ident1"
-      obj@misc$gruffi$thresh.stress.ident1 <- i.stress.ident1
+      obj@misc$gruffi$"thresh.stress.ident1" <- i.stress.ident1
     }
     if (!is.null(stress.ident2)) {
       i.stress.ident2 <- input$"t.stress.ident2"
-      obj@misc$gruffi$thresh.stress.ident2 <- i.stress.ident2
+      obj@misc$gruffi$"thresh.stress.ident2" <- i.stress.ident2
     }
     if (!is.null(notstress.ident3)) {
       i.notstress.ident3 <- input$"t.notstress.ident3"
-      obj@misc$gruffi$thresh.notstress.ident3 <- i.notstress.ident3
+      obj@misc$gruffi$"thresh.notstress.ident3" <- i.notstress.ident3
     }
     if (!is.null(notstress.ident4)) {
       i.notstress.ident4 <- input$"t.notstress.ident4"
-      obj@misc$gruffi$thresh.notstress.ident4 <- i.notstress.ident4
+      obj@misc$gruffi$"thresh.notstress.ident4" <- i.notstress.ident4
     }
     shiny::stopApp(returnValue = obj)
   })
