@@ -16,15 +16,15 @@
 #' an optimal resolution that results in median cluster sizes within the target range. It uses
 #' Seurat's clustering functionality and adjusts based on the median cell count per cluster.
 #'
-#' @param obj Seurat object to perform clustering on. Defaults to `combined.obj`.
+#' @param obj Seurat object to perform clustering on. Defaults to 'combined.obj'.
 #' @param min.med.granule.size Minimum acceptable median cell count per cluster. Default is 100.
 #' @param max.med.granule.size Maximum acceptable median cell count per cluster. Default is 200.
-#' @param min.res Starting lower bound for clustering resolution search. Defaults to:
-#' `round(ncol(obj)/10000)`.
-#' @param max.res Starting upper bound for clustering resolution search. Defaults to:
-#' `round(ncol(obj)/1000)`.
-#' @param assay Specifies the assay to use for clustering. Default is `"integrated"`, with
-#' `"RNA"` as an alternative taken from on `Seurat::DefaultAssay(obj)`.
+#' @param min.res Starting lower bound for clustering resolution search.
+#' Defaults to: `round(ncol(obj)/10000)`.
+#' @param max.res Starting upper bound for clustering resolution search.
+#' Defaults to: `round(ncol(obj)/1000)`.
+#' @param assay Specifies the assay to use for clustering. Default is 'integrated, with
+#' "RNA" as an alternative taken from on `Seurat::DefaultAssay(obj)`.
 #' @param max.loop Maximum number of iterations for adjusting clustering resolution. Default is 20.
 # #' @param n.threads Number of threads to use for parallel computation. Default is 1.
 #'
@@ -34,6 +34,7 @@
 #' # Assuming `combined.obj` is a pre-loaded Seurat object
 #' optimal.obj <- aut.res.clustering(obj = combined.obj)
 #'
+#' @seealso
 #'  \code{\link[Seurat]{reexports}}, \code{\link[Seurat]{FindClusters}}
 #'  \code{\link[Stringendo]{iprint}}
 #' @export
@@ -47,10 +48,11 @@ aut.res.clustering <- function(obj = combined.obj,
                                max.res = round(ncol(obj) / 1e3),
                                assay = c("integrated", "RNA")[1], # Seurat::DefaultAssay(obj),
                                max.loop = 20,
-                               n.threads = 1
-) {
-  message(ncol(combined.obj), " cells in object. Searching for optimal resolution between res: ",
-          min.res ," & ", max.res, "...")
+                               n.threads = 1) {
+  message(
+    ncol(combined.obj), " cells in object. Searching for optimal resolution between res: ",
+    min.res, " & ", max.res, "..."
+  )
 
   assays.present <- names(obj@assays)
   if (assay %in% assays.present) {
@@ -72,15 +74,19 @@ aut.res.clustering <- function(obj = combined.obj,
   }
 
   message("Clustering at res.: ", r.current)
-  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F); tictoc::toc()
+  tictoc::tic()
+  obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = F)
+  tictoc::toc()
   m <- calculateMedianClusterSize(obj, assay, res = r.current)
-  stopifnot('Define a lower `min.res` or decrease `min.med.granule.size` if necessary. Granule size too small' = m > min.med.granule.size)
+  stopifnot("Define a lower `min.res` or decrease `min.med.granule.size` if necessary. Granule size too small" = m > min.med.granule.size)
 
 
   message("Clustering at res.: ", r.upper)
-  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = F); tictoc::toc()
+  tictoc::tic()
+  obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = F)
+  tictoc::toc()
   m.up <- calculateMedianClusterSize(obj, assay, res = r.upper)
-  stopifnot('Define a higher `max.res`. Granule size too big' = m.up < max.med.granule.size)
+  stopifnot("Define a higher `max.res`. Granule size too big" = m.up < max.med.granule.size)
 
 
 
@@ -120,13 +126,13 @@ aut.res.clustering <- function(obj = combined.obj,
   nr.granules <- length(unique(clustering))
   if (nr.granules < 100) {
     message("nr.granules: ", nr.granules)
-    warning('Too few granules is too small. Try to define a higher `min.res`.', immediate. = TRUE)
+    warning("Too few granules is too small. Try to define a higher `min.res`.", immediate. = TRUE)
   }
 
   cv.final <- signif(cv(table(clustering)))
   if (cv.final > 0.5) {
     message("cv: ", cv.final)
-    warning('Granule sizes vary significantly. Try to define a higher `min.res`.', immediate. = TRUE)
+    warning("Granule sizes vary significantly. Try to define a higher `min.res`.", immediate. = TRUE)
   }
 
 
@@ -240,16 +246,16 @@ reassign.small.clusters <- function(obj = combined.obj,
 #' medianSize <- calculateMedianClusterSize(obj = seuratObj, assay = "RNA", res = 0.8)
 #'
 #' @export
-calculateMedianClusterSize <- function(obj, assay, res
-                                       , q = 0.5
-                                       , suffix = "_snn_res."
-                                       , verbose = TRUE) {
-
+calculateMedianClusterSize <- function(
+    obj, assay, res,
+    q = 0.5,
+    suffix = "_snn_res.",
+    verbose = TRUE) {
   # Generate the resolution-specific metadata column name
   columnName <- paste0(assay, suffix, res)
 
   # Ensure the column exists in the metadata
-  if(!columnName %in% colnames(obj@meta.data)) {
+  if (!columnName %in% colnames(obj@meta.data)) {
     stop("Specified column does not exist in the object's metadata.")
   }
 
@@ -257,7 +263,7 @@ calculateMedianClusterSize <- function(obj, assay, res
   m.up <- quantile(table(obj@meta.data[[columnName]]), probs = q)
 
   # Output the median cluster size
-  if(verbose) message("quantile ", q," cluster size at resolution ", res, " is: ", m.up)
+  if (verbose) message("quantile ", q, " cluster size at resolution ", res, " is: ", m.up)
 
   return(m.up)
 }
@@ -637,12 +643,12 @@ Shiny.GO.thresh <- function(
 
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
-                   local = new.env(parent = app_env),
-                   echo = FALSE, keep.source = TRUE
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
   )$value
   app_server <- source(file.path(app_dir, "server.R"),
-                       local = new.env(parent = app_env),
-                       echo = FALSE, keep.source = TRUE
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
   )$value
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
   return(obj)
@@ -769,7 +775,6 @@ FilterStressedCells <- function(
     #   obj.Removed.by.SingleCells <- subset(x = obj, cells = sc.filtered) # remove stressed
     #   Seurat.utils::isave.RDS(obj.Removed.by.SingleCells, inOutDir = T, suffix = "Removed")
     # }
-
   } # if (PlotSingleCellExclusion)
 
   # Plot excluded cells ____________________________________________________________
@@ -788,14 +793,14 @@ FilterStressedCells <- function(
     if (F) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
     ggExpress::qscatter(Av.GO.Scores,
-                        cols = "Stressed", w = 6, h = 6,
-                        vline = stats::quantile(mScores[, 2], quantile.thr),
-                        hline = stats::quantile(mScores[, 1], quantile.thr),
-                        title = "Groups of Stressed cells have high scores.",
-                        subtitle = "Thresholded at 90th percentile",
-                        label = "name",
-                        repel = T,
-                        label.rectangle = T
+      cols = "Stressed", w = 6, h = 6,
+      vline = stats::quantile(mScores[, 2], quantile.thr),
+      hline = stats::quantile(mScores[, 1], quantile.thr),
+      title = "Groups of Stressed cells have high scores.",
+      subtitle = "Thresholded at 90th percentile",
+      label = "name",
+      repel = T,
+      label.rectangle = T
     )
   }
 
@@ -860,8 +865,10 @@ PlotGoTermScores <- function(
 
   if (grepl(x = GO, pattern = "^GO:", perl = T)) {
     # stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
-    stopifnot("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
-                !grepl(pattern = "Score.", x = GO))
+    stopifnot(
+      "Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
+        !grepl(pattern = "Score.", x = GO)
+    )
 
     GO.wDot <- make.names(GO)
     ScoreName <- paste0("Score.", GO.wDot)
@@ -995,9 +1002,8 @@ FeaturePlotSaveGO <- function(
 plot.clust.size.distr <- function(obj = combined.obj,
                                   category = if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))],
                                   plot = T,
-                                  thr.hist = 30
-                                  , ...) {
-
+                                  thr.hist = 30,
+                                  ...) {
   .Deprecated("Seurat.utils::plotClustSizeDistr")
 
   clust.size.distr <- table(obj@meta.data[, category])
@@ -1006,9 +1012,9 @@ plot.clust.size.distr <- function(obj = combined.obj,
 
   if (length(clust.size.distr) < thr.hist) {
     ggExpress::qbarplot(clust.size.distr,
-                        plotname = Stringendo::ppp("clust.size.distr", (category)),
-                        subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
-                        ...
+      plotname = Stringendo::ppp("clust.size.distr", (category)),
+      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+      ...
     )
   } else {
     ggExpress::qhistogram(
@@ -1046,11 +1052,13 @@ PlotNormAndSkew <- function(x, q,
 
   if (plot.hist) {
     Score.threshold.estimate <- x
-    sb <- print(paste("The computed", tresholding, paste0("q", q), "threshold is:"
-                      , signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)))
+    sb <- print(paste(
+      "The computed", tresholding, paste0("q", q), "threshold is:",
+      signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
+    ))
     qhistogram(Score.threshold.estimate,
-               vline = thresh, subtitle = sb, xlab = "Score",
-               plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+      vline = thresh, subtitle = sb, xlab = "Score",
+      plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
     )
   }
   return(thresh)
@@ -1118,11 +1126,11 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 
   for (l in 1:dim(xzy$x)[1]) {
     cells_in_cube <- which(umap_1 <= (xzy$x[l, 1] + x_width / 2) &
-                             umap_2 <= (xzy$x[l, 2] + y_width / 2) &
-                             umap_3 <= (xzy$x[l, 3] + z_width / 2) &
-                             umap_1 > (xzy$x[l, 1] - x_width / 2) &
-                             umap_2 > (xzy$x[l, 2] - y_width / 2) &
-                             umap_3 > (xzy$x[l, 3] - z_width / 2))
+      umap_2 <= (xzy$x[l, 2] + y_width / 2) &
+      umap_3 <= (xzy$x[l, 3] + z_width / 2) &
+      umap_1 > (xzy$x[l, 1] - x_width / 2) &
+      umap_2 > (xzy$x[l, 2] - y_width / 2) &
+      umap_3 > (xzy$x[l, 3] - z_width / 2))
 
     cube_ID[cells_in_cube] <- xzy$cube_ID[l]
 
@@ -1185,17 +1193,18 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 #'
 #' @examples
 #' # Assuming combined.obj is available and properly formatted
-#' customClUMAPWrapper(combined.obj,
-#'                     'RNA_snn_res.6.reassigned_cl.av_GO:0042063',
-#'                     'thresh.stress.ident1')
+#' customClUMAPWrapper(
+#'   combined.obj,
+#'   "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
+#'   "thresh.stress.ident1"
+#' )
 #'
 #' @export
 grScoreUMAP <- function(obj = combined.obj,
-                        colname = 'RNA_snn_res.6.reassigned_cl.av_GO:0042063',
-                        miscname = 'thresh.stress.ident1',
+                        colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
+                        miscname = "thresh.stress.ident1",
                         auto = TRUE,
                         ...) {
-
   stopifnot(
     inherits(obj, "Seurat"), !is.null(obj@misc$gruffi),
     miscname %in% names(obj@misc$gruffi),
@@ -1208,12 +1217,12 @@ grScoreUMAP <- function(obj = combined.obj,
   granule_scores <- CodeAndRoll2::as.numeric.wNames.character(obj@meta.data[[colname]], verbose = F)
 
   # Apply threshold to create a logical vector for identification
-  obj[['pass']] <- (granule_scores < thr)
+  obj[["pass"]] <- (granule_scores < thr)
 
   # Invert the logical vector for a specific miscname
-  if(miscname == 'thresh.notstress.ident3' & auto) {
+  if (miscname == "thresh.notstress.ident3" & auto) {
     message("thresh.notstress.ident3 <> filtering is flipped")
-    obj@meta.data[['pass']] <- !(obj@meta.data[['pass']])
+    obj@meta.data[["pass"]] <- !(obj@meta.data[["pass"]])
   }
 
   components <- strsplit(colname, "_cl\\.av_")[[1]]
@@ -1221,13 +1230,16 @@ grScoreUMAP <- function(obj = combined.obj,
   nr.clust <- NaN
   try(nr.clust <- length(unique(obj@meta.data[[components[1]]])), silent = TRUE)
 
-  subt <- paste("threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[['pass']]) , " | "
-                , ncol(obj), "cells |", nr.clust, "clusters."
+  subt <- paste(
+    "threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[["pass"]]), " | ",
+    ncol(obj), "cells |", nr.clust, "clusters."
   )
   # Call clUMAP with the thresholded identification and any additional arguments
-  Seurat.utils::clUMAP(ident = 'pass', obj = obj, label = FALSE
-                       , title = paste("Granule Thresholding", make.names(components[2]))
-                       , prefix = colname, sub = subt, caption = colname , ...)
+  Seurat.utils::clUMAP(
+    ident = "pass", obj = obj, label = FALSE,
+    title = paste("Granule Thresholding", make.names(components[2])),
+    prefix = colname, sub = subt, caption = colname, ...
+  )
 }
 
 # _________________________________________________________________________________________________
@@ -1258,16 +1270,18 @@ grScoreUMAP <- function(obj = combined.obj,
 #' but generates a histogram plot as a side effect.
 #'
 #' @examples
-#' grScoreHistogram(obj = combined.obj,
-#'                  colname = 'RNA_snn_res.6.reassigned_cl.av_GO:0042063',
-#'                  miscname = 'thresh.stress.ident1')
+#' grScoreHistogram(
+#'   obj = combined.obj,
+#'   colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
+#'   miscname = "thresh.stress.ident1"
+#' )
 #'
 #' @importFrom CodeAndRoll2 as.numeric.wNames.character
 #' @importFrom ggExpress qhistogram
 #' @export
 grScoreHistogram <- function(obj = combined.obj,
                              colname = i1,
-                             miscname = 'thresh.stress.ident1',
+                             miscname = "thresh.stress.ident1",
                              auto = TRUE,
                              ...) {
   # Argument assertions
@@ -1285,28 +1299,31 @@ grScoreHistogram <- function(obj = combined.obj,
 
 
   # Apply threshold to create a logical vector for identification
-  obj[['pass']] <- (granule_scores < thr)
+  obj[["pass"]] <- (granule_scores < thr)
 
   components <- strsplit(colname, "_cl\\.av_")[[1]]
 
   nr.clust <- NaN
   try(nr.clust <- length(unique(obj@meta.data[[components[1]]])), silent = TRUE)
 
-  subt <- paste("threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[['pass']]) , " | "
-                , ncol(obj), "cells |", nr.clust, "clusters."
+  subt <- paste(
+    "threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[["pass"]]), " | ",
+    ncol(obj), "cells |", nr.clust, "clusters."
   )
 
-  colX <- if(miscname == 'thresh.notstress.ident3' & auto) 1 else -1
+  colX <- if (miscname == "thresh.notstress.ident3" & auto) 1 else -1
 
   # Plot histogram with ggExpress::qhistogram
-  pobj <- ggExpress::qhistogram( granule_scores, sub = subt, palette_use = 'npg',
-                                 plotname = paste("Granule Thresholding", make.names(components[2])),
-                                 xlab = "Granule Median Score", ylab = "Nr. of Granules",
-                                 vline = thr, filtercol = colX, ...)
+  pobj <- ggExpress::qhistogram(granule_scores,
+    sub = subt, palette_use = "npg",
+    plotname = paste("Granule Thresholding", make.names(components[2])),
+    xlab = "Granule Median Score", ylab = "Nr. of Granules",
+    vline = thr, filtercol = colX, ...
+  )
   print(pobj)
 
   # Optionally, handle the 'auto' and 'miscname' parameters for additional logic
-  if(miscname == 'thresh.notstress.ident3' & auto) {
+  if (miscname == "thresh.notstress.ident3" & auto) {
     message("Note: 'thresh.notstress.ident3' condition detected, but it affects UMAP plotting logic, not histogram.")
   }
 }
@@ -1334,9 +1351,8 @@ clUMAP.thresholding <- function(
     q.meta.col = "Score.GO.0034976", c.meta.col = "integrated_snn_res.30",
     quantile = .95, absolute.cutoff = NULL,
     obj = combined.obj, plot.barplot = F,
-    subt = "response to ER stress", plotUMAP = T
-    , ...) {
-
+    subt = "response to ER stress", plotUMAP = T,
+    ...) {
   clusters.keep <- Seurat.utils::calc.cluster.averages(
     col_name = q.meta.col, split_by = c.meta.col, absolute.thr = absolute.cutoff,
     quantile.thr = quantile, plotit = plot.barplot
@@ -1706,7 +1722,7 @@ ww.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) {
 # #' @importFrom CodeAndRoll2 grepv
 
 # GetNamedClusteringRuns <- function(
-    #     obj = combined.obj # Get Clustering Runs: metadata column names
+#     obj = combined.obj # Get Clustering Runs: metadata column names
 #     , res = c(F, 0.5)[1],
 #     topgene = F,
 #     pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
@@ -1774,5 +1790,3 @@ ww.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) {
 #   cormat <- covmat / tcrossprod(sdvec)
 #   list(cov = covmat, cor = cormat)
 # }
-
-
