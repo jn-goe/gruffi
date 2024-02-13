@@ -49,7 +49,8 @@ checkres <- devtools::check(repository.dir, cran = FALSE)
 
 # Automated Codebase linting to tidyverse style ------------------------------------------------
 styler::style_pkg(repository.dir)
-
+styler::style_file(paste0(repository.dir, "inst/shiny/GO.thresh/ui.R"))
+styler::style_file(paste0(repository.dir, "inst/shiny/GO.thresh/server.R"))
 
 # Extract package dependencies ------------------------------------------------
 PackageTools::extract_package_dependencies(repository.dir)
