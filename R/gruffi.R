@@ -563,13 +563,14 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 # 4. Filtering ---------------------------------------------------------------------------
 
 #' @title Shiny.GO.thresh
+#'
 #' @description GO-thresholding for the Shiny app.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param proposed.method proposed estimation method, Default: c("fitted", "empirical")[1]
 #' @param quantile quantile cutoff to use, Default: c(0.99, 0.9)[1]
-#' @param stress.ident1 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096")
-#' @param stress.ident2 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976")
-#' @param notstress.ident3 Negative stress filter, notstress identity 3, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063")
+#' @param stress.ident1 stress identity 1.
+#' @param stress.ident2 stress identity 2.
+#' @param notstress.ident3 Negative stress filter, notstress identity 3.
 #' @param notstress.ident4 Negative stress filter, notstress identity 4, Default: NULL
 #' @param plot.cluster.shiny plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)[1]
 #' @seealso
@@ -581,14 +582,15 @@ Shiny.GO.thresh <- function(
     obj = combined.obj,
     proposed.method = c("fitted", "empirical")[1],
     quantile = c(.99, .9)[1],
-    stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
-    stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
-    notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
+    stress.ident1,
+    stress.ident2,
+    notstress.ident3,
     notstress.ident4 = NULL,
     plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
-  app_env <- new.env()
-  meta <- obj@meta.data
 
+  app_env <- new.env()
+
+  meta <- obj@meta.data
   if (!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
   if (!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
   if (!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
@@ -663,9 +665,9 @@ Shiny.GO.thresh <- function(
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param proposed.method proposed estimation method, Default: c("fitted", "empirical")[1]
 #' @param quantile quantile cutoff to use, Default: c(0.99, 0.9)[1]
-#' @param stress.ident1 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096")
-#' @param stress.ident2 stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976")
-#' @param notstress.ident3 Negative stress filter, notstress identity 3, Default: paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063")
+#' @param stress.ident1 stress identity 1
+#' @param stress.ident2 stress identity 1
+#' @param notstress.ident3 Negative stress filter, notstress identity 3
 #' @param notstress.ident4 Negative stress filter, notstress identity 4, Default: NULL
 #' @param plot.cluster.shiny plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)[1]
 #' @export
@@ -673,9 +675,9 @@ Shiny.GO.thresh <- function(
 Auto.GO.thresh <- function(obj = combined.obj
                             , proposed.method = c("fitted","empirical")[1]
                             , quantile = c(.99,.9)[1]
-                            , stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0006096")
-                            , stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0034976")
-                            , notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1],"_cl.av_GO:0042063")
+                            , stress.ident1
+                            , stress.ident2
+                            , notstress.ident3
                             , notstress.ident4 = NULL
                             , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
 
