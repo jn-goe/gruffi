@@ -260,7 +260,6 @@ server <- shiny::shinyServer(function(input, output, session) {
       i.notstress.ident4 <- input$t.notstress.ident4
       obj@misc$gruffi$thresh.notstress.ident4 <- i.notstress.ident4
     }
-
     shiny::stopApp(returnValue = obj)
   })
 })
