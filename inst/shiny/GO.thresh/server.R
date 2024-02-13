@@ -129,12 +129,14 @@ server <- shiny::shinyServer(function(input, output, session) {
   })
 
   #------ Output Plots --------#
+  colorz <- Seurat.utils::gg_color_hue(2)[2:1]
+
   # GO score histograms
   if (!is.null(stress.ident1)) {
     output$hist.stress.ident1 <- shiny::renderPlot({
       df <- df.data.stress.ident1()
       ggplot2::ggplot(df, ggplot2::aes(x = av.stress.ident1, fill = factor(assignment))) +
-        ggplot2::scale_fill_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1])) +
+        ggplot2::scale_fill_manual(values = colorz) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(av.stress.ident1) / length(av.stress.ident1)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.stress.ident1, 0.9)), colour = "black") +
@@ -149,7 +151,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     output$hist.stress.ident2 <- shiny::renderPlot({
       df <- df.data.stress.ident2()
       ggplot2::ggplot(df, ggplot2::aes(x = av.stress.ident2, fill = factor(assignment))) +
-        ggplot2::scale_fill_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1])) +
+        ggplot2::scale_fill_manual(values = colorz) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(av.stress.ident2) / length(av.stress.ident2)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.stress.ident2, 0.9)), colour = "black") +
@@ -164,7 +166,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     output$hist.notstress.ident3 <- shiny::renderPlot({
       df <- df.data.notstress.ident3()
       ggplot2::ggplot(df, ggplot2::aes(x = av.notstress.ident3, fill = factor(assignment))) +
-        ggplot2::scale_fill_manual(values = c(Seurat.utils::gg_color_hue(2)[1], Seurat.utils::gg_color_hue(2)[2])) +
+        ggplot2::scale_fill_manual(values = rev(colorz)) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(av.notstress.ident3) / length(av.notstress.ident3)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.notstress.ident3, 0.9)), colour = "black") +
@@ -179,7 +181,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     output$hist.notstress.ident4 <- shiny::renderPlot({
       df <- df.data.notstress.ident4()
       ggplot2::ggplot(df, ggplot2::aes(x = av.notstress.ident4, fill = factor(assignment))) +
-        ggplot2::scale_fill_manual(values = c(Seurat.utils::gg_color_hue(2)[1], Seurat.utils::gg_color_hue(2)[2])) +
+        ggplot2::scale_fill_manual(values = rev(colorz)) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(av.notstress.ident4) / length(av.notstress.ident4)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.notstress.ident4, 0.9)), colour = "black") +
@@ -195,7 +197,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   output$stress.umap <- shiny::renderPlot({
     c <- c.data()
     Seurat.utils::clUMAP(obj = c, ident = "is.Stressed", save.plot = F) + Seurat::NoAxes() +
-      ggplot2::scale_color_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1]))
+      ggplot2::scale_color_manual(values = colorz)
   })
 
   # stress assignment barplot cell numbers
@@ -203,7 +205,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     c <- c.data()
     ident.plot <- plot.cluster.shiny
     ggplot2::ggplot(obj2@meta.data, ggplot2::aes(x = ident.plot, fill = is.Stressed, stat = "count")) +
-      ggplot2::scale_fill_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1])) +
+      ggplot2::scale_fill_manual(values = colorz) +
       ggplot2::theme_minimal() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 0.5, hjust = 1)) +
       ggplot2::geom_bar() +
@@ -231,28 +233,30 @@ server <- shiny::shinyServer(function(input, output, session) {
         ptlist[[count]] <- Seurat::FeaturePlot(obj = obj, features = ww.convert.GO_term.2.score(paste0(substr(x = strsplit(notstress.ident4, "cl.av")[[1]][2], 2, nchar(strsplit(notstress.ident4, "cl.av")[[1]][2])))), min.cutoff = "q01", max.cutoff = "q99") + Seurat::NoLegend() + Seurat::NoAxes()
         count <- count + 1
       }
+
+      # colorz <- Seurat.utils::gg_color_hue(2)[2:1]
       if (!is.null(stress.ident1)) {
         ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "stress.ident1.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
-          ggplot2::scale_color_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1])) + Seurat::NoAxes()
+          ggplot2::scale_color_manual(values = colorz) + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(stress.ident2)) {
         ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "stress.ident2.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
-          ggplot2::scale_color_manual(values = c(Seurat.utils::gg_color_hue(2)[2], Seurat.utils::gg_color_hue(2)[1])) + Seurat::NoAxes()
+          ggplot2::scale_color_manual(values = colorz) + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(notstress.ident3)) {
         ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "notstress.ident3.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
-          ggplot2::scale_color_manual(values = c(Seurat.utils::gg_color_hue(2)[1], Seurat.utils::gg_color_hue(2)[2])) + Seurat::NoAxes()
+          ggplot2::scale_color_manual(values = rev(colorz)) + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(notstress.ident4)) {
         ptlist[[count]] <- Seurat.utils::clUMAP(obj = c, ident = "notstress.ident4.thresh_cluster", save.plot = F) +
           ggplot2::ggtitle(ggplot2::element_blank()) +
-          ggplot2::scale_color_manual(values = c(Seurat.utils::gg_color_hue(2)[1], Seurat.utils::gg_color_hue(2)[2])) + Seurat::NoAxes()
+          ggplot2::scale_color_manual(values = rev(colorz)) + Seurat::NoAxes()
         count <- count + 1
       }
       gridExtra::grid.arrange(grobs = ptlist, ncol = ceiling(length(ptlist) / 2), title = "GO score")
