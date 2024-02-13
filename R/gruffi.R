@@ -41,6 +41,8 @@
 #' @importFrom Seurat DefaultAssay FindClusters Idents
 #' @importFrom Stringendo iprint
 #' @importFrom tictoc tic toc
+#' @importFrom future plan nbrOfWorkers
+#' @importFrom tictoc tic toc
 aut.res.clustering <- function(obj = combined.obj,
                                min.med.granule.size = 100,
                                max.med.granule.size = 200,
@@ -445,6 +447,7 @@ AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE) {
 #'  \code{\link[Seurat]{AddModuleScore}}
 #' @export
 #' @importFrom Seurat AddModuleScore
+#' @importFrom Stringendo ppp
 
 AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", FixName = TRUE) {
   ls.genes <- list(genes)
@@ -643,12 +646,12 @@ Shiny.GO.thresh <- function(
 
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
-    local = new.env(parent = app_env),
-    echo = FALSE, keep.source = TRUE
+                   local = new.env(parent = app_env),
+                   echo = FALSE, keep.source = TRUE
   )$value
   app_server <- source(file.path(app_dir, "server.R"),
-    local = new.env(parent = app_env),
-    echo = FALSE, keep.source = TRUE
+                       local = new.env(parent = app_env),
+                       echo = FALSE, keep.source = TRUE
   )$value
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
   return(obj)
@@ -681,9 +684,8 @@ Shiny.GO.thresh <- function(
 #' @importFrom dplyr tibble
 #' @importFrom ggExpress qscatter qhistogram
 #' @importFrom MarkdownHelpers filter_HP llprint
-#' @importFrom Seurat.utils calc.cluster.averages
+#' @importFrom Seurat.utils clUMAP calc.cluster.averages isave.RDS
 #' @importFrom Stringendo iprint percentage_formatter
-
 FilterStressedCells <- function(
     obj = combined.obj,
     res = "integrated_snn_res.30",
@@ -793,14 +795,14 @@ FilterStressedCells <- function(
     if (F) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
     ggExpress::qscatter(Av.GO.Scores,
-      cols = "Stressed", w = 6, h = 6,
-      vline = stats::quantile(mScores[, 2], quantile.thr),
-      hline = stats::quantile(mScores[, 1], quantile.thr),
-      title = "Groups of Stressed cells have high scores.",
-      subtitle = "Thresholded at 90th percentile",
-      label = "name",
-      repel = T,
-      label.rectangle = T
+                        cols = "Stressed", w = 6, h = 6,
+                        vline = stats::quantile(mScores[, 2], quantile.thr),
+                        hline = stats::quantile(mScores[, 1], quantile.thr),
+                        title = "Groups of Stressed cells have high scores.",
+                        subtitle = "Thresholded at 90th percentile",
+                        label = "name",
+                        repel = T,
+                        label.rectangle = T
     )
   }
 
@@ -849,7 +851,8 @@ FilterStressedCells <- function(
 #' @export
 #' @importFrom Seurat DefaultAssay
 #' @importFrom Stringendo iprint
-
+#' @importFrom Seurat.utils clUMAP multiFeaturePlot.A4
+#' @importFrom Stringendo ppp
 PlotGoTermScores <- function(
     obj = combined.obj,
     use.ensemble = T,
@@ -1012,9 +1015,9 @@ plot.clust.size.distr <- function(obj = combined.obj,
 
   if (length(clust.size.distr) < thr.hist) {
     ggExpress::qbarplot(clust.size.distr,
-      plotname = Stringendo::ppp("clust.size.distr", (category)),
-      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
-      ...
+                        plotname = Stringendo::ppp("clust.size.distr", (category)),
+                        subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+                        ...
     )
   } else {
     ggExpress::qhistogram(
@@ -1057,8 +1060,8 @@ PlotNormAndSkew <- function(x, q,
       signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
     ))
     qhistogram(Score.threshold.estimate,
-      vline = thresh, subtitle = sb, xlab = "Score",
-      plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+               vline = thresh, subtitle = sb, xlab = "Score",
+               plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
     )
   }
   return(thresh)
@@ -1126,11 +1129,11 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 
   for (l in 1:dim(xzy$x)[1]) {
     cells_in_cube <- which(umap_1 <= (xzy$x[l, 1] + x_width / 2) &
-      umap_2 <= (xzy$x[l, 2] + y_width / 2) &
-      umap_3 <= (xzy$x[l, 3] + z_width / 2) &
-      umap_1 > (xzy$x[l, 1] - x_width / 2) &
-      umap_2 > (xzy$x[l, 2] - y_width / 2) &
-      umap_3 > (xzy$x[l, 3] - z_width / 2))
+                             umap_2 <= (xzy$x[l, 2] + y_width / 2) &
+                             umap_3 <= (xzy$x[l, 3] + z_width / 2) &
+                             umap_1 > (xzy$x[l, 1] - x_width / 2) &
+                             umap_2 > (xzy$x[l, 2] - y_width / 2) &
+                             umap_3 > (xzy$x[l, 3] - z_width / 2))
 
     cube_ID[cells_in_cube] <- xzy$cube_ID[l]
 
@@ -1275,10 +1278,10 @@ grScoreUMAP <- function(obj = combined.obj,
 #'   colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
 #'   miscname = "thresh.stress.ident1"
 #' )
+#' @export
 #'
 #' @importFrom CodeAndRoll2 as.numeric.wNames.character
 #' @importFrom ggExpress qhistogram
-#' @export
 grScoreHistogram <- function(obj = combined.obj,
                              colname = i1,
                              miscname = "thresh.stress.ident1",
@@ -1315,10 +1318,10 @@ grScoreHistogram <- function(obj = combined.obj,
 
   # Plot histogram with ggExpress::qhistogram
   pobj <- ggExpress::qhistogram(granule_scores,
-    sub = subt, palette_use = "npg",
-    plotname = paste("Granule Thresholding", make.names(components[2])),
-    xlab = "Granule Median Score", ylab = "Nr. of Granules",
-    vline = thr, filtercol = colX, ...
+                                sub = subt, palette_use = "npg",
+                                plotname = paste("Granule Thresholding", make.names(components[2])),
+                                xlab = "Granule Median Score", ylab = "Nr. of Granules",
+                                vline = thr, filtercol = colX, ...
   )
   print(pobj)
 
@@ -1722,7 +1725,7 @@ ww.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) {
 # #' @importFrom CodeAndRoll2 grepv
 
 # GetNamedClusteringRuns <- function(
-#     obj = combined.obj # Get Clustering Runs: metadata column names
+    #     obj = combined.obj # Get Clustering Runs: metadata column names
 #     , res = c(F, 0.5)[1],
 #     topgene = F,
 #     pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
