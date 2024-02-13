@@ -1827,6 +1827,31 @@ ww.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) {
 
 
 
+# _________________________________________________________________________________________________
+#' @title Parse GO Term from Granule-score Name
+#'
+#' @description Splits a Granule-score column name into its clustering resolution and
+#' GO term, and returns the 2nd part, the GO Term.
+#' @param ident The column name to be split, e.g., 'RNA_snn_res.6.reassigned_cl.av_GO:0006096'.
+#' @param pattern The pattern to split by, default '_cl\\.av_'.
+#' @param ... Additional arguments passed to `strsplit`.
+#'
+#' @return GO Term as string, e.g. "GO:0006096"
+#' @examples
+#' ww.parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
+ww.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
+                        pattern = "_cl\\.av_", ...) {
+  strsplit(x = ident, split = pattern, ...)[[1]][2]
+}
+
+
+
+# ww.get.gr.res <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
+#                                 pattern = "_cl\\.av_", ...) {
+#   strsplit(x = ident, split = pattern, ...)[[1]][1]
+# }
+
+
 # _____________________________________________________________________________________________ ----
 # 8. Deprecated  ---------------------------------------------------------------------------
 
