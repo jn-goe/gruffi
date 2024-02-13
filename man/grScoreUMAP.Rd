@@ -33,8 +33,10 @@ for plotting based on the thresholded values.
 }
 \examples{
 # Assuming combined.obj is available and properly formatted
-customClUMAPWrapper(combined.obj,
-                    'RNA_snn_res.6.reassigned_cl.av_GO:0042063',
-                    'thresh.stress.ident1')
+customClUMAPWrapper(
+  combined.obj,
+  "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
+  "thresh.stress.ident1"
+)
 
 }

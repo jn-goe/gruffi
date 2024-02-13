@@ -16,20 +16,20 @@ aut.res.clustering(
 )
 }
 \arguments{
-\item{obj}{Seurat object to perform clustering on. Defaults to \code{combined.obj}.}
+\item{obj}{Seurat object to perform clustering on. Defaults to 'combined.obj'.}
 
 \item{min.med.granule.size}{Minimum acceptable median cell count per cluster. Default is 100.}
 
 \item{max.med.granule.size}{Maximum acceptable median cell count per cluster. Default is 200.}
 
-\item{min.res}{Starting lower bound for clustering resolution search. Defaults to:
-\code{round(ncol(obj)/10000)}.}
+\item{min.res}{Starting lower bound for clustering resolution search.
+Defaults to: \code{round(ncol(obj)/10000)}.}
 
-\item{max.res}{Starting upper bound for clustering resolution search. Defaults to:
-\code{round(ncol(obj)/1000)}.}
+\item{max.res}{Starting upper bound for clustering resolution search.
+Defaults to: \code{round(ncol(obj)/1000)}.}
 
-\item{assay}{Specifies the assay to use for clustering. Default is \code{"integrated"}, with
-\code{"RNA"} as an alternative taken from on \code{Seurat::DefaultAssay(obj)}.}
+\item{assay}{Specifies the assay to use for clustering. Default is 'integrated, with
+"RNA" as an alternative taken from on \code{Seurat::DefaultAssay(obj)}.}
 
 \item{max.loop}{Maximum number of iterations for adjusting clustering resolution. Default is 20.}
 }
@@ -49,6 +49,8 @@ Seurat's clustering functionality and adjusts based on the median cell count per
 # Assuming `combined.obj` is a pre-loaded Seurat object
 optimal.obj <- aut.res.clustering(obj = combined.obj)
 
- \code{\link[Seurat]{reexports}}, \code{\link[Seurat]{FindClusters}}
- \code{\link[Stringendo]{iprint}}
+}
+\seealso{
+\code{\link[Seurat]{reexports}}, \code{\link[Seurat]{FindClusters}}
+\code{\link[Stringendo]{iprint}}
 }

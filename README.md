@@ -2,6 +2,8 @@
 
 #### _Published in [Gruffi: an algorithm for computational removal of stressed cells from brain organoid transcriptomic datasets](https://www.embopress.org/doi/full/10.15252/embj.2022111118)_ 
 
+![status: active](https://raw.githubusercontent.com/vertesy/TheCorvinas/master/GitHub/Badges/active.svg)
+
 The Gruffi R package helps you (1) to identify stressed cells in single-cell RNA-seq datasets using  *granular funcitonal filtering*, or (2) you can use it to analyze any gene set's pathway activity (GO-term or custom defined), and define a cell population based on their combined activity.
 
 `Gruffi` integrates into any `Seurat` analysis pipelione & it comes with a graphical user interface.

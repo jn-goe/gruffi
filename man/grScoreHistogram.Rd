@@ -45,8 +45,9 @@ available through additional arguments. The \code{auto} parameter's effect is no
 \code{thresh.notstress.ident3} condition, although it primarily impacts plotting logic interpretation.
 }
 \examples{
-grScoreHistogram(obj = combined.obj,
-                 colname = 'RNA_snn_res.6.reassigned_cl.av_GO:0042063',
-                 miscname = 'thresh.stress.ident1')
-
+grScoreHistogram(
+  obj = combined.obj,
+  colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
+  miscname = "thresh.stress.ident1"
+)
 }
