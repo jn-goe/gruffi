@@ -1,5 +1,4 @@
 server <- shiny::shinyServer(function(input, output, session) {
-
   count.not.null <- 0
   if (!is.null(stress.ident1)) count.not.null <- count.not.null + 1
   if (!is.null(stress.ident2)) count.not.null <- count.not.null + 1
@@ -57,12 +56,11 @@ server <- shiny::shinyServer(function(input, output, session) {
     obj2 <- obj
     meta2 <- obj2@meta.data
 
-    gr.av.scores.1 <- meta2[ , idents$"stress.ident1"]
-    gr.av.scores.2 <- meta2[ , idents$"stress.ident2"]
+    gr.av.scores.1 <- meta2[, idents$"stress.ident1"]
+    gr.av.scores.2 <- meta2[, idents$"stress.ident2"]
     if (!is.null(stress.ident1)) {
       i1.bool <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > i.stress.ident1
       if (!is.null(stress.ident2)) {
-
         i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > i.stress.ident2
         stress.bool <- i1.bool | i2.bool # Combine both boolean vectors for stress determination
       } else {
@@ -72,21 +70,21 @@ server <- shiny::shinyServer(function(input, output, session) {
       # Process only the second stress identifier if the first one is null
       if (!is.null(stress.ident2)) {
         i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > i.stress.ident2
-        stress.bool <- i2.bool  # Use only stress.ident2 for stress determination
+        stress.bool <- i2.bool # Use only stress.ident2 for stress determination
       }
     }
 
     # Process not stress identifiers similarly
     notstress.bool <- NULL
-    gr.av.scores.3 <- meta2[ , idents$"notstress.ident3"]
-    gr.av.scores.4 <- meta2[ , idents$"notstress.ident4"]
+    gr.av.scores.3 <- meta2[, idents$"notstress.ident3"]
+    gr.av.scores.4 <- meta2[, idents$"notstress.ident4"]
 
     # Determine not stressed cells based on the thresholds for notstress.ident3 and potentially notstress.ident4
     if (!is.null(notstress.ident3)) {
       i3.bool <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > i.notstress.ident3
       if (!is.null(notstress.ident4)) {
         i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > i.notstress.ident4
-        notstress.bool <- i3.bool | i4.bool  # Combine boolean vectors for notstress.ident3 and notstress.ident4
+        notstress.bool <- i3.bool | i4.bool # Combine boolean vectors for notstress.ident3 and notstress.ident4
       } else {
         notstress.bool <- i3.bool # Use only notstress.ident3 for not stress determination
       }
@@ -117,28 +115,28 @@ server <- shiny::shinyServer(function(input, output, session) {
     meta2 <- obj2@meta.data
 
     if (!is.null(stress.ident1)) {
-      gr.av.scores.1 <- meta2[ , idents$"stress.ident1"]
+      gr.av.scores.1 <- meta2[, idents$"stress.ident1"]
       obj2$"stress.ident1.thresh_cluster" <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > i.stress.ident1
       obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == FALSE] <- F
       obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(stress.ident2)) {
-      gr.av.scores.2 <- meta2[ , idents$"stress.ident2"]
+      gr.av.scores.2 <- meta2[, idents$"stress.ident2"]
       obj2$"stress.ident2.thresh_cluster" <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > i.stress.ident2
       obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == FALSE] <- F
       obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident3)) {
-      gr.av.scores.3 <- meta2[ , idents$"notstress.ident3"]
+      gr.av.scores.3 <- meta2[, idents$"notstress.ident3"]
       obj2$"notstress.ident3.thresh_cluster" <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > i.notstress.ident3
       obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == FALSE] <- F
       obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident4)) {
-      gr.av.scores.4 <- meta2[ , idents$"notstress.ident4"]
+      gr.av.scores.4 <- meta2[, idents$"notstress.ident4"]
       obj2$"notstress.ident4.thresh_cluster" <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > i.notstress.ident4
       obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == FALSE] <- F
       obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == TRUE] <- T
@@ -161,7 +159,7 @@ server <- shiny::shinyServer(function(input, output, session) {
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.stress.scores1, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.stress.scores1, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.stress.ident1', sliders$'max.x.stress.ident1')) +
+        ggplot2::coord_cartesian(xlim = c(sliders$"min.x.stress.ident1", sliders$"max.x.stress.ident1")) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })
@@ -176,7 +174,7 @@ server <- shiny::shinyServer(function(input, output, session) {
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.stress.scores2, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.stress.scores2, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.stress.ident2', sliders$'max.x.stress.ident2')) +
+        ggplot2::coord_cartesian(xlim = c(sliders$"min.x.stress.ident2", sliders$"max.x.stress.ident2")) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })
@@ -191,7 +189,7 @@ server <- shiny::shinyServer(function(input, output, session) {
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.notstress.scores3, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.notstress.scores3, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.notstress.ident3', sliders$'max.x.notstress.ident3')) +
+        ggplot2::coord_cartesian(xlim = c(sliders$"min.x.notstress.ident3", sliders$"max.x.notstress.ident3")) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })
@@ -206,7 +204,7 @@ server <- shiny::shinyServer(function(input, output, session) {
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.notstress.scores4, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.notstress.scores4, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.notstress.ident4', sliders$'max.x.notstress.ident4')) +
+        ggplot2::coord_cartesian(xlim = c(sliders$"min.x.notstress.ident4", sliders$"max.x.notstress.ident4")) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })

@@ -300,16 +300,18 @@ calculateMedianClusterSize <- function(
 GetGOTerms <- function(obj = combined.obj,
                        GO = "GO:0034976",
                        use.ensemble = T,
+                       assay = "RNA",
                        web.open = F,
                        version = NULL,
                        GRCh = NULL,
                        genes.shown = 10,
                        mirror = NULL) {
-  print("GetGOTerms()")
+  message("Running GetGOTerms()")
+  enrichGO_slot <- obj@misc$"enrichGO"[[assay]]
 
-  if (use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
-    if(!exists("ensembl")) {
-      print('biomaRt::useEnsembl()')
+  if (use.ensemble & is.null(enrichGO_slot)) {
+    if (!exists("ensembl")) {
+      print("biomaRt::useEnsembl()")
       ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh, mirror = mirror)
     }
 
@@ -320,13 +322,15 @@ GetGOTerms <- function(obj = combined.obj,
     )[, 1]
     iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", utils::head(genes, n = genes.shown))
   }
-  if (!use.ensemble & !is.null(obj@misc$enrichGO[["RNA"]])) {
-    genes <- unlist(DOSE::geneInCategory(obj@misc$enrichGO[["RNA"]])[GO])
-    iprint(length(genes), "Gene symbols from enrichGO[['RNA']]:", utils::head(genes, n = genes.shown))
+
+  if (!use.ensemble & !is.null(enrichGO_slot)) {
+    genes <- unlist(DOSE::geneInCategory(enrichGO_slot)[GO])
+    iprint(length(genes), "Gene symbols from enrichGO[[assay]]:", utils::head(genes, n = genes.shown))
   }
-  if (!use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
+
+  if (!use.ensemble & is.null(enrichGO_slot)) {
     print("AnnotationDbi::select()")
-  # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
+    # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
     genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
     iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", utils::head(genes, n = genes.shown))
   }
@@ -370,8 +374,10 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
 
   x <- obj@meta.data
   GOz <- CodeAndRoll2::grepv(pattern = "^Score.GO", x = colnames(x), perl = TRUE)
-  GOx <- gtools::mixedsort(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE
-                                                      , invert = TRUE)))
+  GOx <- gtools::mixedsort(unique(CodeAndRoll2::grepv(
+    pattern = "\\.[0-9]$", x = GOz, perl = TRUE,
+    invert = TRUE
+  )))
   GO.names <- AnnotationDbi::Term(object = ww.convert.score.2.GO_term(GOx))
 
   if (return.obj) {
@@ -503,7 +509,6 @@ GO_score_evaluation <- function(obj = combined.obj,
                                 mirror = NULL,
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                 ...) {
-
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
@@ -609,7 +614,6 @@ Shiny.GO.thresh <- function(
     notstress.ident3,
     notstress.ident4 = NULL,
     plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
-
   app_env <- new.env()
   meta <- obj@meta.data
 
@@ -620,10 +624,10 @@ Shiny.GO.thresh <- function(
   stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
   # Convert categorical scores to numeric for thresholding
-  gr.av.stress.scores1 <- as.numeric(levels(meta[ , stress.ident1]))
-  gr.av.stress.scores2 <- as.numeric(levels(meta[ , stress.ident2]))
-  gr.av.notstress.scores3 <- as.numeric(levels(meta[ , notstress.ident3]))
-  gr.av.notstress.scores4 <- as.numeric(levels(meta[ , notstress.ident4]))
+  gr.av.stress.scores1 <- as.numeric(levels(meta[, stress.ident1]))
+  gr.av.stress.scores2 <- as.numeric(levels(meta[, stress.ident2]))
+  gr.av.notstress.scores3 <- as.numeric(levels(meta[, notstress.ident3]))
+  gr.av.notstress.scores4 <- as.numeric(levels(meta[, notstress.ident4]))
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
   app_env$"thresh.stress.ident1" <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = F)
@@ -642,7 +646,7 @@ Shiny.GO.thresh <- function(
   step.stress.ident2 <- 0.001
 
   min.x.notstress.ident3 <- floor(min(gr.av.notstress.scores3, app_env$"thresh.notstress.ident3"))
-  max.x.notstress.ident3 <- ceiling(max(gr.av.notstress.scores3, app_env$'thresh.notstress.ident3'))
+  max.x.notstress.ident3 <- ceiling(max(gr.av.notstress.scores3, app_env$"thresh.notstress.ident3"))
   step.notstress.ident3 <- 0.001
 
   min.x.notstress.ident4 <- floor(min(gr.av.notstress.scores4, app_env$"thresh.notstress.ident4"))
@@ -651,28 +655,28 @@ Shiny.GO.thresh <- function(
 
   # Define the environment for the Shiny app as `app_env`.
   app_env$"idents" <- list(
-    'stress.ident1' = stress.ident1,
-    'stress.ident2' = stress.ident2,
-    'notstress.ident3' = notstress.ident3,
-    'notstress.ident4' = notstress.ident4
+    "stress.ident1" = stress.ident1,
+    "stress.ident2" = stress.ident2,
+    "notstress.ident3" = notstress.ident3,
+    "notstress.ident4" = notstress.ident4
   )
 
   app_env$"sliders" <- list(
-    'min.x.stress.ident1' = min.x.stress.ident1, 'max.x.stress.ident1' = max.x.stress.ident1,
-    'step.stress.ident1' = step.stress.ident1,
-    'min.x.stress.ident2' = min.x.stress.ident2, 'max.x.stress.ident2' = max.x.stress.ident2,
-    'step.stress.ident2' = step.stress.ident2,
-    'min.x.notstress.ident3' = min.x.notstress.ident3, 'max.x.notstress.ident3' = max.x.notstress.ident3,
-    'step.notstress.ident3' = step.notstress.ident3,
-    'min.x.notstress.ident4' = min.x.notstress.ident4, 'max.x.notstress.ident4' = max.x.notstress.ident4,
-    'step.notstress.ident4' = step.notstress.ident4
+    "min.x.stress.ident1" = min.x.stress.ident1, "max.x.stress.ident1" = max.x.stress.ident1,
+    "step.stress.ident1" = step.stress.ident1,
+    "min.x.stress.ident2" = min.x.stress.ident2, "max.x.stress.ident2" = max.x.stress.ident2,
+    "step.stress.ident2" = step.stress.ident2,
+    "min.x.notstress.ident3" = min.x.notstress.ident3, "max.x.notstress.ident3" = max.x.notstress.ident3,
+    "step.notstress.ident3" = step.notstress.ident3,
+    "min.x.notstress.ident4" = min.x.notstress.ident4, "max.x.notstress.ident4" = max.x.notstress.ident4,
+    "step.notstress.ident4" = step.notstress.ident4
   )
 
   app_env$"average.vec" <- list(
-    'gr.av.stress.scores1' = gr.av.stress.scores1,
-    'gr.av.stress.scores2' = gr.av.stress.scores2,
-    'gr.av.notstress.scores3' = gr.av.notstress.scores3,
-    'gr.av.notstress.scores4' = gr.av.notstress.scores4
+    "gr.av.stress.scores1" = gr.av.stress.scores1,
+    "gr.av.stress.scores2" = gr.av.stress.scores2,
+    "gr.av.notstress.scores3" = gr.av.notstress.scores3,
+    "gr.av.notstress.scores4" = gr.av.notstress.scores4
   )
 
   app_env$"obj" <- obj
@@ -681,14 +685,14 @@ Shiny.GO.thresh <- function(
   # Launch the Shiny app
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
-                   local = new.env(parent = app_env),
-                   echo = FALSE, keep.source = TRUE
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
   )$value
 
   # Call the server.R file
   app_server <- source(file.path(app_dir, "server.R"),
-                       local = new.env(parent = app_env),
-                       echo = FALSE, keep.source = TRUE
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
   )$value
 
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
@@ -717,16 +721,16 @@ Shiny.GO.thresh <- function(
 #' default: `TRUE`.
 #'
 #' @export
-Auto.GO.thresh <- function(obj = combined.obj
-                           , proposed.method = c("fitted","empirical")[1]
-                           , quantile = c(.99,.9)[1]
-                           , stress.ident1
-                           , stress.ident2
-                           , notstress.ident3
-                           , notstress.ident4 = NULL
-                           , plot.results = TRUE
-                           , ...)  {
-
+Auto.GO.thresh <- function(
+    obj = combined.obj,
+    proposed.method = c("fitted", "empirical")[1],
+    quantile = c(.99, .9)[1],
+    stress.ident1,
+    stress.ident2,
+    notstress.ident3,
+    notstress.ident4 = NULL,
+    plot.results = TRUE,
+    ...) {
   meta <- obj@meta.data
   # Ensure that provided GO term identifiers exist in the metadata
   stopifnot(stress.ident1 %in% colnames(meta) | is.null(stress.ident1))
@@ -735,33 +739,33 @@ Auto.GO.thresh <- function(obj = combined.obj
   stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
   # Convert categorical scores to numeric for thresholding
-  gr.av.stress.scores1 <- as.numeric(levels(meta[ ,stress.ident1]))
-  gr.av.stress.scores2 <- as.numeric(levels(meta[ ,stress.ident2]))
-  gr.av.notstress.scores3 <- as.numeric(levels(meta[ ,notstress.ident3]))
-  gr.av.notstress.scores4 <- as.numeric(levels(meta[ ,notstress.ident4]))
+  gr.av.stress.scores1 <- as.numeric(levels(meta[, stress.ident1]))
+  gr.av.stress.scores2 <- as.numeric(levels(meta[, stress.ident2]))
+  gr.av.notstress.scores3 <- as.numeric(levels(meta[, notstress.ident3]))
+  gr.av.notstress.scores4 <- as.numeric(levels(meta[, notstress.ident4]))
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
-  thresh.stress.ident1 <-     PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = F)
-  thresh.stress.ident2 <-     PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = F)
-  thresh.notstress.ident3 <-  PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = F)
-  thresh.notstress.ident4 <-  PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.stress.ident1 <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.stress.ident2 <- PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.notstress.ident3 <- PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.notstress.ident4 <- PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = F)
 
   # Store computed thresholds in the Seurat object's misc slot for later reference
-  if(!is.null(stress.ident1)) obj@misc$gruffi$"thresh.stress.ident1" <- thresh.stress.ident1
-  if(!is.null(stress.ident2)) obj@misc$gruffi$"thresh.stress.ident2" <- thresh.stress.ident2
-  if(!is.null(notstress.ident3)) obj@misc$gruffi$"thresh.notstress.ident3" <- thresh.notstress.ident3
-  if(!is.null(notstress.ident4)) obj@misc$gruffi$"thresh.notstress.ident4" <- thresh.notstress.ident4
+  if (!is.null(stress.ident1)) obj@misc$gruffi$"thresh.stress.ident1" <- thresh.stress.ident1
+  if (!is.null(stress.ident2)) obj@misc$gruffi$"thresh.stress.ident2" <- thresh.stress.ident2
+  if (!is.null(notstress.ident3)) obj@misc$gruffi$"thresh.notstress.ident3" <- thresh.notstress.ident3
+  if (!is.null(notstress.ident4)) obj@misc$gruffi$"thresh.notstress.ident4" <- thresh.notstress.ident4
 
   # Stress Filtering & Assignment
   # Cells are considered stressed if their scores are above the threshold for any of the stress identifiers
   # and not above the threshold for any of the non-stress identifiers
-  if(!is.null(stress.ident1)) {
-    gr.av.scores.1 <- meta[ , stress.ident1]
-    gr.av.scores.2 <- meta[ , stress.ident2]
+  if (!is.null(stress.ident1)) {
+    gr.av.scores.1 <- meta[, stress.ident1]
+    gr.av.scores.2 <- meta[, stress.ident2]
 
     # Check if the numeric score is greater than the threshold for stress
     i1.bool <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > thresh.stress.ident1
-    if(!is.null(stress.ident2)) {
+    if (!is.null(stress.ident2)) {
       i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
       stress.bool <- i1.bool | i2.bool # Combine both boolean vectors for stress determination
     } else {
@@ -769,7 +773,7 @@ Auto.GO.thresh <- function(obj = combined.obj
     }
   } else {
     # Process only the second stress identifier if the first one is null
-    if(!is.null(stress.ident2)) {
+    if (!is.null(stress.ident2)) {
       i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
       stress.bool <- i2.bool
     }
@@ -777,30 +781,30 @@ Auto.GO.thresh <- function(obj = combined.obj
 
   # Process not stress identifiers similarly
   notstress.bool <- NULL
-  gr.av.scores.3 <- meta[ , notstress.ident3]
-  gr.av.scores.4 <- meta[ , notstress.ident4]
+  gr.av.scores.3 <- meta[, notstress.ident3]
+  gr.av.scores.4 <- meta[, notstress.ident4]
 
   # Determine not stressed cells based on the thresholds for notstress.ident3 and potentially notstress.ident4
-  if(!is.null(notstress.ident3)) {
+  if (!is.null(notstress.ident3)) {
     i3.bool <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > thresh.notstress.ident3
-    if(!is.null(notstress.ident4)) {
+    if (!is.null(notstress.ident4)) {
       i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
       notstress.bool <- i3.bool | i4.bool # Combine boolean vectors for notstress.ident3 and notstress.ident4
     } else {
       notstress.bool <- i3.bool # Use only notstress.ident3 for not stress determination
     }
-  } else {  # aka IF notstress.ident3 is null
-    if(!is.null(notstress.ident4)) {
+  } else { # aka IF notstress.ident3 is null
+    if (!is.null(notstress.ident4)) {
       i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
       notstress.bool <- i4.bool
     }
   }
 
   # Final assignment of stressed cells
-  if(!is.null(notstress.bool)) {
-    obj$'is.Stressed' <- stress.bool & !notstress.bool
+  if (!is.null(notstress.bool)) {
+    obj$"is.Stressed" <- stress.bool & !notstress.bool
   } else {
-    obj$'is.Stressed' <- stress.bool
+    obj$"is.Stressed" <- stress.bool
   }
 
   if (plot.results) {
@@ -811,7 +815,7 @@ Auto.GO.thresh <- function(obj = combined.obj
   message(" --  A new metadata column: `is.Stressed`:")
   message(" --  Threshold values for granule average scores: `obj@misc$gruffi$...`:")
   print(pc_TRUE(obj$is.Stressed, suffix = "stressed cells", NumberAndPC = T))
-  print(obj@misc$'gruffi')
+  print(obj@misc$"gruffi")
 
   return(obj)
 }
@@ -864,8 +868,10 @@ FilterStressedCells <- function(
 
   ScoreNames <- ww.convert.GO_term.2.score(GOterms)
   if (!all(ScoreNames %in% MetaVars)) {
-    Stringendo::iprint("Some of the GO-term scores were not found in the object:", ScoreNames,
-                       "Please call first: PlotGoTermScores(), or the actual GetGOTerms()")
+    Stringendo::iprint(
+      "Some of the GO-term scores were not found in the object:", ScoreNames,
+      "Please call first: PlotGoTermScores(), or the actual GetGOTerms()"
+    )
   }
 
   cells.2.granules <- obj[[res]][, 1]
@@ -955,14 +961,14 @@ FilterStressedCells <- function(
     if (F) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
     ggExpress::qscatter(Av.GO.Scores,
-                        cols = "Stressed", w = 6, h = 6,
-                        vline = stats::quantile(mScores[, 2], quantile.thr),
-                        hline = stats::quantile(mScores[, 1], quantile.thr),
-                        title = "Groups of Stressed cells have high scores.",
-                        subtitle = "Thresholded at 90th percentile",
-                        label = "name",
-                        repel = T,
-                        label.rectangle = T
+      cols = "Stressed", w = 6, h = 6,
+      vline = stats::quantile(mScores[, 2], quantile.thr),
+      hline = stats::quantile(mScores[, 1], quantile.thr),
+      title = "Groups of Stressed cells have high scores.",
+      subtitle = "Thresholded at 90th percentile",
+      label = "name",
+      repel = T,
+      label.rectangle = T
     )
   }
 
@@ -1175,9 +1181,9 @@ plot.clust.size.distr <- function(obj = combined.obj,
 
   if (length(clust.size.distr) < thr.hist) {
     ggExpress::qbarplot(clust.size.distr,
-                        plotname = Stringendo::ppp("clust.size.distr", (category)),
-                        subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
-                        ...
+      plotname = Stringendo::ppp("clust.size.distr", (category)),
+      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+      ...
     )
   } else {
     ggExpress::qhistogram(
@@ -1220,8 +1226,8 @@ PlotNormAndSkew <- function(x, q,
       signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
     ))
     qhistogram(Score.threshold.estimate,
-               vline = thresh, subtitle = sb, xlab = "Score",
-               plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+      vline = thresh, subtitle = sb, xlab = "Score",
+      plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
     )
   }
   return(thresh)
@@ -1289,11 +1295,11 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 
   for (l in 1:dim(xzy$x)[1]) {
     cells_in_cube <- which(umap_1 <= (xzy$x[l, 1] + x_width / 2) &
-                             umap_2 <= (xzy$x[l, 2] + y_width / 2) &
-                             umap_3 <= (xzy$x[l, 3] + z_width / 2) &
-                             umap_1 > (xzy$x[l, 1] - x_width / 2) &
-                             umap_2 > (xzy$x[l, 2] - y_width / 2) &
-                             umap_3 > (xzy$x[l, 3] - z_width / 2))
+      umap_2 <= (xzy$x[l, 2] + y_width / 2) &
+      umap_3 <= (xzy$x[l, 3] + z_width / 2) &
+      umap_1 > (xzy$x[l, 1] - x_width / 2) &
+      umap_2 > (xzy$x[l, 2] - y_width / 2) &
+      umap_3 > (xzy$x[l, 3] - z_width / 2))
 
     cube_ID[cells_in_cube] <- xzy$cube_ID[l]
 
@@ -1478,10 +1484,10 @@ grScoreHistogram <- function(obj = combined.obj,
 
   # Plot histogram with ggExpress::qhistogram
   pobj <- ggExpress::qhistogram(granule_scores,
-                                sub = subt, palette_use = "npg",
-                                plotname = paste("Granule Thresholding", make.names(components[2])),
-                                xlab = "Granule Median Score", ylab = "Nr. of Granules",
-                                vline = thr, filtercol = colX, ...
+    sub = subt, palette_use = "npg",
+    plotname = paste("Granule Thresholding", make.names(components[2])),
+    xlab = "Granule Median Score", ylab = "Nr. of Granules",
+    vline = thr, filtercol = colX, ...
   )
   print(pobj)
 
@@ -1770,7 +1776,6 @@ calc.cluster.averages.gruffi <- function(
 #' @export
 #' @importFrom Stringendo iprint
 getGruffiClusteringName <- function(obj, pattern = ".reassigned") {
-
   # Retrieve all clustering runs from the Seurat object
   clusteringRuns <- Seurat.utils::GetClusteringRuns(obj)
 
@@ -1779,7 +1784,7 @@ getGruffiClusteringName <- function(obj, pattern = ".reassigned") {
 
   # Return the first matching run if any exist, otherwise return the first clustering run
   if (length(matchingRuns) == 1) {
-    if (length(matchingRuns) > 1 ) {
+    if (length(matchingRuns) > 1) {
       warning("Multiple matching clustering runs found. Returning the first one.", immediate. = T)
       Stringendo::iprint(matchingRuns)
     }
@@ -1950,7 +1955,7 @@ ww.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
 # #' @importFrom CodeAndRoll2 grepv
 
 # GetNamedClusteringRuns <- function(
-    #     obj = combined.obj # Get Clustering Runs: metadata column names
+#     obj = combined.obj # Get Clustering Runs: metadata column names
 #     , res = c(F, 0.5)[1],
 #     topgene = F,
 #     pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
