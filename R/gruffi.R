@@ -582,82 +582,86 @@ Shiny.GO.thresh <- function(
     obj = combined.obj,
     proposed.method = c("fitted", "empirical")[1],
     quantile = c(.99, .9)[1],
-    stress.ident1,
-    stress.ident2,
-    notstress.ident3,
+    stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
+    stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
+    notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
     notstress.ident4 = NULL,
     plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
 
   app_env <- new.env()
-
   meta <- obj@meta.data
+
   if (!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
   if (!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
   if (!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
   if (!is.null(notstress.ident4)) stopifnot(notstress.ident4 %in% colnames(meta))
 
-  av.stress.ident1 <- as.numeric(levels(meta[, stress.ident1]))
-  av.stress.ident2 <- as.numeric(levels(meta[, stress.ident2]))
-  av.notstress.ident3 <- as.numeric(levels(meta[, notstress.ident3]))
-  av.notstress.ident4 <- as.numeric(levels(meta[, notstress.ident4]))
+  gr.av.stress.scores1 <- as.numeric(levels(meta[ , stress.ident1]))
+  gr.av.stress.scores2 <- as.numeric(levels(meta[ , stress.ident2]))
+  gr.av.notstress.scores3 <- as.numeric(levels(meta[ , notstress.ident3]))
+  gr.av.notstress.scores4 <- as.numeric(levels(meta[ , notstress.ident4]))
 
   # compute proposals for thresholds
-  app_env$thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = proposed.method, plot.hist = F)
-  app_env$thresh.stress.ident2 <- PlotNormAndSkew(av.stress.ident2, q = quantile, tresholding = proposed.method, plot.hist = F)
-  app_env$thresh.notstress.ident3 <- PlotNormAndSkew(av.notstress.ident3, q = quantile, tresholding = proposed.method, plot.hist = F)
-  app_env$thresh.notstress.ident4 <- PlotNormAndSkew(av.notstress.ident4, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$"thresh.stress.ident1" <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$"thresh.stress.ident2" <- PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$"thresh.notstress.ident3" <- PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = F)
+  app_env$"thresh.notstress.ident4" <- PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = F)
 
-  min.x.stress.ident1 <- floor(min(av.stress.ident1, app_env$thresh.stress.ident1))
-  max.x.stress.ident1 <- ceiling(max(av.stress.ident1, app_env$thresh.stress.ident1))
+  min.x.stress.ident1 <- floor(min(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
+  max.x.stress.ident1 <- ceiling(max(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
   step.stress.ident1 <- 0.001
 
-  min.x.stress.ident2 <- floor(min(av.stress.ident2, app_env$thresh.stress.ident2))
-  max.x.stress.ident2 <- ceiling(max(av.stress.ident2, app_env$thresh.stress.ident2))
+  min.x.stress.ident2 <- floor(min(gr.av.stress.scores2, app_env$"thresh.stress.ident2"))
+  max.x.stress.ident2 <- ceiling(max(gr.av.stress.scores2, app_env$"thresh.stress.ident2"))
   step.stress.ident2 <- 0.001
 
-  min.x.notstress.ident3 <- floor(min(av.notstress.ident3, app_env$thresh.notstress.ident3))
-  max.x.notstress.ident3 <- ceiling(max(av.notstress.ident3, app_env$thresh.notstress.ident3))
+  min.x.notstress.ident3 <- floor(min(gr.av.notstress.scores3, app_env$"thresh.notstress.ident3"))
+  max.x.notstress.ident3 <- ceiling(max(gr.av.notstress.scores3, app_env$'thresh.notstress.ident3'))
   step.notstress.ident3 <- 0.001
 
-  min.x.notstress.ident4 <- floor(min(av.notstress.ident4, app_env$thresh.notstress.ident4))
-  max.x.notstress.ident4 <- ceiling(max(av.notstress.ident4, app_env$thresh.notstress.ident4))
+  min.x.notstress.ident4 <- floor(min(gr.av.notstress.scores4, app_env$"thresh.notstress.ident4"))
+  max.x.notstress.ident4 <- ceiling(max(gr.av.notstress.scores4, app_env$"thresh.notstress.ident4"))
   step.notstress.ident4 <- 0.001
 
-  app_env$idents <- list(
+  app_env$"idents" <- list(
     stress.ident1 = stress.ident1,
     stress.ident2 = stress.ident2,
     notstress.ident3 = notstress.ident3,
     notstress.ident4 = notstress.ident4
   )
 
-  app_env$sliders <- list(
+  app_env$"sliders" <- list(
     min.x.stress.ident1 = min.x.stress.ident1, max.x.stress.ident1 = max.x.stress.ident1, step.stress.ident1 = step.stress.ident1,
     min.x.stress.ident2 = min.x.stress.ident2, max.x.stress.ident2 = max.x.stress.ident2, step.stress.ident2 = step.stress.ident2,
     min.x.notstress.ident3 = min.x.notstress.ident3, max.x.notstress.ident3 = max.x.notstress.ident3, step.notstress.ident3 = step.notstress.ident3,
     min.x.notstress.ident4 = min.x.notstress.ident4, max.x.notstress.ident4 = max.x.notstress.ident4, step.notstress.ident4 = step.notstress.ident4
   )
 
-  app_env$average.vec <- list(
-    av.stress.ident1 = av.stress.ident1,
-    av.stress.ident2 = av.stress.ident2,
-    av.notstress.ident3 = av.notstress.ident3,
-    av.notstress.ident4 = av.notstress.ident4
+  app_env$"average.vec" <- list(
+    gr.av.stress.scores1 = gr.av.stress.scores1,
+    gr.av.stress.scores2 = gr.av.stress.scores2,
+    gr.av.notstress.scores3 = gr.av.notstress.scores3,
+    gr.av.notstress.scores4 = gr.av.notstress.scores4
   )
-  app_env$obj <- obj
-  app_env$plot.cluster.shiny <- plot.cluster.shiny
+
+  app_env$"obj" <- obj
+  app_env$"plot.cluster.shiny" <- plot.cluster.shiny
 
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
                    local = new.env(parent = app_env),
                    echo = FALSE, keep.source = TRUE
   )$value
+
   app_server <- source(file.path(app_dir, "server.R"),
                        local = new.env(parent = app_env),
                        echo = FALSE, keep.source = TRUE
   )$value
+
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
   return(obj)
 }
+
 
 # _________________________________________________________________________________________________
 #' @title Auto.GO.thresh

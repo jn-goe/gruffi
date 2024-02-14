@@ -14,32 +14,32 @@ server <- shiny::shinyServer(function(input, output, session) {
   if (!is.null(stress.ident1)) {
     df.data.stress.ident1 <- shiny::reactive({
       i <- input$"t.stress.ident1"
-      df <- data.frame(av.stress.ident1 = average.vec$"av.stress.ident1", assignment = F)
-      df$assignment[df$"av.stress.ident1" > i] <- T
+      df <- data.frame(gr.av.stress.scores1 = average.vec$"gr.av.stress.scores1", assignment = F)
+      df$assignment[df$"gr.av.stress.scores1" > i] <- T
       df
     })
   }
   if (!is.null(stress.ident2)) {
     df.data.stress.ident2 <- shiny::reactive({
       i <- input$"t.stress.ident2"
-      df <- data.frame(av.stress.ident2 = average.vec$"av.stress.ident2", assignment = F)
-      df$assignment[df$"av.stress.ident2" > i] <- T
+      df <- data.frame(gr.av.stress.scores2 = average.vec$"gr.av.stress.scores2", assignment = F)
+      df$assignment[df$"gr.av.stress.scores2" > i] <- T
       df
     })
   }
   if (!is.null(notstress.ident3)) {
     df.data.notstress.ident3 <- shiny::reactive({
       i <- input$"t.notstress.ident3"
-      df <- data.frame(av.notstress.ident3 = average.vec$"av.notstress.ident3", assignment = F)
-      df$assignment[df$"av.notstress.ident3" > i] <- T
+      df <- data.frame(gr.av.notstress.scores3 = average.vec$"gr.av.notstress.scores3", assignment = F)
+      df$assignment[df$"gr.av.notstress.scores3" > i] <- T
       df
     })
   }
   if (!is.null(notstress.ident4)) {
     df.data.notstress.ident4 <- shiny::reactive({
       i <- input$"t.notstress.ident4"
-      df <- data.frame(av.notstress.ident4 = average.vec$"av.notstress.ident4", assignment = F)
-      df$assignment[df$"av.notstress.ident4" > i] <- T
+      df <- data.frame(gr.av.notstress.scores4 = average.vec$"gr.av.notstress.scores4", assignment = F)
+      df$assignment[df$"gr.av.notstress.scores4" > i] <- T
       df
     })
   }
@@ -146,14 +146,14 @@ server <- shiny::shinyServer(function(input, output, session) {
   if (!is.null(stress.ident1)) {
     output$"hist.stress.ident1" <- shiny::renderPlot({
       df <- df.data.stress.ident1()
-      ggplot2::ggplot(df, ggplot2::aes(x = av.stress.ident1, fill = factor(assignment))) +
+      ggplot2::ggplot(df, ggplot2::aes(x = gr.av.stress.scores1, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = colorz) +
-        ggplot2::geom_histogram(binwidth = (2 * IQR(av.stress.ident1) / length(av.stress.ident1)^(1 / 3))) +
+        ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.stress.scores1) / length(gr.av.stress.scores1)^(1 / 3))) +
         ggplot2::theme_minimal() +
-        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.stress.ident1, 0.9)), colour = "black") +
+        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.stress.scores1, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
-        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(av.stress.ident1, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$min.x.stress.ident1, sliders$max.x.stress.ident1)) +
+        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.stress.scores1, 0.9), y = Inf, label = "90% quantile")) +
+        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.stress.ident1', sliders$'max.x.stress.ident1')) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })
@@ -161,14 +161,14 @@ server <- shiny::shinyServer(function(input, output, session) {
   if (!is.null(stress.ident2)) {
     output$"hist.stress.ident2" <- shiny::renderPlot({
       df <- df.data.stress.ident2()
-      ggplot2::ggplot(df, ggplot2::aes(x = av.stress.ident2, fill = factor(assignment))) +
+      ggplot2::ggplot(df, ggplot2::aes(x = gr.av.stress.scores2, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = colorz) +
-        ggplot2::geom_histogram(binwidth = (2 * IQR(av.stress.ident2) / length(av.stress.ident2)^(1 / 3))) +
+        ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.stress.scores2) / length(gr.av.stress.scores2)^(1 / 3))) +
         ggplot2::theme_minimal() +
-        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.stress.ident2, 0.9)), colour = "black") +
+        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.stress.scores2, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
-        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(av.stress.ident2, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$min.x.stress.ident2, sliders$max.x.stress.ident2)) +
+        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.stress.scores2, 0.9), y = Inf, label = "90% quantile")) +
+        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.stress.ident2', sliders$'max.x.stress.ident2')) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })
@@ -176,14 +176,14 @@ server <- shiny::shinyServer(function(input, output, session) {
   if (!is.null(notstress.ident3)) {
     output$"hist.notstress.ident3" <- shiny::renderPlot({
       df <- df.data.notstress.ident3()
-      ggplot2::ggplot(df, ggplot2::aes(x = av.notstress.ident3, fill = factor(assignment))) +
+      ggplot2::ggplot(df, ggplot2::aes(x = gr.av.notstress.scores3, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = rev(colorz)) +
-        ggplot2::geom_histogram(binwidth = (2 * IQR(av.notstress.ident3) / length(av.notstress.ident3)^(1 / 3))) +
+        ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.notstress.scores3) / length(gr.av.notstress.scores3)^(1 / 3))) +
         ggplot2::theme_minimal() +
-        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.notstress.ident3, 0.9)), colour = "black") +
+        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.notstress.scores3, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
-        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(av.notstress.ident3, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$min.x.notstress.ident3, sliders$max.x.notstress.ident3)) +
+        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.notstress.scores3, 0.9), y = Inf, label = "90% quantile")) +
+        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.notstress.ident3', sliders$'max.x.notstress.ident3')) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })
@@ -191,14 +191,14 @@ server <- shiny::shinyServer(function(input, output, session) {
   if (!is.null(notstress.ident4)) {
     output$"hist.notstress.ident4" <- shiny::renderPlot({
       df <- df.data.notstress.ident4()
-      ggplot2::ggplot(df, ggplot2::aes(x = av.notstress.ident4, fill = factor(assignment))) +
+      ggplot2::ggplot(df, ggplot2::aes(x = gr.av.notstress.scores4, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = rev(colorz)) +
-        ggplot2::geom_histogram(binwidth = (2 * IQR(av.notstress.ident4) / length(av.notstress.ident4)^(1 / 3))) +
+        ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.notstress.scores4) / length(gr.av.notstress.scores4)^(1 / 3))) +
         ggplot2::theme_minimal() +
-        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(av.notstress.ident4, 0.9)), colour = "black") +
+        ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.notstress.scores4, 0.9)), colour = "black") +
         ggplot2::ylab("count") +
-        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(av.notstress.ident4, 0.9), y = Inf, label = "90% quantile")) +
-        ggplot2::coord_cartesian(xlim = c(sliders$min.x.notstress.ident4, sliders$max.x.notstress.ident4)) +
+        ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.notstress.scores4, 0.9), y = Inf, label = "90% quantile")) +
+        ggplot2::coord_cartesian(xlim = c(sliders$'min.x.notstress.ident4', sliders$'max.x.notstress.ident4')) +
         ggplot2::xlab("GO Score") +
         ggplot2::guides(fill = ggplot2::guide_legend(title = "assignment"))
     })

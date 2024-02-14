@@ -1,11 +1,11 @@
 ui <- shiny::shinyUI(shiny::fluidPage(
   shiny::titlePanel(
-    paste0(
-      "Threshold proposal: ",
-      if (!is.null(stress.ident1)) paste0(ww.parse.GO(stress.ident1), "| ", round(thresh.stress.ident1, 2)),
-      if (!is.null(stress.ident2)) paste0(ww.parse.GO(stress.ident2), "| ", round(thresh.stress.ident2, 2)),
-      if (!is.null(notstress.ident3)) paste0(ww.parse.GO(notstress.ident3), "| ", round(thresh.notstress.ident3, 2)),
-      if (!is.null(notstress.ident4)) paste0(ww.parse.GO(notstress.ident4), "| ", round(thresh.notstress.ident4, 2))
+    paste(
+      "Threshold proposals",
+      if (!is.null(stress.ident1)) paste0(ww.parse.GO(stress.ident1), "= ", round(thresh.stress.ident1, 2)),
+      if (!is.null(stress.ident2)) paste0(ww.parse.GO(stress.ident2), "= ", round(thresh.stress.ident2, 2)),
+      if (!is.null(notstress.ident3)) paste0(ww.parse.GO(notstress.ident3), "= ", round(thresh.notstress.ident3, 2)),
+      if (!is.null(notstress.ident4)) paste0(ww.parse.GO(notstress.ident4), "= ", round(thresh.notstress.ident4, 2)), sep = " | "
     )
   ),
   shiny::sidebarLayout(
