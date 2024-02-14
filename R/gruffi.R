@@ -562,51 +562,61 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 # _____________________________________________________________________________________________ ----
 # 4. Filtering ---------------------------------------------------------------------------
 
-#' @title Shiny.GO.thresh
+#' @title Launch Shiny App for GO Term-based Thresholding
 #'
-#' @description GO-thresholding for the Shiny app.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param proposed.method proposed estimation method, Default: c("fitted", "empirical")[1]
-#' @param quantile quantile cutoff to use, Default: c(0.99, 0.9)[1]
-#' @param stress.ident1 stress identity 1.
-#' @param stress.ident2 stress identity 2.
-#' @param notstress.ident3 Negative stress filter, notstress identity 3.
-#' @param notstress.ident4 Negative stress filter, notstress identity 4, Default: NULL
-#' @param plot.cluster.shiny plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)[1]
-#' @seealso
-#'  \code{\link[shiny]{runApp}}, \code{\link[shiny]{shinyApp}}
+#' @description Launches a Shiny application to interactively apply GO term-based thresholding
+#' for identifying stressed cells in a Seurat object. This function calculates the
+#' "granule average GO-scores" for individual GO terms and updates the object with a combined stress
+#' identification based on these thresholds.#'
+#' @param obj Seurat single cell object, with Granule Averages GO-Scores in metadata (ident1-4).
+#' @param proposed.method The method for estimating thresholds, default: `"fitted"`.
+#' Options are `"fitted"` or `"empirical"`.
+#' @param quantile The quantile cutoff for threshold determination, default: `0.99`.
+#' Options are `0.99` or `0.9`.
+#' @param stress.ident1 Identifier for the first stress-related GO term.
+#' @param stress.ident2 Identifier for the second stress-related GO term.
+#' @param notstress.ident3 Identifier for the first non-stress-related GO term. Idents 3 and 4 act
+#'  as a negative filter for stress identification.
+#' @param notstress.ident4 Identifier for the second non-stress-related GO term, optional.
+#' @param plot.cluster.shiny The clustering run to be used for plotting in the Shiny app,
+#' default: `Seurat.utils::GetClusteringRuns(obj)[1]`.
+#'
 #' @export
 #' @importFrom shiny runApp shinyApp
-
 Shiny.GO.thresh <- function(
     obj = combined.obj,
     proposed.method = c("fitted", "empirical")[1],
     quantile = c(.99, .9)[1],
-    stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
-    stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
-    notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
+    stress.ident1,
+    stress.ident2,
+    notstress.ident3,
     notstress.ident4 = NULL,
     plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
 
   app_env <- new.env()
   meta <- obj@meta.data
 
-  if (!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
-  if (!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
-  if (!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
-  if (!is.null(notstress.ident4)) stopifnot(notstress.ident4 %in% colnames(meta))
+  # Ensure that provided GO term identifiers exist in the metadata
+  stopifnot(stress.ident1 %in% colnames(meta) | is.null(stress.ident1))
+  stopifnot(stress.ident2 %in% colnames(meta) | is.null(stress.ident2))
+  stopifnot(notstress.ident3 %in% colnames(meta) | is.null(notstress.ident3))
+  stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
+  # Convert categorical scores to numeric for thresholding
   gr.av.stress.scores1 <- as.numeric(levels(meta[ , stress.ident1]))
   gr.av.stress.scores2 <- as.numeric(levels(meta[ , stress.ident2]))
   gr.av.notstress.scores3 <- as.numeric(levels(meta[ , notstress.ident3]))
   gr.av.notstress.scores4 <- as.numeric(levels(meta[ , notstress.ident4]))
 
-  # compute proposals for thresholds
+  # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
   app_env$"thresh.stress.ident1" <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = F)
   app_env$"thresh.stress.ident2" <- PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = F)
   app_env$"thresh.notstress.ident3" <- PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = F)
   app_env$"thresh.notstress.ident4" <- PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = F)
 
+
+  # Prepare slider inputs for Shiny app based on min, max, and step values calculated from scores
+  # These values define the range and granularity of threshold adjustments within the Shiny app
   min.x.stress.ident1 <- floor(min(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
   max.x.stress.ident1 <- ceiling(max(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
   step.stress.ident1 <- 0.001
@@ -623,36 +633,43 @@ Shiny.GO.thresh <- function(
   max.x.notstress.ident4 <- ceiling(max(gr.av.notstress.scores4, app_env$"thresh.notstress.ident4"))
   step.notstress.ident4 <- 0.001
 
+  # Define the environment for the Shiny app as `app_env`.
   app_env$"idents" <- list(
-    stress.ident1 = stress.ident1,
-    stress.ident2 = stress.ident2,
-    notstress.ident3 = notstress.ident3,
-    notstress.ident4 = notstress.ident4
+    'stress.ident1' = stress.ident1,
+    'stress.ident2' = stress.ident2,
+    'notstress.ident3' = notstress.ident3,
+    'notstress.ident4' = notstress.ident4
   )
 
   app_env$"sliders" <- list(
-    min.x.stress.ident1 = min.x.stress.ident1, max.x.stress.ident1 = max.x.stress.ident1, step.stress.ident1 = step.stress.ident1,
-    min.x.stress.ident2 = min.x.stress.ident2, max.x.stress.ident2 = max.x.stress.ident2, step.stress.ident2 = step.stress.ident2,
-    min.x.notstress.ident3 = min.x.notstress.ident3, max.x.notstress.ident3 = max.x.notstress.ident3, step.notstress.ident3 = step.notstress.ident3,
-    min.x.notstress.ident4 = min.x.notstress.ident4, max.x.notstress.ident4 = max.x.notstress.ident4, step.notstress.ident4 = step.notstress.ident4
+    'min.x.stress.ident1' = min.x.stress.ident1, 'max.x.stress.ident1' = max.x.stress.ident1,
+    'step.stress.ident1' = step.stress.ident1,
+    'min.x.stress.ident2' = min.x.stress.ident2, 'max.x.stress.ident2' = max.x.stress.ident2,
+    'step.stress.ident2' = step.stress.ident2,
+    'min.x.notstress.ident3' = min.x.notstress.ident3, 'max.x.notstress.ident3' = max.x.notstress.ident3,
+    'step.notstress.ident3' = step.notstress.ident3,
+    'min.x.notstress.ident4' = min.x.notstress.ident4, 'max.x.notstress.ident4' = max.x.notstress.ident4,
+    'step.notstress.ident4' = step.notstress.ident4
   )
 
   app_env$"average.vec" <- list(
-    gr.av.stress.scores1 = gr.av.stress.scores1,
-    gr.av.stress.scores2 = gr.av.stress.scores2,
-    gr.av.notstress.scores3 = gr.av.notstress.scores3,
-    gr.av.notstress.scores4 = gr.av.notstress.scores4
+    'gr.av.stress.scores1' = gr.av.stress.scores1,
+    'gr.av.stress.scores2' = gr.av.stress.scores2,
+    'gr.av.notstress.scores3' = gr.av.notstress.scores3,
+    'gr.av.notstress.scores4' = gr.av.notstress.scores4
   )
 
   app_env$"obj" <- obj
   app_env$"plot.cluster.shiny" <- plot.cluster.shiny
 
+  # Launch the Shiny app
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
                    local = new.env(parent = app_env),
                    echo = FALSE, keep.source = TRUE
   )$value
 
+  # Call the server.R file
   app_server <- source(file.path(app_dir, "server.R"),
                        local = new.env(parent = app_env),
                        echo = FALSE, keep.source = TRUE
@@ -664,126 +681,125 @@ Shiny.GO.thresh <- function(
 
 
 # _________________________________________________________________________________________________
-#' @title Auto.GO.thresh
-#' @description GO-thresholding to run automatically.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param proposed.method proposed estimation method, Default: c("fitted", "empirical")[1]
-#' @param quantile quantile cutoff to use, Default: c(0.99, 0.9)[1]
-#' @param stress.ident1 stress identity 1
-#' @param stress.ident2 stress identity 1
-#' @param notstress.ident3 Negative stress filter, notstress identity 3
-#' @param notstress.ident4 Negative stress filter, notstress identity 4, Default: NULL
-#' @param plot.cluster.shiny plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)[1]
+#' @title Automated GO Term-based Thresholding without using a Shiny app.
+#'
+#' @description Automatically applies granular GO term-based thresholding to identify stressed cells
+#' in a Seurat object without launching a Shiny app. This function calculates the
+#' "granule average GO-scores" for individual GO terms and updates the object with a combined stress
+#' identification based on these thresholds.
+#' @param obj Seurat single cell object, with Granule Averages GO-Scores in metadata (ident1-4).
+#' @param proposed.method The method for estimating thresholds, default: `"fitted"`.
+#' Options are `"fitted"` or `"empirical"`.
+#' @param quantile The quantile cutoff for threshold determination, default: `0.99`.
+#' Options are `0.99` or `0.9`.
+#' @param stress.ident1 Identifier for the first stress-related GO term.
+#' @param stress.ident2 Identifier for the second stress-related GO term.
+#' @param notstress.ident3 Identifier for the first non-stress-related GO term. Idents 3 and 4 act
+#'  as a negative filter for stress identification.
+#' @param notstress.ident4 Identifier for the second non-stress-related GO term, optional.
+#' @param plot.results Boolean flag to control the plotting of results on UMAPs and histograms,
+#' default: `TRUE`.
+#'
 #' @export
-
 Auto.GO.thresh <- function(obj = combined.obj
-                            , proposed.method = c("fitted","empirical")[1]
-                            , quantile = c(.99,.9)[1]
-                            , stress.ident1
-                            , stress.ident2
-                            , notstress.ident3
-                            , notstress.ident4 = NULL
-                            , plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1])  {
+                           , proposed.method = c("fitted","empirical")[1]
+                           , quantile = c(.99,.9)[1]
+                           , stress.ident1
+                           , stress.ident2
+                           , notstress.ident3
+                           , notstress.ident4 = NULL
+                           , plot.results = TRUE
+                           , ...)  {
 
-    meta <- obj@meta.data
+  meta <- obj@meta.data
+  # Ensure that provided GO term identifiers exist in the metadata
+  stopifnot(stress.ident1 %in% colnames(meta) | is.null(stress.ident1))
+  stopifnot(stress.ident2 %in% colnames(meta) | is.null(stress.ident2))
+  stopifnot(notstress.ident3 %in% colnames(meta) | is.null(notstress.ident3))
+  stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
-    if(!is.null(stress.ident1)) stopifnot(stress.ident1 %in% colnames(meta))
-    if(!is.null(stress.ident2)) stopifnot(stress.ident2 %in% colnames(meta))
-    if(!is.null(notstress.ident3)) stopifnot(notstress.ident3 %in% colnames(meta))
-    if(!is.null(notstress.ident4)) stopifnot(notstress.ident4 %in% colnames(meta))
+  # Convert categorical scores to numeric for thresholding
+  gr.av.stress.scores1 <- as.numeric(levels(meta[ ,stress.ident1]))
+  gr.av.stress.scores2 <- as.numeric(levels(meta[ ,stress.ident2]))
+  gr.av.notstress.scores3 <- as.numeric(levels(meta[ ,notstress.ident3]))
+  gr.av.notstress.scores4 <- as.numeric(levels(meta[ ,notstress.ident4]))
 
-    av.stress.ident1 <- as.numeric(levels(meta[,stress.ident1]))
-    av.stress.ident2 <- as.numeric(levels(meta[,stress.ident2]))
-    av.notstress.ident3 <- as.numeric(levels(meta[,notstress.ident3]))
-    av.notstress.ident4 <- as.numeric(levels(meta[,notstress.ident4]))
+  # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
+  thresh.stress.ident1 <-     PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.stress.ident2 <-     PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.notstress.ident3 <-  PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = F)
+  thresh.notstress.ident4 <-  PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = F)
 
-    # compute proposals for thresholds
-    thresh.stress.ident1 <- PlotNormAndSkew(av.stress.ident1, q = quantile, tresholding = proposed.method, plot.hist = F)
-    thresh.stress.ident2 <- PlotNormAndSkew(av.stress.ident2, q = quantile, tresholding = proposed.method, plot.hist = F)
-    thresh.notstress.ident3 <- PlotNormAndSkew(av.notstress.ident3, q = quantile, tresholding = proposed.method, plot.hist = F)
-    thresh.notstress.ident4 <- PlotNormAndSkew(av.notstress.ident4, q = quantile, tresholding = proposed.method, plot.hist = F)
+  # Store computed thresholds in the Seurat object's misc slot for later reference
+  if(!is.null(stress.ident1)) obj@misc$gruffi$"thresh.stress.ident1" <- thresh.stress.ident1
+  if(!is.null(stress.ident2)) obj@misc$gruffi$"thresh.stress.ident2" <- thresh.stress.ident2
+  if(!is.null(notstress.ident3)) obj@misc$gruffi$"thresh.notstress.ident3" <- thresh.notstress.ident3
+  if(!is.null(notstress.ident4)) obj@misc$gruffi$"thresh.notstress.ident4" <- thresh.notstress.ident4
 
-    min.x.stress.ident1 <- floor(min(av.stress.ident1, thresh.stress.ident1))
-    max.x.stress.ident1 <- ceiling(max(av.stress.ident1, thresh.stress.ident1))
-    step.stress.ident1  <- 0.001
+  # Stress Filtering & Assignment
+  # Cells are considered stressed if their scores are above the threshold for any of the stress identifiers
+  # and not above the threshold for any of the non-stress identifiers
+  if(!is.null(stress.ident1)) {
+    gr.av.scores.1 <- meta[ , stress.ident1]
+    gr.av.scores.2 <- meta[ , stress.ident2]
 
-    min.x.stress.ident2 <- floor(min(av.stress.ident2, thresh.stress.ident2))
-    max.x.stress.ident2 <- ceiling(max(av.stress.ident2, thresh.stress.ident2))
-    step.stress.ident2  <- 0.001
-
-    min.x.notstress.ident3 <- floor(min(av.notstress.ident3, thresh.notstress.ident3))
-    max.x.notstress.ident3 <- ceiling(max(av.notstress.ident3, thresh.notstress.ident3))
-    step.notstress.ident3  <- 0.001
-
-    min.x.notstress.ident4 <- floor(min(av.notstress.ident4, thresh.notstress.ident4))
-    max.x.notstress.ident4 <- ceiling(max(av.notstress.ident4, thresh.notstress.ident4))
-    step.notstress.ident4  <- 0.001
-
-    idents <- list(stress.ident1 = stress.ident1,
-                   stress.ident2 = stress.ident2,
-                   notstress.ident3 = notstress.ident3,
-                   notstress.ident4 = notstress.ident4)
-
-    sliders <- list(min.x.stress.ident1 = min.x.stress.ident1, max.x.stress.ident1 = max.x.stress.ident1, step.stress.ident1 = step.stress.ident1,
-                    min.x.stress.ident2 = min.x.stress.ident2, max.x.stress.ident2 = max.x.stress.ident2, step.stress.ident2 = step.stress.ident2,
-                    min.x.notstress.ident3 = min.x.notstress.ident3, max.x.notstress.ident3 = max.x.notstress.ident3, step.notstress.ident3 = step.notstress.ident3,
-                    min.x.notstress.ident4 = min.x.notstress.ident4, max.x.notstress.ident4 = max.x.notstress.ident4, step.notstress.ident4 = step.notstress.ident4)
-
-    average.vec <- list(av.stress.ident1 = av.stress.ident1,
-                        av.stress.ident2 = av.stress.ident2,
-                        av.notstress.ident3 = av.notstress.ident3,
-                        av.notstress.ident4 = av.notstress.ident4)
-
-    if(!is.null(stress.ident1)) i.stress.ident1 <- thresh.stress.ident1
-    if(!is.null(stress.ident2)) i.stress.ident2 <- thresh.stress.ident2
-    if(!is.null(notstress.ident3)) i.notstress.ident3 <- thresh.notstress.ident3
-    if(!is.null(notstress.ident4)) i.notstress.ident4 <- thresh.notstress.ident4
-
-    c <- obj
-
-    if(!is.null(stress.ident1)) {
-        i1.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident1]))[c@meta.data[,idents$stress.ident1]] > i.stress.ident1
-        if(!is.null(stress.ident2)) {
-            i2.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident2]))[c@meta.data[,idents$stress.ident2]] > i.stress.ident2
-            stress.bool <- i1.bool | i2.bool
-        }
-        else {
-            stress.bool <- i1.bool
-        }
+    # Check if the numeric score is greater than the threshold for stress
+    i1.bool <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > thresh.stress.ident1
+    if(!is.null(stress.ident2)) {
+      i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
+      stress.bool <- i1.bool | i2.bool # Combine both boolean vectors for stress determination
     } else {
-        if(!is.null(stress.ident2)) {
-            i2.bool <- as.numeric(levels(c@meta.data[,idents$stress.ident2]))[c@meta.data[,idents$stress.ident2]] > i.stress.ident2
-            stress.bool <- i2.bool
-        }
+      stress.bool <- i1.bool # Use only stress.ident1 for stress determination
     }
+  } else {
+    # Process only the second stress identifier if the first one is null
+    if(!is.null(stress.ident2)) {
+      i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
+      stress.bool <- i2.bool
+    }
+  }
 
-    notstress.bool <- NULL
-    if(!is.null(notstress.ident3)) {
-        i3.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident3]))[c@meta.data[,idents$notstress.ident3]] > i.notstress.ident3
-        if(!is.null(notstress.ident4)) {
-            i4.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident4]))[c@meta.data[,idents$notstress.ident4]] > i.notstress.ident4
-            notstress.bool <- i3.bool | i4.bool
-        }
-        else {
-            notstress.bool <- i3.bool
-        }
-    } else {
-        if(!is.null(notstress.ident4)) {
-            i4.bool <- as.numeric(levels(c@meta.data[,idents$notstress.ident4]))[c@meta.data[,idents$notstress.ident4]] > i.notstress.ident4
-            notstress.bool <- i4.bool
-        }
-    }
+  # Process not stress identifiers similarly
+  notstress.bool <- NULL
+  gr.av.scores.3 <- meta[ , notstress.ident3]
+  gr.av.scores.4 <- meta[ , notstress.ident4]
 
-    if(!is.null(notstress.bool)) {
-        c$is.Stressed <- stress.bool & !notstress.bool
+  # Determine not stressed cells based on the thresholds for notstress.ident3 and potentially notstress.ident4
+  if(!is.null(notstress.ident3)) {
+    i3.bool <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > thresh.notstress.ident3
+    if(!is.null(notstress.ident4)) {
+      i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
+      notstress.bool <- i3.bool | i4.bool # Combine boolean vectors for notstress.ident3 and notstress.ident4
     } else {
-        c$is.Stressed <- stress.bool
+      notstress.bool <- i3.bool # Use only notstress.ident3 for not stress determination
     }
-    # c$is.Stressed[c$is.Stressed == FALSE] <- F
-    # c$is.Stressed[c$is.Stressed == TRUE] <- T
-    c
-    return(c)
+  } else {  # aka IF notstress.ident3 is null
+    if(!is.null(notstress.ident4)) {
+      i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
+      notstress.bool <- i4.bool
+    }
+  }
+
+  # Final assignment of stressed cells
+  if(!is.null(notstress.bool)) {
+    obj$'is.Stressed' <- stress.bool & !notstress.bool
+  } else {
+    obj$'is.Stressed' <- stress.bool
+  }
+
+  if (plot.results) {
+    message("plot.results not yet implemented")
+  }
+
+  message("Seurat object now contains:")
+  message(" --  A new metadata column: `is.Stressed`:")
+  message(" --  Threshold values for granule average scores: `obj@misc$gruffi$...`:")
+  print(pc_TRUE(obj$is.Stressed, suffix = "stressed cells", NumberAndPC = T))
+  print(obj@misc$'gruffi')
+
+  return(obj)
 }
+
 
 # _________________________________________________________________________________________________
 #' @title Filter Stressed Cells from a Seurat Object
