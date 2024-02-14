@@ -317,6 +317,8 @@ GetAllGOTerms <- function(obj = combined.obj, return.obj = TRUE) {
 #' @param GRCh = Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())
 #' @param web.open Open weblink for GO-term?, Default: FALSE
 #' @param genes.shown Number of genes shown, Default: 10
+#' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl
+#' fails with default settings, mirror can be specified. Default: 'NULL'
 #' @seealso
 #'  \code{\link[biomaRt]{useEnsembl}}, \code{\link[biomaRt]{getBM}}
 #'  \code{\link[AnnotationDbi]{AnnotationDb-objects}}
@@ -334,7 +336,8 @@ GetGOTerms <- function(obj = combined.obj,
                        web.open = F,
                        version = NULL,
                        GRCh = NULL,
-                       genes.shown = 10) {
+                       genes.shown = 10,
+                       mirror = NULL) {
   print("GetGOTerms()")
 
   if (use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
@@ -464,6 +467,7 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 
 # _________________________________________________________________________________________________
 #' @title GO_score_evaluation
+#'
 #' @description GO-score evaluation for filtering.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param GO_term GO-term; Default: 'GO:0034976'
@@ -472,6 +476,7 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 #' @param plot.each.gene Plot each gene's expression, Default: FALSE
 #' @param assay Which assay to use?, Default: 'RNA'
 #' @param description Description to added to plot title, e.g. GO-terms name, Default: 'NULL'
+#' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl fails with default settings, mirror can be specified. Default: 'NULL'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @param clustering Which clustering to use (from metadata)? Default: '`if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))])`'
 #' @seealso
@@ -488,15 +493,17 @@ GO_score_evaluation <- function(obj = combined.obj,
                                 plot.each.gene = FALSE,
                                 assay = "RNA",
                                 description = NULL,
+                                mirror = NULL,
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                 clustering = if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
+
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
   if (new_GO_term_computation) {
     obj <- PlotGoTermScores(
       GO = GO_term, save.UMAP = save.UMAP, obj = obj,
-      desc = description, plot.each.gene = plot.each.gene
+      desc = description, plot.each.gene = plot.each.gene, mirror = mirror
     )
   }
 
