@@ -3,7 +3,7 @@
  > (of connected functions)
 
 ```mermaid
-flowchart LR 
+flowchart LR
 
   GetGOTerms(GetGOTerms) --> IntersectWithExpressed(IntersectWithExpressed)
   PlotGoTermScores(PlotGoTermScores) --> FeaturePlotSaveGO(FeaturePlotSaveGO)
@@ -24,14 +24,14 @@ flowchart LR
   PlotNormAndSkew(PlotNormAndSkew) --> CalcStandDevSkewedDistr(CalcStandDevSkewedDistr)
 
   GetAllGOTermNames(GetAllGOTermNames) --> .convert.score.2.GO_term(.convert.score.2.GO_term)
- 
+
 ```
 
  *created by `convert_igraph_to_mermaid()`*
 
 
 
-## List of Functions in gruffi.R (31) 
+## List of Functions in gruffi.R (31)
 
 Updated: 2024/02/15 00:28
 
@@ -41,7 +41,7 @@ Updated: 2024/02/15 00:28
 
 - #### 2 `CalculateMedianClusterSize()`
 
-  Calculate Median Cluster Size. This function calculates and returns the median size of clusters for a given assay  and resolution in a Seurat object. It provides an option to display the median size via message. 
+  Calculate Median Cluster Size. This function calculates and returns the median size of clusters for a given assay  and resolution in a Seurat object. It provides an option to display the median size via message.
 
 - #### 3 `GetGOTerms()`
 
@@ -109,11 +109,11 @@ Updated: 2024/02/15 00:28
 
 - #### 19 `GrScoreUMAP()`
 
-  Wrapper for clUMAP with Thresholding and Plotting. This function applies thresholding to granule scores within a specified object and column,  inverts the thresholding if a specific miscellaneous name is provided, and then calls clUMAP  for plotting based on the thresholded values. 
+  Wrapper for clUMAP with Thresholding and Plotting. This function applies thresholding to granule scores within a specified object and column,  inverts the thresholding if a specific miscellaneous name is provided, and then calls clUMAP  for plotting based on the thresholded values.
 
 - #### 20 `GrScoreHistogram()`
 
-  Histogram Visualization of Granule Scores with Threshold. Plots a histogram of granule scores from a specified column within a Seurat object,  with a vertical line denoting a threshold. The function allows for an optional  inversion of filtering logic based on the `miscname` and `auto` parameters. 
+  Histogram Visualization of Granule Scores with Threshold. Plots a histogram of granule scores from a specified column within a Seurat object,  with a vertical line denoting a threshold. The function allows for an optional  inversion of filtering logic based on the `miscname` and `auto` parameters.
 
 - #### 21 `ClusterUMAPthresholding()`
 
@@ -129,7 +129,7 @@ Updated: 2024/02/15 00:28
 
 - #### 24 `CalcStandDevSkewedDistr()`
 
-  Calculate Standard Deviation for Skewed Distributions. Computes a modified standard deviation for skewed distributions by mirroring data points about the mean.  This approach aims to reflect the skewed part of the distribution to better understand its spread. 
+  Calculate Standard Deviation for Skewed Distributions. Computes a modified standard deviation for skewed distributions by mirroring data points about the mean.  This approach aims to reflect the skewed part of the distribution to better understand its spread.
 
 - #### 25 `CalcClusterAverages_Gruffi()`
 
@@ -137,7 +137,7 @@ Updated: 2024/02/15 00:28
 
 - #### 26 `GetGruffiClusteringName()`
 
-  Retrieve First Clustering Run or First Matching Pattern Run. Fetches the first clustering run from a Seurat object,  optionally filtered by a specific pattern (e.g., ".reassigned"). 
+  Retrieve First Clustering Run or First Matching Pattern Run. Fetches the first clustering run from a Seurat object,  optionally filtered by a specific pattern (e.g., ".reassigned").
 
 - #### 27 `CleanDuplicateScorenames()`
 
