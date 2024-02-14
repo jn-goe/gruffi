@@ -165,8 +165,6 @@ Seurat.utils::clUMAP('is.Stressed', label = F, obj = subset.obj)
 
 
 
-
-
 ## Troubleshooting
 
 For Errors, Problems & Questions: **please [see the FAQ](https://github.com/jn-goe/gruffi/blob/main/FAQ.md) **

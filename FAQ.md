@@ -36,6 +36,8 @@ Typically, integration methods simply provide an alternative reduction to `PCA` 
 If you integrated with a method that created a different assay (e.g.: `@BlaBla`), provide the assay name in `AutoFindGranuleResolution( , assay = "BlaBla")`.
 
 
+
+
 ## 3. How to use Gruffi when providing a custom set of genes, instead of a GO-term?
 
 Gruffi can work with any set of genes to classify cells. In the current implementation you can provide 2 positive and 2 negative filtering terms (in the default implementation we use 2 positive and 1 negative terms).
@@ -50,7 +52,6 @@ combined.obj <- CustomScoreEvaluation(obj = combined.obj, custom.score.name = 'S
 ```
 
 Finally continue with the Gruffi pipeline as normal, by calling the Shiny app. This extension of the Gruffi workflow is less tested, so if you find bugs / encounter an error, [please let us know](https://github.com/jn-goe/gruffi/issues).
-
 
 
 
