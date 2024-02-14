@@ -8,7 +8,7 @@ try(dev.off(), silent = TRUE)
 # Functions ------------------------
 # require(PackageTools)
 devtools::load_all("~/GitHub/Packages/PackageTools")
-devtools::load_all("~/GitHub/Packages/gruffi/")
+# devtools::load_all("~/GitHub/Packages/gruffi/")
 
 # Setup ------------------------
 repository.dir <- "~/GitHub/Packages/gruffi/"
@@ -88,6 +88,7 @@ PackageTools::copy_github_badge("active") # Add badge to readme via clipboard
 # Replaces T with TRUE and F with FALSE ------------------------------------------------
 for (scriptX in ls.scripts.full.path) {
   PackageTools::replace_short_calls(scriptX, strict_mode = F)
+  PackageTools::replace_tf_with_true_false(scriptX, strict_mode = F)
 }
 
 

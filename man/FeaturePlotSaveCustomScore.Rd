@@ -9,7 +9,7 @@ FeaturePlotSaveCustomScore(
   genes = "",
   name_desc = NULL,
   h = 7,
-  PNG = T,
+  PNG = TRUE,
   ...
 )
 }
@@ -22,7 +22,7 @@ FeaturePlotSaveCustomScore(
 
 \item{h}{height, Default: 7}
 
-\item{PNG}{Save as .png? Default: T}
+\item{PNG}{Save as .png? Default: TRUE}
 
 \item{...}{Pass any other parameter to the internally called functions (most of them should work).}
 }

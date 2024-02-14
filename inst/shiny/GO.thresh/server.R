@@ -237,29 +237,29 @@ server <- shiny::shinyServer(function(input, output, session) {
       ptlist <- list()
       count <- 1
       if (!is.null(stress.ident1)) {
-        GOterm <- ww.parse.GO(stress.ident1)
-        GOscore <- ww.convert.GO_term.2.score(GOterm)
+        GOterm <- .parse.GO(stress.ident1)
+        GOscore <- .convert.GO_term.2.score(GOterm)
         ptlist[[count]] <- Seurat::FeaturePlot(object = obj, features = GOscore, min.cutoff = "q01", max.cutoff = "q99") +
           Seurat::NoLegend() + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(stress.ident2)) {
-        GOterm <- ww.parse.GO(stress.ident2)
-        GOscore <- ww.convert.GO_term.2.score(GOterm)
+        GOterm <- .parse.GO(stress.ident2)
+        GOscore <- .convert.GO_term.2.score(GOterm)
         ptlist[[count]] <- Seurat::FeaturePlot(object = obj, features = GOscore, min.cutoff = "q01", max.cutoff = "q99") +
           Seurat::NoLegend() + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(notstress.ident3)) {
-        GOterm <- ww.parse.GO(notstress.ident3)
-        GOscore <- ww.convert.GO_term.2.score(GOterm)
+        GOterm <- .parse.GO(notstress.ident3)
+        GOscore <- .convert.GO_term.2.score(GOterm)
         ptlist[[count]] <- Seurat::FeaturePlot(object = obj, features = GOscore, min.cutoff = "q01", max.cutoff = "q99") +
           Seurat::NoLegend() + Seurat::NoAxes()
         count <- count + 1
       }
       if (!is.null(notstress.ident4)) {
-        GOterm <- ww.parse.GO(notstress.ident4)
-        GOscore <- ww.convert.GO_term.2.score(GOterm)
+        GOterm <- .parse.GO(notstress.ident4)
+        GOscore <- .convert.GO_term.2.score(GOterm)
         ptlist[[count]] <- Seurat::FeaturePlot(object = obj, features = GOscore, min.cutoff = "q01", max.cutoff = "q99") +
           Seurat::NoLegend() + Seurat::NoAxes()
         count <- count + 1

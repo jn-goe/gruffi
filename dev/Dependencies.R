@@ -63,12 +63,12 @@ $`package:graphics`
 [1] "hist"
 
 $`package:gruffi`
- [1] "AddGOScore"                         "calc.cluster.averages.gruffi"      
- [3] "calculateMedianClusterSize"         "FeaturePlotSaveGO"                 
+ [1] "AddGOScore"                         "CalcClusterAverages_Gruffi"      
+ [3] "CalculateMedianClusterSize"         "FeaturePlotSaveGO"                 
  [5] "GetGOTerms"                         "IntersectWithExpressed"            
  [7] "PlotGoTermScores"                   "PlotNormAndSkew"                   
- [9] "stand_dev_skewed"                   "ww.convert.GO_term.2.score"        
-[11] "ww.convert.score.2.GO_term"         "ww.fix.metad.colname.rm.trailing.1"
+ [9] "CalcStandDevSkewedDistr"                   ".convert.GO_term.2.score"        
+[11] ".convert.score.2.GO_term"         ".fix.metad.colname.rm.trailing.1"
 
 $`package:stats`
 [1] "dist"     "median"   "qnorm"    "quantile"

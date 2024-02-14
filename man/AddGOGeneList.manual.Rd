@@ -7,7 +7,7 @@
 AddGOGeneList.manual(
   obj = combined.obj,
   GO = "GO:0034976",
-  web.open = F,
+  web.open = FALSE,
   genes = c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")
 )
 }
@@ -16,7 +16,7 @@ AddGOGeneList.manual(
 
 \item{GO}{GO-term; Default: 'GO:0034976'}
 
-\item{web.open}{Open weblink, Default: F}
+\item{web.open}{Open weblink, Default: FALSE}
 
 \item{genes}{Charcter vector of genes, Default: c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")}
 }

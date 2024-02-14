@@ -19,11 +19,11 @@ combined.obj <- readRDS("obj.cluster.RDS")
 
 #### 2. Granule partitioning ------------------------------------------------------------
 
-combined.obj <- aut.res.clustering(combined.obj) # in the following "integrated_snn_res.25.reassigned"
+combined.obj <- AutoFindGranuleResolution(combined.obj) # in the following "integrated_snn_res.25.reassigned"
 granule.res.4.gruffi <- combined.obj@misc$gruffi$'optimal.granule.res'
 
 
-combined.obj <- reassign.small.clusters(combined.obj, ident = granule.res.4.gruffi)
+combined.obj <- ReassignSmallClusters(combined.obj, ident = granule.res.4.gruffi)
 granule.res.4.gruffi <- paste0(granule.res.4.gruffi, '.reassigned')
 
 
@@ -31,13 +31,13 @@ granule.res.4.gruffi <- paste0(granule.res.4.gruffi, '.reassigned')
 #### 3. Pathway scoring ------------------------------------------------------------
 
 # Glycolytic process	GO:0006096
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
+combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
 
 # ER stress 	GO:0034976
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
+combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
 
 # Gliogenesis		GO:0042063
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
+combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi)
 
 
 

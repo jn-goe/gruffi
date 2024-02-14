@@ -6,13 +6,13 @@
 \usage{
 PlotGoTermScores(
   obj = combined.obj,
-  use.ensemble = T,
-  only.draw.plot = F,
-  openBrowser = F,
-  plot.each.gene = F,
+  use.ensemble = TRUE,
+  only.draw.plot = FALSE,
+  openBrowser = FALSE,
+  plot.each.gene = FALSE,
   desc = "",
-  save.UMAP = T,
-  verbose = T,
+  save.UMAP = TRUE,
+  verbose = TRUE,
   GO = "GO:0009651",
   ...
 )
@@ -20,19 +20,19 @@ PlotGoTermScores(
 \arguments{
 \item{obj}{Seurat single cell object, Default: combined.obj}
 
-\item{use.ensemble}{Use ensemble to obtain scores? Default: T}
+\item{use.ensemble}{Use ensemble to obtain scores? Default: TRUE}
 
-\item{only.draw.plot}{Only show GO term score umap plot, Default: F}
+\item{only.draw.plot}{Only show GO term score umap plot, Default: FALSE}
 
-\item{openBrowser}{Open website for GO term? Default: F}
+\item{openBrowser}{Open website for GO term? Default: FALSE}
 
-\item{plot.each.gene}{Plot each gene's expression on a combined umap? Default: F}
+\item{plot.each.gene}{Plot each gene's expression on a combined umap? Default: FALSE}
 
 \item{desc}{GO-score description on the plot, Default: ""}
 
-\item{save.UMAP}{Save umap into a file. Default: T}
+\item{save.UMAP}{Save umap into a file. Default: TRUE}
 
-\item{verbose}{Verbose output? Default: T}
+\item{verbose}{Verbose output? Default: TRUE}
 
 \item{GO}{GO-term; Default: 'GO:0009651'}
 

@@ -76,7 +76,7 @@ go3 <- "GO:0042063" # Gliogenesis, negative filtering
 Gruffi works best if you partition cells into groups of 100-200 cells. Find the corresponding clustering resolution by:
 
 ```  R
-combined.obj <- aut.res.clustering(obj = combined.obj)
+combined.obj <- AutoFindGranuleResolution(obj = combined.obj)
 ```
 
 The optimal resolution found is stored in:
@@ -85,10 +85,10 @@ The optimal resolution found is stored in:
 granule.res.4.gruffi <- combined.obj@misc$gruffi$'optimal.granule.res'	
 ```
 
-Some granules have too few cells, therfore their scoring is not robust statistically. Use `reassign.small.clusters` to assign these cells to the nearest large-enough granule:
+Some granules have too few cells, therfore their scoring is not robust statistically. Use `ReassignSmallClusters` to assign these cells to the nearest large-enough granule:
 
 ```R
-combined.obj <- reassign.small.clusters(combined.obj, ident = granule.res.4.gruffi) # will be stored in meta data column as "seurat_clusters.reassigned"
+combined.obj <- ReassignSmallClusters(combined.obj, ident = granule.res.4.gruffi) # will be stored in meta data column as "seurat_clusters.reassigned"
 ````
 
 Above, granules with <30 cells are cell-by-cell re-assigned to a neighboring granule (by default based on Euclidean distance between the mean of cell groups in 3dim UMAP space). The reassigned granules are suffixed as :
@@ -105,13 +105,13 @@ After finding the right granule resolution, first GO scores per cells, then aver
 
 ```R
 # Glycolytic process	GO:0006096
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # ER stress 	GO:0034976
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # Gliogenesis		GO:0042063
-combined.obj <- GO_score_evaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 ```
 
 These functions store the resulting scores in `combined.obj@meta.data`.

@@ -33,7 +33,7 @@ Gruffi assumes that you used Seurat, thus granule clustering runs on `assays@RNA
 
 Typically, integration methods simply provide an alternative reduction to `PCA` such as  `iNMF` for LIGER batch correction. Simply provide this reduction when calculateing the 3D UMAP (see 2.).
 
-If you integrated with a method that created a different assay (e.g.: `@BlaBla`), provide the assay name in `aut.res.clustering( , assay = "BlaBla")`.
+If you integrated with a method that created a different assay (e.g.: `@BlaBla`), provide the assay name in `AutoFindGranuleResolution( , assay = "BlaBla")`.
 
 
 ## 3. How to use Gruffi when providing a custom set of genes, instead of a GO-term?

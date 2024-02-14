@@ -1,7 +1,7 @@
 # Configuration for the Package
 DESCRIPTION <- list(
   package.name = "gruffi"
-  , version = "1.2.4"
+  , version = "1.2.6"
   , title = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets."
   , "Author" = c(
     person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),

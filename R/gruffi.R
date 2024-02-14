@@ -10,7 +10,7 @@
 
 
 # _________________________________________________________________________________________________
-#' @title aut.res.clustering
+#' @title AutoFindGranuleResolution
 #'
 #' @details The function iterates over clustering resolutions within the specified bounds to find
 #' an optimal resolution that results in median cluster sizes within the target range. It uses
@@ -32,7 +32,7 @@
 #' modifications to `obj@meta.data` and `Idents(obj)` to reflect the new clustering.
 #' @examples
 #' # Assuming `combined.obj` is a pre-loaded Seurat object
-#' optimal.obj <- aut.res.clustering(obj = combined.obj)
+#' optimal.obj <- AutoFindGranuleResolution(obj = combined.obj)
 #'
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}, \code{\link[Seurat]{FindClusters}}
@@ -41,7 +41,7 @@
 #' @importFrom Stringendo iprint
 #' @importFrom tictoc tic toc
 #' @importFrom future plan nbrOfWorkers
-aut.res.clustering <- function(obj = combined.obj,
+AutoFindGranuleResolution <- function(obj = combined.obj,
                                min.med.granule.size = 100,
                                max.med.granule.size = 200,
                                min.res = round(ncol(obj) / 1e4),
@@ -78,7 +78,7 @@ aut.res.clustering <- function(obj = combined.obj,
   tictoc::tic()
   obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE)
   tictoc::toc()
-  m <- calculateMedianClusterSize(obj, assay, res = r.current)
+  m <- CalculateMedianClusterSize(obj, assay, res = r.current)
   stopifnot("Define a lower `min.res` or decrease `min.med.granule.size` if necessary. Granule size too small" = m > min.med.granule.size)
 
 
@@ -86,7 +86,7 @@ aut.res.clustering <- function(obj = combined.obj,
   tictoc::tic()
   obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = FALSE)
   tictoc::toc()
-  m.up <- calculateMedianClusterSize(obj, assay, res = r.upper)
+  m.up <- CalculateMedianClusterSize(obj, assay, res = r.upper)
   stopifnot("Define a higher `max.res`. Granule size too big" = m.up < max.med.granule.size)
 
 
@@ -150,7 +150,7 @@ aut.res.clustering <- function(obj = combined.obj,
 
 
 # _________________________________________________________________________________________________
-#' @title reassign.small.clusters
+#' @title ReassignSmallClusters
 #' @description Reassign granules (clusters) smaller than X to nearby granules based on 3D UMAP coordinates.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param ident Identity (granules / clustering) to reassign, Default: obj@misc$gruffi$optimal.granule.res
@@ -164,7 +164,7 @@ aut.res.clustering <- function(obj = combined.obj,
 #' @importFrom Stringendo iprint
 #' @importFrom Seurat RunUMAP Idents RenameIdents
 
-reassign.small.clusters <- function(obj = combined.obj,
+ReassignSmallClusters <- function(obj = combined.obj,
                                     ident = obj@misc$gruffi$"optimal.granule.res",
                                     cell.num = 30,
                                     reduction = c("pca", "3d_umap")[2],
@@ -219,7 +219,7 @@ reassign.small.clusters <- function(obj = combined.obj,
     obj@meta.data[[name.id.reassigned]] <- Seurat::Idents(obj)
   }
   print(name.id.reassigned)
-  print("Call plot.clust.size.distr() to check results.")
+  print("Call PlotClustSizeDistr() to check results.")
   return(obj)
 }
 
@@ -244,10 +244,10 @@ reassign.small.clusters <- function(obj = combined.obj,
 #'
 #' @examples
 #' # Assuming `seuratObj` is a Seurat object with appropriate metadata
-#' medianSize <- calculateMedianClusterSize(obj = seuratObj, assay = "RNA", res = 0.8)
+#' medianSize <- CalculateMedianClusterSize(obj = seuratObj, assay = "RNA", res = 0.8)
 #'
 #' @export
-calculateMedianClusterSize <- function(
+CalculateMedianClusterSize <- function(
     obj, assay, res,
     q = 0.5,
     suffix = "_snn_res.",
@@ -306,6 +306,7 @@ GetGOTerms <- function(obj = combined.obj,
                        GRCh = NULL,
                        genes.shown = 10,
                        mirror = NULL) {
+
   message("Running GetGOTerms()")
   enrichGO_slot <- obj@misc$"enrichGO"[[assay]]
 
@@ -320,23 +321,23 @@ GetGOTerms <- function(obj = combined.obj,
       filters = "go_parent_term", uniqueRows = TRUE,
       values = GO, mart = ensembl
     )[, 1]
-    iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", utils::head(genes, n = genes.shown))
+    iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", head(genes, n = genes.shown))
   }
 
   if (!use.ensemble & !is.null(enrichGO_slot)) {
     genes <- unlist(DOSE::geneInCategory(enrichGO_slot)[GO])
-    iprint(length(genes), "Gene symbols from enrichGO[[assay]]:", utils::head(genes, n = genes.shown))
+    iprint(length(genes), "Gene symbols from enrichGO[[assay]]:", head(genes, n = genes.shown))
   }
 
   if (!use.ensemble & is.null(enrichGO_slot)) {
     print("AnnotationDbi::select()")
     # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
     genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
-    iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", utils::head(genes, n = genes.shown))
+    iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", head(genes, n = genes.shown))
   }
 
   (GO.wDot <- make.names(GO))
-  Stringendo::iprint(length(genes), "Gene symbols downloaded:", utils::head(genes, n = genes.shown))
+  Stringendo::iprint(length(genes), "Gene symbols downloaded:", head(genes, n = genes.shown))
 
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
@@ -378,12 +379,12 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
     pattern = "\\.[0-9]$", x = GOz, perl = TRUE,
     invert = TRUE
   )))
-  GO.names <- AnnotationDbi::Term(object = ww.convert.score.2.GO_term(GOx))
+  GO.names <- AnnotationDbi::Term(object = .convert.score.2.GO_term(GOx))
 
   if (return.obj) {
     obj@misc$"GO.Lookup" <- GO.names
     print("GO IDs present in @meta.data are now saved in misc$GO.Lookup")
-    cat(utils::head(GO.names), "...")
+    cat(head(GO.names), "...")
     return(obj)
   } else {
     return(GO.names)
@@ -409,7 +410,7 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
 
 AddGOGeneList.manual <- function(obj = combined.obj, GO = "GO:0034976", web.open = FALSE # Add GO terms via Biomart package.
                                  , genes = c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")) {
-  print(utils::head(genes, n = 15))
+  print(head(genes, n = 15))
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
   if (is.null(obj@misc$GO)) obj@misc$GO <- list()
@@ -442,7 +443,7 @@ AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE) {
   if (!is.list(genes.GO)) genes.GO <- list(genes.GO) # idk why this structure is not consistent...
   obj <- Seurat::AddModuleScore(object = obj, features = genes.GO, name = ScoreName)
 
-  if (FixName) obj <- ww.fix.metad.colname.rm.trailing.1(obj = obj, colname = ScoreName)
+  if (FixName) obj <- .fix.metad.colname.rm.trailing.1(obj = obj, colname = ScoreName)
   return(obj)
 }
 
@@ -468,7 +469,7 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
   (ScoreName <- Stringendo::ppp("Score", substitute(genes)))
   obj <- Seurat::AddModuleScore(object = obj, features = ls.genes, name = ScoreName, assay = assay.use)
 
-  if (FixName) obj <- ww.fix.metad.colname.rm.trailing.1(obj = obj, colname = ScoreName)
+  if (FixName) obj <- .fix.metad.colname.rm.trailing.1(obj = obj, colname = ScoreName)
   return(obj)
 }
 
@@ -476,7 +477,7 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 
 
 # _________________________________________________________________________________________________
-#' @title GO_score_evaluation
+#' @title GOscoreEvaluation
 #'
 #' @description GO-score evaluation for filtering.
 #' @param obj Seurat single cell object, Default: combined.obj
@@ -488,7 +489,7 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 #' @param description Description to added to plot title, e.g. GO-terms name, Default: 'NULL'
 #' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl fails with default settings, mirror can be specified. Default: 'NULL'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
-#' @param clustering Which clustering to use (from metadata)? Default: getGruffiClusteringName(obj)
+#' @param clustering Which clustering to use (from metadata)? Default: GetGruffiClusteringName(obj)
 #' e.g. "integrated_snn_res.48.reassigned"
 #' @param ... Additional parameters to be passed to the function.
 #' @seealso
@@ -498,10 +499,10 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 #' @importFrom Seurat Idents RenameIdents
 #' @importFrom Stringendo iprint
 
-GO_score_evaluation <- function(obj = combined.obj,
+GOscoreEvaluation <- function(obj = combined.obj,
                                 GO_term = "GO:0034976",
                                 new_GO_term_computation = FALSE,
-                                clustering = getGruffiClusteringName(obj),
+                                clustering = GetGruffiClusteringName(obj),
                                 save.UMAP = FALSE,
                                 plot.each.gene = FALSE,
                                 assay = "RNA",
@@ -520,10 +521,10 @@ GO_score_evaluation <- function(obj = combined.obj,
   }
 
   print("Calculating cl. average score")
-  cl.av <- calc.cluster.averages.gruffi(
+  cl.av <- CalcClusterAverages_Gruffi(
     obj = obj,
     stat = stat.av,
-    col_name = ww.convert.GO_term.2.score(GO_term),
+    col_name = .convert.GO_term.2.score(GO_term),
     split_by = clustering
   )
   names(cl.av) <- gsub("cl.", "", names(cl.av))
@@ -543,7 +544,7 @@ GO_score_evaluation <- function(obj = combined.obj,
 #' @description Custom gene-set derived score evaluation for filtering.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param custom.score.name Name of your custom gene set.
-#' @param clustering Which clustering to use (from metadata)? Default: getGruffiClusteringName(obj)
+#' @param clustering Which clustering to use (from metadata)? Default: GetGruffiClusteringName(obj)
 #' e.g. "integrated_snn_res.48.reassigned"
 #' @param assay Which assay to use?, Default: 'RNA'
 #' @param stat.av How to caluclate the central tendency?
@@ -557,7 +558,7 @@ GO_score_evaluation <- function(obj = combined.obj,
 
 CustomScoreEvaluation <- function(obj = combined.obj,
                                   custom.score.name = "Score.heGENES",
-                                  clustering = getGruffiClusteringName(obj),
+                                  clustering = GetGruffiClusteringName(obj),
                                   assay = "RNA",
                                   stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                   ...) {
@@ -565,7 +566,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
   all.genes <- rownames(obj@assays[[assay]])
 
   print("Calculating cl. average score")
-  cl.av <- calc.cluster.averages.gruffi(
+  cl.av <- CalcClusterAverages_Gruffi(
     obj = obj,
     stat = stat.av,
     col_name = custom.score.name,
@@ -866,7 +867,7 @@ FilterStressedCells <- function(
     Stringendo::iprint("res", res, "is not found in the object.")
   }
 
-  ScoreNames <- ww.convert.GO_term.2.score(GOterms)
+  ScoreNames <- .convert.GO_term.2.score(GOterms)
   if (!all(ScoreNames %in% MetaVars)) {
     Stringendo::iprint(
       "Some of the GO-term scores were not found in the object:", ScoreNames,
@@ -976,7 +977,7 @@ FilterStressedCells <- function(
   # Exclude cells & subset ____________________________________________________________
 
   cells.discard <- which(cells.2.granules %in% granules.excluded)
-  cells.keep <- which(cells.2.granules %!in% granules.excluded)
+  cells.keep <- which(!(cells.2.granules %in% granules.excluded))
   MarkdownHelpers::llprint(Stringendo::percentage_formatter(length(cells.keep) / length(cells.2.granules)), "cells kept.")
 
   obj.noStress <- subset(x = obj, cells = cells.keep) # remove stressed
@@ -1064,7 +1065,7 @@ PlotGoTermScores <- function(
 
     obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, use.ensemble = use.ensemble)
     GO.genes <- obj@misc$GO[[GO.wDot]]
-    if (verbose) print(utils::head(GO.genes))
+    if (verbose) print(head(GO.genes))
     obj <- AddGOScore(obj = obj, GO = GO)
   }
 
@@ -1113,6 +1114,7 @@ FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes = "", name_desc
 
 # _________________________________________________________________________________________________
 #' @title FeaturePlotSaveGO
+#'
 #' @description Plot and save a Seurat FeaturePlot from a GO-score.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param GO.score Metadata column name for a GO-term scoreDefault: 'Score.GO.0034976'
@@ -1139,7 +1141,8 @@ FeaturePlotSaveGO <- function(
     name_desc = NULL,
     save.plot = TRUE,
     title_ = paste(GO.score, name_desc),
-    h = 7, PNG = TRUE, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
+    h = 7, PNG = TRUE, ...) {
+
   proper.GO <- paste(stringr::str_split_fixed(string = GO.score, pattern = "\\.", n = 3)[2:3], collapse = ":")
   (genes.GO <- obj@misc$GO[[make.names(proper.GO)]])
 
@@ -1155,21 +1158,23 @@ FeaturePlotSaveGO <- function(
 }
 
 
-#' @title plot.clust.size.distr
+# _________________________________________________________________________________________________
+#' @title PlotClustSizeDistr
+#'
 #' @description Plot cluster size distribution.
 #' @param obj Seurat single cell object, Default: combined.obj
-#' @param category Clustering or any categorical metadata column name, Default: if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned",
-#'    Seurat.utils::GetClusteringRuns(obj))]
+#' @param category Clustering or any categorical metadata column name.
+#' Default: GetGruffiClusteringName(obj)
 #' @param plot Plot results? Default: TRUE
 #' @param thr.hist Plot histogram or a barplot? If less than X categories, it draws a barplot. If more, a histogram, Default: 30
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
 #' @seealso
 #'  \code{\link[ggExpress]{qbarplot}}, \code{\link[ggExpress]{qhistogram}}
-#' @export plot.clust.size.distr
+#' @export
 #' @importFrom ggExpress qbarplot qhistogram
 
-plot.clust.size.distr <- function(obj = combined.obj,
-                                  category = if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))],
+PlotClustSizeDistr <- function(obj = combined.obj,
+                                  category = GetGruffiClusteringName(obj),
                                   plot = TRUE,
                                   thr.hist = 30,
                                   ...) {
@@ -1196,6 +1201,7 @@ plot.clust.size.distr <- function(obj = combined.obj,
 
 # _________________________________________________________________________________________________
 #' @title PlotNormAndSkew
+#'
 #' @description Plot normal distribution and skew.
 #' @param x Distribution
 #' @param q Quantile
@@ -1203,12 +1209,11 @@ plot.clust.size.distr <- function(obj = combined.obj,
 #' @param plot.hist Draw a histogram? Default: TRUE
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
 #' @export
-
 PlotNormAndSkew <- function(x, q,
                             tresholding = c("fitted", "empirical")[1],
                             plot.hist = TRUE, ...) {
   m <- median(x)
-  stde_skewed <- stand_dev_skewed(x, mean_x = m)
+  stde_skewed <- CalcStandDevSkewedDistr(x, mean_x = m)
 
   thresh <-
     if (tresholding == "fitted") {
@@ -1237,7 +1242,8 @@ PlotNormAndSkew <- function(x, q,
 
 
 # _________________________________________________________________________________________________
-#' @title UMAP.3d.cubes
+#' @title UMAP3Dcubes
+#'
 #' @description UMAP with 3D cubes.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param n_bin Number of bins, Default: 10
@@ -1261,7 +1267,7 @@ PlotNormAndSkew <- function(x, q,
 #' @importFrom rgl open3d shade3d translate3d cube3d rglwidget
 #' @importFrom htmlwidgets saveWidget
 
-UMAP.3d.cubes <- function(obj = combined.obj,
+UMAP3Dcubes <- function(obj = combined.obj,
                           n_bin = 10, plot = FALSE, save.plot = FALSE,
                           reduction = c("umap", "pca", "tsne")[1],
                           ident = Seurat.utils::GetClusteringRuns(obj)[1],
@@ -1369,7 +1375,7 @@ UMAP.3d.cubes <- function(obj = combined.obj,
 #' )
 #'
 #' @export
-grScoreUMAP <- function(obj = combined.obj,
+GrScoreUMAP <- function(obj = combined.obj,
                         colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
                         miscname = "thresh.stress.ident1",
                         auto = TRUE,
@@ -1439,7 +1445,7 @@ grScoreUMAP <- function(obj = combined.obj,
 #' but generates a histogram plot as a side effect.
 #'
 #' @examples
-#' grScoreHistogram(
+#' GrScoreHistogram(
 #'   obj = combined.obj,
 #'   colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
 #'   miscname = "thresh.stress.ident1"
@@ -1448,7 +1454,7 @@ grScoreUMAP <- function(obj = combined.obj,
 #'
 #' @importFrom CodeAndRoll2 as.numeric.wNames.character
 #' @importFrom ggExpress qhistogram
-grScoreHistogram <- function(obj = combined.obj,
+GrScoreHistogram <- function(obj = combined.obj,
                              colname = i1,
                              miscname = "thresh.stress.ident1",
                              auto = TRUE,
@@ -1500,7 +1506,7 @@ grScoreHistogram <- function(obj = combined.obj,
 
 
 # _________________________________________________________________________________________________
-#' @title clUMAP.thresholding
+#' @title ClusterUMAPthresholding
 #' @description clUMAP with threshold value.
 #' @param q.meta.col Numeric metadata column name, Default: 'Score.GO.0034976'
 #' @param c.meta.col Clustering basis to split the data (Categorical metadata column name), Default: 'integrated_snn_res.30'
@@ -1516,7 +1522,7 @@ grScoreHistogram <- function(obj = combined.obj,
 #' @export
 #' @importFrom Seurat.utils calc.cluster.averages
 
-clUMAP.thresholding <- function(
+ClusterUMAPthresholding <- function(
     q.meta.col = "Score.GO.0034976", c.meta.col = "integrated_snn_res.30",
     quantile = .95, absolute.cutoff = NULL,
     obj = combined.obj, plot.barplot = FALSE,
@@ -1596,34 +1602,53 @@ CalcTranscriptomePercentage <- function(obj = combined.obj, genes = genes.GO.006
 
 
 # _________________________________________________________________________________________________
-#' @title stand_dev_skewed
-#' @description Standard deviation skew.
-#' @param x distribution
-#' @param mean_x central tendency, Default: mean(x)
-#' @param plothist Show histogram? Default: FALSE
-#' @param breaks n.bins in histogram, Default: 50
+#' @title Calculate Standard Deviation for Skewed Distributions
+#'
+#' @description Computes a modified standard deviation for skewed distributions by mirroring data points about the mean.
+#' This approach aims to reflect the skewed part of the distribution to better understand its spread.
+#'
+#' @param x A numeric vector representing the distribution.
+#' @param mean_x The central tendency of `x`, used to mirror the distribution.
+#' Default is the mean of `x`.
+#' @param plothist Logical indicating whether to display histograms of the original, mirrored,
+#' and combined distributions. Default is `FALSE`.
+#' @param breaks The number of bins to use in the histogram if plotted.
+#' Default is 50.
+#'
+#' @return The estimated standard deviation for the skewed distribution.
+#'
+#' @examples
+#' set.seed(123)
+#' skewed_data <- rexp(100, rate = 0.1)
+#' # Calculate modified standard deviation without plotting
+#' modified_sd <- stand_dev_skewed(skewed_data)
+#'
+#' # Calculate and plot the distribution and its mirrored version
+#' stand_dev_skewed(skewed_data, plothist = TRUE)
+#'
 #' @export
 
-stand_dev_skewed <- function(x, mean_x = mean(x), plothist = FALSE, breaks = 50) {
-  # print(mean(x))
+CalcStandDevSkewedDistr <- function(x, mean_x = mean(x),
+                                    plothist = FALSE, breaks = 50) {
+
   x_lower_eq <- x[x <= mean_x]
   x_lower <- x[x < mean_x]
   x_mirror <- c(x_lower_eq, abs(mean_x - x_lower) + mean_x)
 
   if (plothist) {
-    graphics::hist(x_lower, xlim = range(x), breaks = breaks)
-    graphics::hist(x, xlim = range(x), breaks = breaks)
-    graphics::hist(x_mirror, xlim = range(x), breaks = breaks)
+    hist(x_lower, xlim = range(x), breaks = breaks)
+    hist(x, xlim = range(x), breaks = breaks)
+    hist(x_mirror, xlim = range(x), breaks = breaks)
   }
+
   res <- sum((x_mirror - mean_x)^2) / (length(x_mirror) - 1)
   return(sqrt(res))
 }
 
 
 
-
 # _________________________________________________________________________________________________
-#' @title calc.cluster.averages.gruffi
+#' @title CalcClusterAverages_Gruffi
 #'
 #' @description Calculate granule (cluster) averages scores.
 #' @param col_name Numeric metadata column name, Default: 'Score.GO.0006096'
@@ -1660,7 +1685,7 @@ stand_dev_skewed <- function(x, mean_x = mean(x), plothist = FALSE, breaks = 50)
 #' @importFrom rlang sym
 #' @importFrom CodeAndRoll2 sem sortbyitsnames
 
-calc.cluster.averages.gruffi <- function(
+CalcClusterAverages_Gruffi <- function(
     col_name = "Score.GO.0006096",
     obj = combined.obj,
     split_by = Seurat.utils::GetClusteringRuns(obj)[1],
@@ -1753,9 +1778,6 @@ calc.cluster.averages.gruffi <- function(
 # 7. Helpers  ---------------------------------------------------------------------------
 
 
-`%!in%` <- Negate(`%in%`)
-
-# _________________________________________________________________________________________________
 #' @title Retrieve First Clustering Run or First Matching Pattern Run
 #'
 #' @description Fetches the first clustering run from a Seurat object,
@@ -1770,12 +1792,12 @@ calc.cluster.averages.gruffi <- function(
 #'
 #' @examples
 #' # Assume `seuratObj` is your Seurat object
-#' getGruffiClusteringName(seuratObj)
-#' getGruffiClusteringName(seuratObj, pattern = "someOtherPattern")
+#' GetGruffiClusteringName(seuratObj)
+#' GetGruffiClusteringName(seuratObj, pattern = "someOtherPattern")
 #'
 #' @export
 #' @importFrom Stringendo iprint
-getGruffiClusteringName <- function(obj, pattern = ".reassigned") {
+GetGruffiClusteringName <- function(obj, pattern = ".reassigned") {
   # Retrieve all clustering runs from the Seurat object
   clusteringRuns <- Seurat.utils::GetClusteringRuns(obj)
 
@@ -1851,25 +1873,12 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 
 
 # _________________________________________________________________________________________________
-#' @title PasteUniqueGeneList
-#' @description Paste unique gene list
-#' @seealso
-#'  \code{\link[clipr]{read_clip}}
-#' @export
-#' @importFrom clipr read_clip
-
-PasteUniqueGeneList <- function() {
-  dput(sort(unique(clipr::read_clip())))
-}
-
-
-
-# _________________________________________________________________________________________________
-#' @title ww.convert.GO_term.2.score
+#' @title .convert.GO_term.2.score
 #' @description Convert a string GO_term-name to Score-name.
 #' @param GO_term GO-term; Default: "GO:0006096"
+#' @return Score name, e.g.: "Score.GO.0006096"
 #'
-ww.convert.GO_term.2.score <- function(GO_term = "GO:0006096") {
+.convert.GO_term.2.score <- function(GO_term = "GO:0006096") {
   if (grepl(x = GO_term, pattern = "^GO:", perl = TRUE)) {
     gsub(x = GO_term, pattern = ".*?GO:", replacement = "Score.GO.")
   } else {
@@ -1881,24 +1890,26 @@ ww.convert.GO_term.2.score <- function(GO_term = "GO:0006096") {
 
 
 # _________________________________________________________________________________________________
-#' @title ww.convert.score.2.GO_term
+#' @title .convert.score.2.GO_term
 #' @description Convert a string Score-name to GO_term-name.
 #' @param ScoreNames Vector of ScoreNames to convert to GO term, Default: "Score.GO.0006096"
+#' @return GO term name, e.g.: "GO:0006096"
 #'
-ww.convert.score.2.GO_term <- function(ScoreNames = "Score.GO.0006096") {
+.convert.score.2.GO_term <- function(ScoreNames = "Score.GO.0006096") {
   gsub(x = ScoreNames, pattern = "Score.GO.", replacement = "GO:")
 }
 
 # _________________________________________________________________________________________________
-#' @title ww.fix.metad.colname.rm.trailing.1
-#' @description Fix malformed (suffxed) column names in obj@meta.data.
+#' @title .fix.metad.colname.rm.trailing.1
+#' @description Fix malformed (suffxed) column names in obj@meta.data. When running AddGOScore(),
+#' a '1' is added to the end of the column name. It is hereby removed.
 #' @param obj Seurat single cell object, Default: obj
 #' @param colname Metadata column name to fix, Default: ScoreName
 #' @seealso
 #'  \code{\link[Stringendo]{iprint}}
 #'
 #' @importFrom Stringendo iprint
-ww.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
+.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) {
   colnames(obj@meta.data) <-
     gsub(
       x = colnames(obj@meta.data),
@@ -1922,8 +1933,8 @@ ww.fix.metad.colname.rm.trailing.1 <- function(obj = obj, colname = ScoreName) {
 #'
 #' @return GO Term as string, e.g. "GO:0006096"
 #' @examples
-#' ww.parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
-ww.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
+#' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
+.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
                         pattern = "_cl\\.av_", ...) {
   strsplit(x = ident, split = pattern, ...)[[1]][2]
 }
@@ -1940,6 +1951,21 @@ ww.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
 # 8. Deprecated  ---------------------------------------------------------------------------
 
 # These functions may have been used in the publication, but are not needed for the pipeline.
+
+
+aut.res.clustering <- function() .Deprecated("gruffi::AutoFindGranuleResolution()")
+stand_dev_skewed <- function() .Deprecated("gruffi::CalcStandDevSkewedDistr()")
+GetAllGOTerms <- function() .Deprecated("gruffi::GetAllGOTerms()")
+GO_score_evaluation <- function() .Deprecated("gruffi::GOscoreEvaluation()")
+
+calc.cluster.averages.gruff <- function() .Deprecated("gruffi::CalcClusterAverages_Gruffi()")
+reassign.small.clusters <- function() .Deprecated("gruffi::ReassignSmallClusters()")
+ww.convert.GO_term.2.score.Rd <- function() .Deprecated("gruffi:::.convert.GO_term.2.score.Rd()")
+ww.convert.score.2.GO_term.Rd <- function() .Deprecated("gruffi:::.convert.score.2.GO_term.Rd()")
+fix.metad.colname.rm.trailing.1 <- function() .Deprecated("gruffi:::.fix.metad.colname.rm.trailing.1()")
+plot.clust.size.distr <- function() .Deprecated("gruffi::PlotClustSizeDistr()")
+plot_norm_and_skew <- function() .Deprecated("gruffi::PlotNormAndSkew()")
+
 
 
 # _________________________________________________________________________________________________
@@ -2023,3 +2049,21 @@ ww.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
 #   cormat <- covmat / tcrossprod(sdvec)
 #   list(cov = covmat, cor = cormat)
 # }
+
+
+# # _________________________________________________________________________________________________
+# #' @title PasteUniqueGeneList
+# #' @description Paste unique gene list
+# #' @seealso
+# #'  \code{\link[clipr]{read_clip}}
+# #' @export
+# #' @importFrom clipr read_clip
+
+# PasteUniqueGeneList <- function() {
+#   dput(sort(unique(clipr::read_clip())))
+# }
+
+# # _________________________________________________________________________________________________
+
+
+

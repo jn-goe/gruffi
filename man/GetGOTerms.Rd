@@ -7,8 +7,9 @@
 GetGOTerms(
   obj = combined.obj,
   GO = "GO:0034976",
-  use.ensemble = T,
-  web.open = F,
+  use.ensemble = TRUE,
+  assay = "RNA",
+  web.open = FALSE,
   version = NULL,
   GRCh = NULL,
   genes.shown = 10,
