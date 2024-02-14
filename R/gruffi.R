@@ -275,37 +275,6 @@ calculateMedianClusterSize <- function(
 # 2. Obtain and prepare GO Terms ---------------------------------------------------------------------------
 
 
-# _________________________________________________________________________________________________
-#' @title GetAllGOTerms
-#' @description Return all GO-terms present in a Seurat single cell object.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param return.obj Return Seurat object (or GO-names?) Default: TRUE, meaning object.
-#' @seealso
-#'  \code{\link[CodeAndRoll2]{grepv}}
-#'  \code{\link[AnnotationDbi]{GOID}}, \code{\link[AnnotationDbi]{GOTerms-class}}
-#' @export
-#' @importFrom CodeAndRoll2 grepv
-#' @importFrom AnnotationDbi Term
-#' @importFrom gtools mixedsort
-
-GetAllGOTerms <- function(obj = combined.obj, return.obj = TRUE) {
-  x <- obj@meta.data
-  GOz <- CodeAndRoll2::grepv(pattern = "^Score.GO", x = colnames(x), perl = TRUE)
-  GOx <- gtools::mixedsort(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE, invert = TRUE)))
-  GO.names <- AnnotationDbi::Term(object = ww.convert.score.2.GO_term(GOx))
-
-  if (return.obj) {
-    obj@misc$"GO.Lookup" <- GO.names
-    print("GO IDs present in @meta.data are now saved in misc$GO.Lookup")
-    cat(utils::head(GO.names), "...")
-    return(obj)
-  } else {
-    return(GO.names)
-  }
-}
-
-
-# _________________________________________________________________________________________________
 #' @title GetGOTerms
 #'
 #' @description Get GO Terms
@@ -378,13 +347,52 @@ GetGOTerms <- function(obj = combined.obj,
 }
 
 
+# _________________________________________________________________________________________________
+#' @title Show All GO Terms in an Object, and retrieve corresponding names using AnnotationDbi
+#'
+#' @description Retrieves and optionally annotates all GO term identifiers present in the
+#' metadata of a Seurat object. It identifies columns starting with 'Score.GO',
+#' extracts the corresponding GO terms, retrieves tge corresponding term-names using AnnotationDbi,
+#' and optionally saving them back into the object.
+#' @param obj A Seurat object containing metadata with GO term score columns, default: `combined.obj`.
+#' @param return.obj Logical indicating whether to return the modified Seurat object.
+#'
+#' @return A modified Seurat object with GO terms annotated in `misc$GO.Lookup` or
+#' a vector of GO term names.
+#' @seealso
+#'  \code{\link[CodeAndRoll2]{grepv}}
+#'  \code{\link[AnnotationDbi]{GOID}}, \code{\link[AnnotationDbi]{GOTerms-class}}
+#' @export
+#' @importFrom CodeAndRoll2 grepv
+#' @importFrom AnnotationDbi Term
+#' @importFrom gtools mixedsort
+#'
+#' @export
+GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
+  # Foremerly GetAllGOTerms
+
+  x <- obj@meta.data
+  GOz <- CodeAndRoll2::grepv(pattern = "^Score.GO", x = colnames(x), perl = TRUE)
+  GOx <- gtools::mixedsort(unique(CodeAndRoll2::grepv(pattern = "\\.[0-9]$", x = GOz, perl = TRUE
+                                                      , invert = TRUE)))
+  GO.names <- AnnotationDbi::Term(object = ww.convert.score.2.GO_term(GOx))
+
+  if (return.obj) {
+    obj@misc$"GO.Lookup" <- GO.names
+    print("GO IDs present in @meta.data are now saved in misc$GO.Lookup")
+    cat(utils::head(GO.names), "...")
+    return(obj)
+  } else {
+    return(GO.names)
+  }
+}
+
+
 
 # _____________________________________________________________________________________________ ----
 # 3. Calculate GO Scores ---------------------------------------------------------------------------
 
 
-
-# _________________________________________________________________________________________________
 #' @title AddGOGeneList.manual
 #' @description Add a GO-term gene list under obj@misc$GO$xxxx.
 #' @param obj Seurat single cell object, Default: combined.obj
