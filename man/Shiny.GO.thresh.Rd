@@ -2,40 +2,43 @@
 % Please edit documentation in R/gruffi.R
 \name{Shiny.GO.thresh}
 \alias{Shiny.GO.thresh}
-\title{Shiny.GO.thresh}
+\title{Launch Shiny App for GO Term-based Thresholding}
 \usage{
 Shiny.GO.thresh(
   obj = combined.obj,
   proposed.method = c("fitted", "empirical")[1],
   quantile = c(0.99, 0.9)[1],
-  stress.ident1 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0006096"),
-  stress.ident2 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0034976"),
-  notstress.ident3 = paste0(Seurat.utils::GetClusteringRuns(obj)[1], "_cl.av_GO:0042063"),
+  stress.ident1,
+  stress.ident2,
+  notstress.ident3,
   notstress.ident4 = NULL,
   plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]
 )
 }
 \arguments{
-\item{obj}{Seurat single cell object, Default: combined.obj}
+\item{obj}{Seurat single cell object, with Granule Averages GO-Scores in metadata (ident1-4).}
 
-\item{proposed.method}{proposed estimation method, Default: c("fitted", "empirical")\link{1}}
+\item{proposed.method}{The method for estimating thresholds, default: \code{"fitted"}.
+Options are \code{"fitted"} or \code{"empirical"}.}
 
-\item{quantile}{quantile cutoff to use, Default: c(0.99, 0.9)\link{1}}
+\item{quantile}{The quantile cutoff for threshold determination, default: \code{0.99}.
+Options are \code{0.99} or \code{0.9}.}
 
-\item{stress.ident1}{stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0006096")}
+\item{stress.ident1}{Identifier for the first stress-related GO term.}
 
-\item{stress.ident2}{stress identity 1, Default: paste0(Seurat.utils::GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0034976")}
+\item{stress.ident2}{Identifier for the second stress-related GO term.}
 
-\item{notstress.ident3}{Negative stress filter, notstress identity 3, Default: paste0(Seurat.utils::GetClusteringRuns(obj)\link{1}, "_cl.av_GO:0042063")}
+\item{notstress.ident3}{Identifier for the first non-stress-related GO term. Idents 3 and 4 act
+as a negative filter for stress identification.}
 
-\item{notstress.ident4}{Negative stress filter, notstress identity 4, Default: NULL}
+\item{notstress.ident4}{Identifier for the second non-stress-related GO term, optional.}
 
-\item{plot.cluster.shiny}{plot.cluster.shiny, Default: Seurat.utils::GetClusteringRuns(obj)\link{1}}
-
+\item{plot.cluster.shiny}{The clustering run to be used for plotting in the Shiny app,
+default: \code{Seurat.utils::GetClusteringRuns(obj)[1]}.}
 }
 \description{
-GO-thresholding for the Shiny app.
-}
-\seealso{
-\code{\link[shiny]{runApp}}, \code{\link[shiny]{shinyApp}}
+Launches a Shiny application to interactively apply GO term-based thresholding
+for identifying stressed cells in a Seurat object. This function calculates the
+"granule average GO-scores" for individual GO terms and updates the object with a combined stress
+identification based on these thresholds.#'
 }

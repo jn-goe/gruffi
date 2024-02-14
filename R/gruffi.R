@@ -614,7 +614,6 @@ Shiny.GO.thresh <- function(
   app_env$"thresh.notstress.ident3" <- PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = F)
   app_env$"thresh.notstress.ident4" <- PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = F)
 
-
   # Prepare slider inputs for Shiny app based on min, max, and step values calculated from scores
   # These values define the range and granularity of threshold adjustments within the Shiny app
   min.x.stress.ident1 <- floor(min(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
