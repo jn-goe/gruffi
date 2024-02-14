@@ -38,11 +38,9 @@
 #'  \code{\link[Seurat]{reexports}}, \code{\link[Seurat]{FindClusters}}
 #'  \code{\link[Stringendo]{iprint}}
 #' @export
-#' @importFrom Seurat DefaultAssay FindClusters Idents
 #' @importFrom Stringendo iprint
 #' @importFrom tictoc tic toc
 #' @importFrom future plan nbrOfWorkers
-#' @importFrom tictoc tic toc
 aut.res.clustering <- function(obj = combined.obj,
                                min.med.granule.size = 100,
                                max.med.granule.size = 200,
@@ -69,6 +67,7 @@ aut.res.clustering <- function(obj = combined.obj,
   r.upper <- max.res
 
   if (n.threads > 1) {
+    warning("Using multicore for parallel computation is not debgugged.", immediate. = TRUE)
     z <- require(future)
     stopifnot("future package needed for multicore" = z)
     future::plan("multisession", workers = n.threads)
@@ -327,12 +326,10 @@ GetGOTerms <- function(obj = combined.obj,
   }
   if (!use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
     print("AnnotationDbi::select()")
+  # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
     genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
     iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", utils::head(genes, n = genes.shown))
   }
-  # if(F) {
-  # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
-  # }
 
   (GO.wDot <- make.names(GO))
   Stringendo::iprint(length(genes), "Gene symbols downloaded:", utils::head(genes, n = genes.shown))
@@ -485,7 +482,9 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 #' @param description Description to added to plot title, e.g. GO-terms name, Default: 'NULL'
 #' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl fails with default settings, mirror can be specified. Default: 'NULL'
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
-#' @param clustering Which clustering to use (from metadata)? Default: '`if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))])`'
+#' @param clustering Which clustering to use (from metadata)? Default: getGruffiClusteringName(obj)
+#' e.g. "integrated_snn_res.48.reassigned"
+#' @param ... Additional parameters to be passed to the function.
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}
 #'  \code{\link[Stringendo]{iprint}}
@@ -496,13 +495,14 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 GO_score_evaluation <- function(obj = combined.obj,
                                 GO_term = "GO:0034976",
                                 new_GO_term_computation = FALSE,
+                                clustering = getGruffiClusteringName(obj),
                                 save.UMAP = FALSE,
                                 plot.each.gene = FALSE,
                                 assay = "RNA",
                                 description = NULL,
                                 mirror = NULL,
                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-                                clustering = if (is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))]) {
+                                ...) {
 
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
@@ -510,7 +510,7 @@ GO_score_evaluation <- function(obj = combined.obj,
   if (new_GO_term_computation) {
     obj <- PlotGoTermScores(
       GO = GO_term, save.UMAP = save.UMAP, obj = obj,
-      desc = description, plot.each.gene = plot.each.gene, mirror = mirror
+      desc = description, plot.each.gene = plot.each.gene, mirror = mirror, ...
     )
   }
 
@@ -534,12 +534,15 @@ GO_score_evaluation <- function(obj = combined.obj,
 
 # _________________________________________________________________________________________________
 #' @title CustomScoreEvaluation
+#'
 #' @description Custom gene-set derived score evaluation for filtering.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param custom.score.name Name of your custom gene set.
-#' @param clustering Which clustering to use (from metadata)? Default: "integrated_snn_res.48.reassigned"
+#' @param clustering Which clustering to use (from metadata)? Default: getGruffiClusteringName(obj)
+#' e.g. "integrated_snn_res.48.reassigned"
 #' @param assay Which assay to use?, Default: 'RNA'
-#' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
+#' @param stat.av How to caluclate the central tendency?
+#' Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @seealso
 #'  \code{\link[Seurat]{reexports}}
 #'  \code{\link[Stringendo]{iprint}}
@@ -549,10 +552,10 @@ GO_score_evaluation <- function(obj = combined.obj,
 
 CustomScoreEvaluation <- function(obj = combined.obj,
                                   custom.score.name = "Score.heGENES",
-                                  # plot.each.gene = FALSE,
-                                  clustering = "integrated_snn_res.48.reassigned",
+                                  clustering = getGruffiClusteringName(obj),
                                   assay = "RNA",
-                                  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3]) {
+                                  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
+                                  ...) {
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
@@ -1747,6 +1750,47 @@ calc.cluster.averages.gruffi <- function(
 `%!in%` <- Negate(`%in%`)
 
 # _________________________________________________________________________________________________
+#' @title Retrieve First Clustering Run or First Matching Pattern Run
+#'
+#' @description Fetches the first clustering run from a Seurat object,
+#' optionally filtered by a specific pattern (e.g., ".reassigned").
+#'
+#' @param obj A Seurat object with clustering results in meta.data.
+#' @param pattern A character string pattern to filter clustering runs.
+#' Default is ".reassigned".
+#'
+#' @return The name of the first clustering run that matches the pattern
+#' if any; otherwise, the name of the first available clustering run.
+#'
+#' @examples
+#' # Assume `seuratObj` is your Seurat object
+#' getGruffiClusteringName(seuratObj)
+#' getGruffiClusteringName(seuratObj, pattern = "someOtherPattern")
+#'
+#' @export
+#' @importFrom Stringendo iprint
+getGruffiClusteringName <- function(obj, pattern = ".reassigned") {
+
+  # Retrieve all clustering runs from the Seurat object
+  clusteringRuns <- Seurat.utils::GetClusteringRuns(obj)
+
+  # Check for clustering runs that match the given pattern
+  matchingRuns <- clusteringRuns[grepl(pattern, clusteringRuns)]
+
+  # Return the first matching run if any exist, otherwise return the first clustering run
+  if (length(matchingRuns) == 1) {
+    if (length(matchingRuns) > 1 ) {
+      warning("Multiple matching clustering runs found. Returning the first one.", immediate. = T)
+      Stringendo::iprint(matchingRuns)
+    }
+    return(matchingRuns[1])
+  } else {
+    return(clusteringRuns[1])
+  }
+}
+
+
+# _________________________________________________________________________________________________
 #' @title CleanDuplicateScorenames
 #' @description Remove duplicate scorenames from obj@mata.data.
 #' @param obj Seurat single cell object, Default: obj
@@ -1756,7 +1800,6 @@ calc.cluster.averages.gruffi <- function(
 #' @export
 #' @importFrom CodeAndRoll2 grepv
 #' @importFrom Stringendo iprint
-
 CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
   obj <- combined.obj
   cn <- colnames(obj@meta.data)

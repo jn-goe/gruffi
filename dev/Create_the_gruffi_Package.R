@@ -2,12 +2,13 @@
 # Create_the_gruffi_Package.R
 ######################################################################################################
 # source("~/GitHub/Packages/gruffi/dev/Create_the_gruffi_Package.R")
-# rm(list = ls(all.names = TRUE));
+rm(list = ls(all.names = TRUE));
 try(dev.off(), silent = TRUE)
 
 # Functions ------------------------
-require(PackageTools)
-# devtools::load_all("~/GitHub/Packages/PackageTools")
+# require(PackageTools)
+devtools::load_all("~/GitHub/Packages/PackageTools")
+devtools::load_all("~/GitHub/Packages/gruffi/")
 
 # Setup ------------------------
 repository.dir <- "~/GitHub/Packages/gruffi/"
@@ -18,7 +19,7 @@ file.edit(config.path)
 source(config.path)
 package.name <- DESCRIPTION$'package.name'
 
-PackageTools::document_and_create_package(repository.dir, config_file = 'config.R', dev_folder = "dev")
+PackageTools::document_and_create_package(repository.dir, config_file = 'config.R', dev = "dev")
 'git add commit push to remote'
 
 # Install your package ------------------------------------------------

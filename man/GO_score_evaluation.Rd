@@ -8,16 +8,14 @@ GO_score_evaluation(
   obj = combined.obj,
   GO_term = "GO:0034976",
   new_GO_term_computation = FALSE,
+  clustering = getGruffiClusteringName(obj),
   save.UMAP = FALSE,
   plot.each.gene = FALSE,
   assay = "RNA",
   description = NULL,
   mirror = NULL,
   stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-  clustering = if (is.null(sum(grepl(".reassigned",
-    Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else
-    Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned",
-    Seurat.utils::GetClusteringRuns(obj))]
+  ...
 )
 }
 \arguments{
@@ -26,6 +24,9 @@ GO_score_evaluation(
 \item{GO_term}{GO-term; Default: 'GO:0034976'}
 
 \item{new_GO_term_computation}{Calculate new GO-term score? (or use exisitng one?) Default: FALSE}
+
+\item{clustering}{Which clustering to use (from metadata)? Default: getGruffiClusteringName(obj)
+e.g. "integrated_snn_res.48.reassigned"}
 
 \item{save.UMAP}{Save umap into a file. Default: FALSE}
 
@@ -39,7 +40,7 @@ GO_score_evaluation(
 
 \item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 
-\item{clustering}{Which clustering to use (from metadata)? Default: '\verb{if(is.null(sum(grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))))) Seurat.utils::GetClusteringRuns(obj)[1] else Seurat.utils::GetClusteringRuns(obj)[grepl(".reassigned", Seurat.utils::GetClusteringRuns(obj))])}'}
+\item{...}{Additional parameters to be passed to the function.}
 }
 \description{
 GO-score evaluation for filtering.

@@ -5,7 +5,7 @@ Version: 1.2.4
 Authors@R:
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Author: Julia Naas <julia.naas@meduniwien.ac.at> [aut, cre]Abel Vertesy
+Author: Julia Naas <julia.naas@meduniwien.ac.at> [aut, cre]; Abel Vertesy
     <abel.vertesy@imba.oeaw.ac.at> [aut, cre]
 Description: The Gruffi R package helps you (1) to identify stressed cells
     in single-cell RNA-seq datasets using *granular funcitonal filtering*,
@@ -44,7 +44,6 @@ Imports:
     tictoc,
     viridis
 Encoding: UTF-8
-Encoding: UTF-8
-Packaged: 2024-02-14 15:14:35.982938
+Packaged: 2024-02-14 21:41:57.815611
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

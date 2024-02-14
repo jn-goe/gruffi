@@ -7,9 +7,10 @@
 CustomScoreEvaluation(
   obj = combined.obj,
   custom.score.name = "Score.heGENES",
-  clustering = "integrated_snn_res.48.reassigned",
+  clustering = getGruffiClusteringName(obj),
   assay = "RNA",
-  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3]
+  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
+  ...
 )
 }
 \arguments{
@@ -17,11 +18,13 @@ CustomScoreEvaluation(
 
 \item{custom.score.name}{Name of your custom gene set.}
 
-\item{clustering}{Which clustering to use (from metadata)? Default: "integrated_snn_res.48.reassigned"}
+\item{clustering}{Which clustering to use (from metadata)? Default: getGruffiClusteringName(obj)
+e.g. "integrated_snn_res.48.reassigned"}
 
 \item{assay}{Which assay to use?, Default: 'RNA'}
 
-\item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
+\item{stat.av}{How to caluclate the central tendency?
+Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 }
 \description{
 Custom gene-set derived score evaluation for filtering.
