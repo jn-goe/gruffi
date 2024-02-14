@@ -11,7 +11,8 @@ GetGOTerms(
   web.open = F,
   version = NULL,
   GRCh = NULL,
-  genes.shown = 10
+  genes.shown = 10,
+  mirror = NULL
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ GetGOTerms(
 \item{GRCh}{= Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())}
 
 \item{genes.shown}{Number of genes shown, Default: 10}
+
+\item{mirror}{Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl
+fails with default settings, mirror can be specified. Default: 'NULL'}
 }
 \description{
 Get GO Terms

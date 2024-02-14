@@ -286,6 +286,7 @@ calculateMedianClusterSize <- function(
 #' @export
 #' @importFrom CodeAndRoll2 grepv
 #' @importFrom AnnotationDbi Term
+#' @importFrom gtools mixedsort
 
 GetAllGOTerms <- function(obj = combined.obj, return.obj = TRUE) {
   x <- obj@meta.data
@@ -304,11 +305,9 @@ GetAllGOTerms <- function(obj = combined.obj, return.obj = TRUE) {
 }
 
 
-
-
-
 # _________________________________________________________________________________________________
 #' @title GetGOTerms
+#'
 #' @description Get GO Terms
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param GO GO-term; Default: 'GO:0034976'
@@ -341,9 +340,9 @@ GetGOTerms <- function(obj = combined.obj,
   print("GetGOTerms()")
 
   if (use.ensemble & is.null(obj@misc$enrichGO[["RNA"]])) {
-    if (!exists("ensembl")) {
-      print("biomaRt::useEnsembl()")
-      ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh)
+    if(!exists("ensembl")) {
+      print('biomaRt::useEnsembl()')
+      ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh, mirror = mirror)
     }
 
     genes <- biomaRt::getBM(
@@ -854,7 +853,8 @@ FilterStressedCells <- function(
 
   ScoreNames <- ww.convert.GO_term.2.score(GOterms)
   if (!all(ScoreNames %in% MetaVars)) {
-    Stringendo::iprint("Some of the GO-term scores were not found in the object:", ScoreNames, "Please call first: PlotGoTermScores(), or the actual GetGOTerms()")
+    Stringendo::iprint("Some of the GO-term scores were not found in the object:", ScoreNames,
+                       "Please call first: PlotGoTermScores(), or the actual GetGOTerms()")
   }
 
   cells.2.granules <- obj[[res]][, 1]
