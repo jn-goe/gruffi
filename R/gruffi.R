@@ -42,23 +42,24 @@
 #' @importFrom tictoc tic toc
 #' @importFrom future plan nbrOfWorkers
 AutoFindGranuleResolution <- function(obj = combined.obj,
-                               min.med.granule.size = 100,
-                               max.med.granule.size = 200,
-                               min.res = round(ncol(obj) / 1e4),
-                               max.res = round(ncol(obj) / 1e3),
-                               assay = c("integrated", "RNA")[1], # Seurat::DefaultAssay(obj),
-                               max.loop = 20,
-                               n.threads = 1) {
+                                      min.med.granule.size = 100,
+                                      max.med.granule.size = 200,
+                                      min.res = round(ncol(obj) / 1e4),
+                                      max.res = round(ncol(obj) / 1e3),
+                                      assay = c("integrated", "RNA")[1], # Seurat::DefaultAssay(obj),
+                                      max.loop = 20,
+                                      n.threads = 1) {
   message(
     ncol(combined.obj), " cells in object. Searching for optimal resolution between res: ",
-    min.res, " & ", max.res, "..."
+    min.res, " & ", max.res, "...\nGranule Size Requirements: ",
+    min.med.granule.size, " >X> ", max.med.granule.size
   )
 
   assays.present <- names(obj@assays)
   if (assay %in% assays.present) {
     Seurat::DefaultAssay(obj) <- assay
   } else {
-    Stringendo::iprint("Assay: (", assay, ") is not found in the object. Replaced by: (", assays.present[1], ")")
+    message("Assay: (", assay, ") is not found in the object. Replaced by: (", assays.present[1], ")")
     assay <- assays.present[1]
   }
 
@@ -74,18 +75,14 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     message("Threads: ", future::nbrOfWorkers())
   }
 
-  message("Clustering at res.: ", r.current)
-  tictoc::tic()
-  obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE)
-  tictoc::toc()
+  message("\nClustering at res.: ", r.current)
+  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE); tictoc::toc()
   m <- CalculateMedianClusterSize(obj, assay, res = r.current)
   stopifnot("Define a lower `min.res` or decrease `min.med.granule.size` if necessary. Granule size too small" = m > min.med.granule.size)
 
 
-  message("Clustering at res.: ", r.upper)
-  tictoc::tic()
-  obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = FALSE)
-  tictoc::toc()
+  message("\nClustering at res.: ", r.upper)
+  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = FALSE); tictoc::toc()
   m.up <- CalculateMedianClusterSize(obj, assay, res = r.upper)
   stopifnot("Define a higher `max.res`. Granule size too big" = m.up < max.med.granule.size)
 
@@ -93,8 +90,8 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
 
   loop.count <- 1
   while (m > max.med.granule.size | m < min.med.granule.size) {
-    message("Current clustering resolution: ", r.current)
-    message("Current median cluster size: ", m)
+    # message("Current clustering resolution: ", r.current)
+    # message("Current median cluster size: ", m)
 
     obj@meta.data[[paste0(assay, "_snn_res.", r.current)]] <- NULL
 
@@ -108,10 +105,11 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
       r.current <- round((r.current - min.res) / 2 + min.res)
     }
 
-    message("Search between ", r.lower, " and ", r.upper, ".")
-    obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE)
+    message("\nSearch between resolutions: ", r.lower, " & ", r.upper, ".")
+    tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE); tictoc::toc()
+
     res.name <- paste0(assay, "_snn_res.", r.current)
-    m <- median(table(obj@meta.data[[res.name]]))
+    m <- CalculateMedianClusterSize(obj, assay, res = r.current)
 
     loop.count <- loop.count + 1
     if (loop.count > max.loop) {
@@ -122,23 +120,25 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
   clustering <- obj@meta.data[[res.name]]
 
   obj@misc$gruffi$"optimal.granule.res" <- res.name
+  message("Suggested Granule resolution (meta.data colname) is stored in: obj@misc$gruffi$optimal.granule.res:\n",
+          res.name)
+
   Seurat::Idents(obj) <- clustering
 
   nr.granules <- length(unique(clustering))
   if (nr.granules < 100) {
-    message("nr.granules: ", nr.granules)
     warning("Too few granules is too small. Try to define a higher `min.res`.", immediate. = TRUE)
+    message(" -> nr.granules: ", nr.granules)
   }
 
   cv.final <- signif(cv(table(clustering)))
   if (cv.final > 0.5) {
-    message("cv: ", cv.final)
     warning("Granule sizes vary significantly. Try to define a higher `min.res`.", immediate. = TRUE)
+    message(" -> CV: ", Stringendo::percentage_formatter(cv.final))
   }
 
-
   print(paste0(
-    "Suggested resolution is ", r.current,
+    "\nSuggested resolution is ", r.current,
     " and the respective clustering is stored in Idents(obj) and in @meta.data.",
     " The median numbers of cells per cluster is ", m,
     ". The number of clusters is ", length(unique(clustering))
@@ -147,16 +147,15 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
 }
 
 
-
-
 # _________________________________________________________________________________________________
 #' @title ReassignSmallClusters
+#'
 #' @description Reassign granules (clusters) smaller than X to nearby granules based on 3D UMAP coordinates.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param ident Identity (granules / clustering) to reassign, Default: obj@misc$gruffi$optimal.granule.res
 #' @param cell.num Minimum number of cells per granule / cluster, Default: 30
 #' @param reduction Dim. reduction used to estimate closest cluster center when reassigning. Default: c("pca", "3d_umap")[2]
-#' @param PCA_dim.recompution.umap.3d If 3D umap need to be recomputed, how many PCA-dimensions to be used?, Default: ncol(obj@reductions$pca@cell.embeddings)
+#' @param nr.of.PCs.for.3D.umap.computation If 3D umap need to be recomputed, how many PCA-dimensions to be used?, Default: ncol(obj@reductions$pca@cell.embeddings)
 #' @seealso
 #'  \code{\link[Stringendo]{iprint}}
 #'  \code{\link[Seurat]{RunUMAP}}, \code{\link[Seurat]{reexports}}
@@ -165,61 +164,92 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
 #' @importFrom Seurat RunUMAP Idents RenameIdents
 
 ReassignSmallClusters <- function(obj = combined.obj,
-                                    ident = obj@misc$gruffi$"optimal.granule.res",
-                                    cell.num = 30,
-                                    reduction = c("pca", "3d_umap")[2],
-                                    PCA_dim.recompution.umap.3d = ncol(obj@reductions$pca@cell.embeddings)) {
+                                  ident = obj@misc$gruffi$"optimal.granule.res",
+                                  cell.num = 30,
+                                  reduction = c("pca", "3d_umap")[2],
+                                  nr.of.PCs.for.3D.umap.computation = ncol(obj@reductions$pca@cell.embeddings)) {
+
+  # Create a new identifier for reassigned granules
   name.id.reassigned <- paste0(ident, ".reassigned")
+  message("Reassigned granule res. column: ", name.id.reassigned)
 
-  obj@meta.data[[name.id.reassigned]] <- obj@meta.data[[ident]]
+  granules <- obj@meta.data[[name.id.reassigned]] <- obj@meta.data[[ident]]
+  granules.sizes <- table(granules) # Calculate sizes of all granules
+  granules.too.small.bool <- (granules.sizes < cell.num) # Identify granules smaller than the specified minimum cell number
 
-  while (sum(table(obj@meta.data[[name.id.reassigned]]) < cell.num) > 0) {
-    cl.reassign <- names(which(table(obj@meta.data[[name.id.reassigned]]) < cell.num))
-    Stringendo::iprint(length(cl.reassign), "clusters have <", cell.num, "cells, which need to be reassigned.")
-    clustering <- obj@meta.data[[name.id.reassigned]]
+  # If there are small granules, proceed with reassignment
+  if (sum(granules.too.small.bool) > 0) {
 
+    # Choose the dimensionality reduction technique for calculating embeddings
     if (reduction == "pca") {
+      message("PCA cell.embeddings used.")
       embedding <- obj@reductions$pca@cell.embeddings
-    }
 
-    if (reduction == "3d_umap") {
-      if (!is.null(obj@misc$"reductions.backup")) {
-        print("THE 3D UMAP IN @misc$'reductions.backup WILL BE USED.")
-        embedding <- obj@misc$"reductions.backup"$umap3d@cell.embeddings
-      }
+    } else if (reduction == "3d_umap") {
+      message("3D umap cell.embeddings used.")
+
       if (is.null(obj@misc$"reductions.backup")) {
-        Stringendo::iprint("3D UMAP WILL BE COMPUTED AND STORED IN @misc$'reductions.backup. PC dimensions used:", PCA_dim.recompution.umap.3d)
+        message("The 3D UMAP will now be computed. PC dimensions used: ", nr.of.PCs.for.3D.umap.computation, "\n")
+
+        obj.3d <- Seurat::RunUMAP(obj, dims = 1:nr.of.PCs.for.3D.umap.computation, n.components = 3)
+
+        obj@misc$reductions.backup$"umap3d" <- obj.3d@reductions$umap
+        message("3D UMAP embedding is now saved to: obj@misc$reductions.backup")
+
+      } else {
+        message("A 3D UMAP in @misc$'reductions.backup is found and will be used.\n")
+      } # if exists / calculate
+
+      embedding <- obj@misc$"reductions.backup"$umap3d@cell.embeddings
+      stopifnot(ncol(embedding) == 3)
+    }  # if reduction == "3d_umap"
+  } # if any granules too small
 
 
-        obj.3d <- Seurat::RunUMAP(obj, dims = 1:PCA_dim.recompution.umap.3d, n.components = 3)
-        obj@misc$"reductions.backup"$umap3d <- obj.3d@reductions$umap
-        embedding <- obj@misc$"reductions.backup"$umap3d@cell.embeddings
-      }
-    }
+  # Iterate over reassignment process until no small granules remain
+  while (sum(table(obj@meta.data[[name.id.reassigned]]) < cell.num) > 0) {
 
+    cl.reassign <- names(which(table(obj@meta.data[[name.id.reassigned]]) < cell.num))
+    message("\n", length(cl.reassign), " clusters have <",
+            cell.num, " cells, and need to be reassigned.")
+
+    # Calculate the center (mean position) of each cluster in the embedding space
+    clustering <- obj@meta.data[[name.id.reassigned]]
     cluster.means <- matrix(NA, nrow = length(unique(clustering)), ncol = dim(embedding)[2])
     rownames(cluster.means) <- levels(clustering)
-
     for (d in 1:dim(embedding)[2]) {
       cluster.means[, d] <- by(embedding[, d], clustering, mean)
     }
 
-    names(new_names) <- new_names <- levels(clustering)
-
+    # Prepare for reassignment by calculating distances between cluster centers
     dist.mat <- as.matrix(stats::dist(cluster.means))
     diag(dist.mat) <- Inf
 
+    # Identify and reassign small clusters based on proximity to larger ones
+    names(new_names) <- new_names <- levels(clustering)
     for (r in cl.reassign) {
       Stringendo::iprint("cluster:", r)
       new_names[which(new_names == r)] <- names(which.min(dist.mat[r, ]))
     }
 
+    # Update identities in the Seurat object with reassigned cluster names
     Seurat::Idents(obj) <- obj@meta.data[[name.id.reassigned]]
     obj <- Seurat::RenameIdents(obj, new_names)
     obj@meta.data[[name.id.reassigned]] <- Seurat::Idents(obj)
-  }
-  print(name.id.reassigned)
-  print("Call PlotClustSizeDistr() to check results.")
+  } # while
+
+  message("\nReassignment resulted in " , length(levels(obj@meta.data[[name.id.reassigned]])),
+          " granules down from ", length(levels(obj@meta.data[[ident]])), " original granules.")
+
+  # Update the optimal granule resolution in the Seurat object's @misc slot
+  obj@misc$gruffi$"optimal.granule.res" <- name.id.reassigned
+  message("Suggested Granule Resolution (meta.data colname) is stored in:
+          obj@misc$gruffi$optimal.granule.res:\n", name.id.reassigned)
+
+  message("\nCall PlotClustSizeDistr() to check results.\n")
+
+  CalculateMedianClusterSize(columnName = ident, obj = obj)
+  CalculateMedianClusterSize(columnName = name.id.reassigned, obj = obj)
   return(obj)
 }
 
@@ -232,8 +262,9 @@ ReassignSmallClusters <- function(obj = combined.obj,
 #' @param obj A Seurat object containing metadata with clustering information.
 #' @param assay The name of the assay to which the resolution parameter is applied.
 #' @param res The resolution level for which to calculate the median cluster size.
-#' @param q quantile. Default: 0.5, i.e: the median.
 #' @param suffix String suffix for clustering name
+#' @param columnName Directly provide a meta.data column name instead of parsing it.
+#' @param q quantile. Default: 0.5, i.e: the median.
 #' @param verbose Logical; if TRUE, prints the median cluster size to the console. Defaults to TRUE.
 #'
 #' @return The median size of the clusters at the specified resolution.
@@ -248,25 +279,33 @@ ReassignSmallClusters <- function(obj = combined.obj,
 #'
 #' @export
 CalculateMedianClusterSize <- function(
-    obj, assay, res,
+    obj,
+    assay = NULL, res = NULL, suffix = "_snn_res.",
+    columnName = NULL,
     q = 0.5,
-    suffix = "_snn_res.",
     verbose = TRUE) {
   # Generate the resolution-specific metadata column name
-  columnName <- paste0(assay, suffix, res)
+
+  if(is.null(columnName)) columnName <- paste0(assay, suffix, res)
 
   # Ensure the column exists in the metadata
-  if (!columnName %in% colnames(obj@meta.data)) {
-    stop("Specified column does not exist in the object's metadata.")
-  }
+  stopifnot(columnName %in% colnames(obj@meta.data))
 
   # Calculate the median size of clusters at the specified resolution
-  m.up <- quantile(table(obj@meta.data[[columnName]]), probs = q)
+  cluster.sizes <- table(obj@meta.data[[columnName]])
+  median.size <- quantile(cluster.sizes, probs = q)
+  cv.size <- signif(cv(cluster.sizes))
 
   # Output the median cluster size
-  if (verbose) message("quantile ", q, " cluster size at resolution ", res, " is: ", m.up)
+  if (verbose) {
+    prefix <- if (q == 0.5) "Median" else paste("quantile", q)
+    if (is.null(res)) res <- columnName
+    message("Resolution: ", res, " | ", length(cluster.sizes), " clusters | ",
+            prefix, " size: ", median.size,
+            " | CV of sizes: ", Stringendo::percentage_formatter(cv.size))
+  }
 
-  return(m.up)
+  return(median.size)
 }
 
 
@@ -500,16 +539,16 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 #' @importFrom Stringendo iprint
 
 GOscoreEvaluation <- function(obj = combined.obj,
-                                GO_term = "GO:0034976",
-                                new_GO_term_computation = FALSE,
-                                clustering = GetGruffiClusteringName(obj),
-                                save.UMAP = FALSE,
-                                plot.each.gene = FALSE,
-                                assay = "RNA",
-                                description = NULL,
-                                mirror = NULL,
-                                stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-                                ...) {
+                              GO_term = "GO:0034976",
+                              new_GO_term_computation = FALSE,
+                              clustering = GetGruffiClusteringName(obj),
+                              save.UMAP = FALSE,
+                              plot.each.gene = FALSE,
+                              assay = "RNA",
+                              description = NULL,
+                              mirror = NULL,
+                              stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
+                              ...) {
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
   all.genes <- rownames(obj@assays[[assay]])
 
@@ -686,14 +725,14 @@ Shiny.GO.thresh <- function(
   # Launch the Shiny app
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
-    local = new.env(parent = app_env),
-    echo = FALSE, keep.source = TRUE
+                   local = new.env(parent = app_env),
+                   echo = FALSE, keep.source = TRUE
   )$value
 
   # Call the server.R file
   app_server <- source(file.path(app_dir, "server.R"),
-    local = new.env(parent = app_env),
-    echo = FALSE, keep.source = TRUE
+                       local = new.env(parent = app_env),
+                       echo = FALSE, keep.source = TRUE
   )$value
 
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
@@ -962,14 +1001,14 @@ FilterStressedCells <- function(
     if (FALSE) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
     ggExpress::qscatter(Av.GO.Scores,
-      cols = "Stressed", w = 6, h = 6,
-      vline = stats::quantile(mScores[, 2], quantile.thr),
-      hline = stats::quantile(mScores[, 1], quantile.thr),
-      title = "Groups of Stressed cells have high scores.",
-      subtitle = "Thresholded at 90th percentile",
-      label = "name",
-      repel = TRUE,
-      label.rectangle = TRUE
+                        cols = "Stressed", w = 6, h = 6,
+                        vline = stats::quantile(mScores[, 2], quantile.thr),
+                        hline = stats::quantile(mScores[, 1], quantile.thr),
+                        title = "Groups of Stressed cells have high scores.",
+                        subtitle = "Thresholded at 90th percentile",
+                        label = "name",
+                        repel = TRUE,
+                        label.rectangle = TRUE
     )
   }
 
@@ -1174,10 +1213,10 @@ FeaturePlotSaveGO <- function(
 #' @importFrom ggExpress qbarplot qhistogram
 
 PlotClustSizeDistr <- function(obj = combined.obj,
-                                  category = GetGruffiClusteringName(obj),
-                                  plot = TRUE,
-                                  thr.hist = 30,
-                                  ...) {
+                               category = GetGruffiClusteringName(obj),
+                               plot = TRUE,
+                               thr.hist = 30,
+                               ...) {
   .Deprecated("Seurat.utils::plotClustSizeDistr")
 
   clust.size.distr <- table(obj@meta.data[, category])
@@ -1186,9 +1225,9 @@ PlotClustSizeDistr <- function(obj = combined.obj,
 
   if (length(clust.size.distr) < thr.hist) {
     ggExpress::qbarplot(clust.size.distr,
-      plotname = Stringendo::ppp("clust.size.distr", (category)),
-      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
-      ...
+                        plotname = Stringendo::ppp("clust.size.distr", (category)),
+                        subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+                        ...
     )
   } else {
     ggExpress::qhistogram(
@@ -1231,8 +1270,8 @@ PlotNormAndSkew <- function(x, q,
       signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
     ))
     qhistogram(Score.threshold.estimate,
-      vline = thresh, subtitle = sb, xlab = "Score",
-      plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+               vline = thresh, subtitle = sb, xlab = "Score",
+               plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
     )
   }
   return(thresh)
@@ -1268,10 +1307,10 @@ PlotNormAndSkew <- function(x, q,
 #' @importFrom htmlwidgets saveWidget
 
 UMAP3Dcubes <- function(obj = combined.obj,
-                          n_bin = 10, plot = FALSE, save.plot = FALSE,
-                          reduction = c("umap", "pca", "tsne")[1],
-                          ident = Seurat.utils::GetClusteringRuns(obj)[1],
-                          PCA_dim = 50) {
+                        n_bin = 10, plot = FALSE, save.plot = FALSE,
+                        reduction = c("umap", "pca", "tsne")[1],
+                        ident = Seurat.utils::GetClusteringRuns(obj)[1],
+                        PCA_dim = 50) {
   if (dim(obj[[reduction]]@cell.embeddings)[2] < 3) {
     if (reduction == "umap") {
       obj.3d <- Seurat::RunUMAP(obj, dims = 1:PCA_dim, n.components = 3)
@@ -1301,11 +1340,11 @@ UMAP3Dcubes <- function(obj = combined.obj,
 
   for (l in 1:dim(xzy$x)[1]) {
     cells_in_cube <- which(umap_1 <= (xzy$x[l, 1] + x_width / 2) &
-      umap_2 <= (xzy$x[l, 2] + y_width / 2) &
-      umap_3 <= (xzy$x[l, 3] + z_width / 2) &
-      umap_1 > (xzy$x[l, 1] - x_width / 2) &
-      umap_2 > (xzy$x[l, 2] - y_width / 2) &
-      umap_3 > (xzy$x[l, 3] - z_width / 2))
+                             umap_2 <= (xzy$x[l, 2] + y_width / 2) &
+                             umap_3 <= (xzy$x[l, 3] + z_width / 2) &
+                             umap_1 > (xzy$x[l, 1] - x_width / 2) &
+                             umap_2 > (xzy$x[l, 2] - y_width / 2) &
+                             umap_3 > (xzy$x[l, 3] - z_width / 2))
 
     cube_ID[cells_in_cube] <- xzy$cube_ID[l]
 
@@ -1490,10 +1529,10 @@ GrScoreHistogram <- function(obj = combined.obj,
 
   # Plot histogram with ggExpress::qhistogram
   pobj <- ggExpress::qhistogram(granule_scores,
-    sub = subt, palette_use = "npg",
-    plotname = paste("Granule Thresholding", make.names(components[2])),
-    xlab = "Granule Median Score", ylab = "Nr. of Granules",
-    vline = thr, filtercol = colX, ...
+                                sub = subt, palette_use = "npg",
+                                plotname = paste("Granule Thresholding", make.names(components[2])),
+                                xlab = "Granule Median Score", ylab = "Nr. of Granules",
+                                vline = thr, filtercol = colX, ...
   )
   print(pobj)
 
@@ -1797,23 +1836,34 @@ CalcClusterAverages_Gruffi <- function(
 #'
 #' @export
 #' @importFrom Stringendo iprint
-GetGruffiClusteringName <- function(obj, pattern = ".reassigned") {
-  # Retrieve all clustering runs from the Seurat object
-  clusteringRuns <- Seurat.utils::GetClusteringRuns(obj)
+GetGruffiClusteringName <- function(obj, pattern = ".reassigned",
+                                    granule.res.slot = "optimal.granule.res") {
 
-  # Check for clustering runs that match the given pattern
-  matchingRuns <- clusteringRuns[grepl(pattern, clusteringRuns)]
+  res <- obj@misc$gruffi[[granule.res.slot]]
 
-  # Return the first matching run if any exist, otherwise return the first clustering run
-  if (length(matchingRuns) == 1) {
-    if (length(matchingRuns) > 1) {
-      warning("Multiple matching clustering runs found. Returning the first one.", immediate. = TRUE)
-      Stringendo::iprint(matchingRuns)
+  if (is.null(res)) {
+    message("obj@misc$gruffi$optimal.granule.res not found. Searching for pattern in meta.data: *", pattern)
+
+    # Retrieve all clustering runs from the Seurat object
+    clusteringRuns <- Seurat.utils::GetClusteringRuns(obj)
+
+    # Check for clustering runs that match the given pattern
+    matchingRuns <- clusteringRuns[grepl(pattern, clusteringRuns)]
+
+    # Return the first matching run if any exist, otherwise return the first clustering run
+    if (length(matchingRuns) == 1) {
+
+      if (length(matchingRuns) > 1) {
+        warning("Multiple matching clustering runs found. Returning the first one.", immediate. = TRUE)
+        Stringendo::iprint(matchingRuns)
+      }
+      res <- matchingRuns[1]
+    } else {
+      warning("No matching clustering runs found. Returning the last one.", immediate. = TRUE)
+      res <- clusteringRuns[length(clusteringRuns)]
     }
-    return(matchingRuns[1])
-  } else {
-    return(clusteringRuns[1])
   }
+  return(res)
 }
 
 
@@ -1935,7 +1985,7 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 #' @examples
 #' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
 .parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
-                        pattern = "_cl\\.av_", ...) {
+                      pattern = "_cl\\.av_", ...) {
   strsplit(x = ident, split = pattern, ...)[[1]][2]
 }
 
@@ -1981,7 +2031,7 @@ plot_norm_and_skew <- function() .Deprecated("gruffi::PlotNormAndSkew()")
 # #' @importFrom CodeAndRoll2 grepv
 
 # GetNamedClusteringRuns <- function(
-#     obj = combined.obj # Get Clustering Runs: metadata column names
+    #     obj = combined.obj # Get Clustering Runs: metadata column names
 #     , res = c(FALSE, 0.5)[1],
 #     topgene = FALSE,
 #     pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
