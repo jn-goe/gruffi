@@ -1677,32 +1677,34 @@ CalcStandDevSkewedDistr <- function(x, mean_x = mean(x),
 
 
 # _________________________________________________________________________________________________
-#' @title CalcClusterAverages_Gruffi
+#' @title Calculate Cluster Averages for Granules in a Seurat Object
 #'
-#' @description Calculate granule (cluster) averages scores.
-#' @param col_name Numeric metadata column name, Default: 'Score.GO.0006096'
+#' @description Calculates the central tendency (mean or median) of specified scores for clusters (granules)
+#' within a Seurat object and optionally plots these averages.
+#'
 #' @param obj Seurat single cell object, Default: combined.obj
-#' @param split_by Clustering to split by (categorical metadata column name), Default: Seurat.utils::GetClusteringRuns(obj)[1]
-#' @param stat How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
-#' @param scale.zscore Scale as zscore?, Default: FALSE
+#' @param col_name Name of the numeric metadata column to calculate averages for.
+#'        Default: 'Score.GO.0006096'.
+#' @param split_by Name of the clustering (categorical metadata column) to calculate averages within.
+#'        Default: First clustering result from `Seurat.utils::GetClusteringRuns(obj)`.
+#' @param stat Method to calculate the central tendency. Options are "mean", "median",
+#'        "normalized.mean", and "normalized.median". Default: "normalized.mean".
+#' @param scale.zscore Logical flag to scale the calculated scores as z-scores. Default: FALSE.
 #' @param quantile.thr Quantile threshold for cutoff, Default: 0.99
 #' @param absolute.thr Use an absolute threshold? Default: FALSE
 #' @param plotit Draw a plot? Default: FALSE
-#' @param save.plot Save plot into a file. Default: FALSE
-#' @param return.plot Return the plot as output of the function? Default: FALSE
-#' @param max.bin.plot What is considered too many clusters for a histogram to plot? Default: 200
-#' @param simplify Simplify output? Default: TRUE
-#' @param suffix What suffix to append at the end of the plotname/file name? Default: NULL
+#' @param save.plot Save plot into a file? Default: FALSE
+#' @param max.bin.plot Maximum number of clusters for which a barplot is considered feasible,
+#' otherwise a histogram is drawn. Default: 50.
+#' @param suffix Suffix to append to the plot/file name. Default: NULL.
 #' @param ylab.text Y-axis label. Default: paste("Cluster", stat, "score")
 #' @param title Plot title, Default: paste("Cluster", stat, col_name)
 #' @param subtitle Plot subtitle, Default: NULL
 #' @param width Plot width, Default: 8
 #' @param height Plot height, Default: 6
-#' @param xlb X-axis label, Default: if (absolute.thr) paste("Threshold at", absolute.thr) else paste("Black lines: ",
-#'    Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
-#'    "Cl. >", Stringendo::percentage_formatter(quantile.thr),
-#'    "are highlighted. |", split_by)
-#' @param ... Pass any other parameter to the internally called functions (most of them should work).
+#' @param xlb X-axis label for the plot, with dynamic content based on `absolute.thr` and `quantile.thr`.
+#'        Default varies based on these parameters.
+#' @param ... Additional parameters passed to internally called functions.
 #' @seealso
 #'  \code{\link[Stringendo]{percentage_formatter}}, \code{\link[Stringendo]{iprint}}
 #'  \code{\link[dplyr]{select_all}}, \code{\link[dplyr]{group_by_all}}, \code{\link[dplyr]{summarise}}, \code{\link[dplyr]{context}}
@@ -1725,7 +1727,7 @@ CalcClusterAverages_Gruffi <- function(
     plotit = FALSE,
     save.plot = FALSE,
     return.plot = FALSE,
-    max.bin.plot = 200,
+    max.bin.plot = 50,
     simplify = TRUE,
     suffix = NULL,
     ylab.text = paste("Cluster", stat, "score"),
@@ -1743,23 +1745,26 @@ CalcClusterAverages_Gruffi <- function(
     ...) {
   Stringendo::iprint(substitute(obj), "split by", split_by)
 
+  # Calculate mean, mediand and CV of each granule (specified in split_by) .
   df.summary <-
     obj@meta.data %>%
     dplyr::select_at(c(col_name, split_by)) %>%
     dplyr::group_by_at(split_by) %>%
     dplyr::summarize(
-      "nr.cells" = dplyr::n(),
-      "mean" = mean(!!rlang::sym(col_name), na.rm = TRUE),
-      "SEM" = CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE),
-      "normalized.mean" = mean(!!rlang::sym(col_name), na.rm = TRUE),
-      "median" = median(!!rlang::sym(col_name), na.rm = TRUE),
-      "SE.median" = 1.2533 * CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE),
-      "normalized.median" = median(!!rlang::sym(col_name), na.rm = TRUE)
+      "nr.cells"          = dplyr::n(),
+      "mean"              = mean(!!rlang::sym(col_name), na.rm = TRUE),
+      "normalized.mean"   = mean(!!rlang::sym(col_name), na.rm = TRUE),
+      "SEM"               = CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE),
+      "median"            = median(!!rlang::sym(col_name), na.rm = TRUE),
+      "normalized.median" = median(!!rlang::sym(col_name), na.rm = TRUE),
+      "SE.median"         = 1.2533 * CodeAndRoll2::sem(!!rlang::sym(col_name), na.rm = TRUE)
     )
 
-  df.summary$normalized.mean <- sqrt(df.summary$nr.cells) * (df.summary$normalized.mean - median(df.summary$normalized.mean))
-  df.summary$normalized.median <- sqrt(df.summary$nr.cells) * (df.summary$normalized.median - median(df.summary$normalized.median))
+  # Normalize the mean and median scores by scaling them relative to their overall median and adjusting by cluster size.
+  df.summary$"normalized.mean"   <- sqrt(df.summary$'nr.cells') * (df.summary$'normalized.mean' - median(df.summary$'normalized.mean'))
+  df.summary$"normalized.median" <- sqrt(df.summary$'nr.cells') * (df.summary$'normalized.median' - median(df.summary$'normalized.median'))
 
+  # Simplify the output if requested, to return just the scores, optionally scaling as z-scores.
   if (simplify) {
     av.score <- df.summary[[stat]]
     names(av.score) <- df.summary[[1]]
@@ -1767,33 +1772,45 @@ CalcClusterAverages_Gruffi <- function(
 
     if (scale.zscore) av.score <- (scale(av.score)[, 1])
 
+    # Determine the cutoff threshold, either as an absolute value or based on the specified quantile.
     cutoff <- if (absolute.thr) absolute.thr else stats::quantile(av.score, quantile.thr)
 
     if (plotit) {
       if (length(av.score) > max.bin.plot) {
-        print("Too many clusters for histogram plot.")
+        warning("histogram plotting is not debugged. May contain errors.", immediate. = TRUE)
+        p <- ggExpress::qhistogram(
+          vec = av.score, save = FALSE,
+          vline =  = cutoff,
+          plotname = title,
+          suffix = quantile.thr,
+          subtitle = subtitle,
+          ylab = xlb,
+          xlab = ylab.text
+          # , ...
+        )
       } else {
-        p <- qbarplot(
+        p <- ggExpress::qbarplot(
           vec = av.score, save = FALSE,
           hline = cutoff,
           plotname = title,
           suffix = quantile.thr,
           subtitle = subtitle,
           ylab = ylab.text,
-          xlab = xlb # Abused
-          , xlab.angle = 45
+          xlab = xlb, # Abused
+          xlab.angle = 45
           # , ...
         )
         print(p)
+
         if (save.plot) {
           title_ <- Stringendo::ppp(title, suffix, Stringendo::flag.nameiftrue(scale.zscore))
           ggExpress::qqSave(ggobj = p, title = title_, fname = Stringendo::ppp(title_, split_by, "png"), w = width, h = height)
-        }
-        if (return.plot) {
-          return(p)
-        }
-      }
-    }
+        } # save.plot
+
+        if (return.plot) return(p)
+      } # length(av.score) > max.bin.plot
+    } # plotit
+
     return(av.score)
   } else {
     return(df.summary)
