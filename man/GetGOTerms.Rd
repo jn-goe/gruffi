@@ -2,40 +2,48 @@
 % Please edit documentation in R/gruffi.R
 \name{GetGOTerms}
 \alias{GetGOTerms}
-\title{GetGOTerms}
+\title{Retrieve Gene Ontology (GO) Terms and Associated Genes}
 \usage{
 GetGOTerms(
   obj = combined.obj,
   GO = "GO:0034976",
-  use.ensemble = TRUE,
   assay = "RNA",
-  web.open = FALSE,
+  use.ensemble = TRUE,
   version = NULL,
   GRCh = NULL,
   genes.shown = 10,
+  web.open = FALSE,
   mirror = NULL
 )
 }
 \arguments{
-\item{obj}{Seurat single cell object, Default: combined.obj}
+\item{obj}{A Seurat object potentially containing precomputed enrichGO results. Default: combined.obj}
 
-\item{GO}{GO-term; Default: 'GO:0034976'}
+\item{GO}{The GO term identifier for which to fetch associated genes. Default: 'GO:0034976'}
 
-\item{use.ensemble}{Use ensemble database, Default: TRUE}
+\item{assay}{Assay to consider when retrieving precomputed enrichGO results.}
 
-\item{web.open}{Open weblink for GO-term?, Default: FALSE}
+\item{use.ensemble}{Logical; if TRUE, uses the Ensembl database for gene retrieval.}
 
-\item{version}{= Def: NULL, Ensembl version to connect to when wanting to connect to an archived Ensembl version (via useEnsembl())}
+\item{version}{Ensembl version, useful if wanting to connect to an archived Ensembl version.}
 
-\item{GRCh}{= Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())}
+\item{GRCh}{GRCh version if not using the current GRCh38, currently this can only be 37 (via useEnsembl())}
 
 \item{genes.shown}{Number of genes shown, Default: 10}
 
-\item{mirror}{Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl
-fails with default settings, mirror can be specified. Default: 'NULL'}
+\item{web.open}{Logical; if TRUE, opens the web page for the specified GO term.}
+
+\item{mirror}{Ensembl mirror to use, helpful if the default connection fails with
+default settings, mirror can be specified. Default: 'NULL'}
+}
+\value{
+The input Seurat object with the retrieved genes associated with the
+specified GO term stored in \code{obj@misc$GO}.
 }
 \description{
-Get GO Terms
+Fetches genes associated with a specified Gene Ontology (GO) term and optionally
+opens the GO term page. The genes are retrieved using either the Ensembl database via biomaRt or
+from precomputed enrichGO results stored in the Seurat object.
 }
 \seealso{
 \code{\link[biomaRt]{useEnsembl}}, \code{\link[biomaRt]{getBM}}
