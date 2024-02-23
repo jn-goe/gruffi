@@ -82,19 +82,19 @@ combined.obj <- AutoFindGranuleResolution(obj = combined.obj)
 The optimal resolution found is stored in:
 
 ```r
-granule.res.4.gruffi <- combined.obj@misc$gruffi$'optimal.granule.res'	
+(granule.res.4.gruffi <- GetGruffiClusteringName(combined.obj)) # Recalled from @misc$gruffi$'optimal.granule.res.
 ```
 
 Some granules have too few cells, therfore their scoring is not robust statistically. Use `ReassignSmallClusters` to assign these cells to the nearest large-enough granule:
 
 ```R
-combined.obj <- ReassignSmallClusters(combined.obj, ident = granule.res.4.gruffi) # will be stored in meta data column as "seurat_clusters.reassigned"
+combined.obj <- ReassignSmallClusters(combined.obj, ident = granule.res.4.gruffi) # Will be stored in meta data column as "seurat_clusters.reassigned".
 ````
 
 Above, granules with <30 cells are cell-by-cell re-assigned to a neighboring granule (by default based on Euclidean distance between the mean of cell groups in 3dim UMAP space). The reassigned granules are suffixed as :
 
 ```r
-granule.res.4.gruffi <- paste0(granule.res.4.gruffi, '.reassigned')
+(granule.res.4.gruffi <- GetGruffiClusteringName(combined.obj))
 ```
 
 
