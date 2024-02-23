@@ -128,9 +128,9 @@ We will now call a Shiny Interface to auto-estimate and/or manually adjust the s
 Example code for filtering cells high in glycolytic process and ER stress but low in gliogenesis: 
 ```R
 # Create score names:
-(i1 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go1))
-(i2 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go2))
-(i3 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go3))
+(i1 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', make.names(go1)))
+(i2 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', make.names(go2)))
+(i3 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', make.names(go3)))
 
 # Call Shiny app
 combined.obj <- FindThresholdsShiny(obj = combined.obj,
