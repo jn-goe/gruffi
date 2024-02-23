@@ -349,6 +349,7 @@ CalculateMedianClusterSize <- function(
 #' @param assay Assay to consider when retrieving precomputed GO_genes results.
 #' @param data.base.access Which tool to use to access gene list databases? Options:
 #' biomaRt (deault) or AnnotationDbi.
+#' @param overwrite.misc.GO_genes Overwrite preexisting gene set in `misc$gruffi$GO[[make.names(GO)]]`.
 #' @param version Ensembl version, useful if wanting to connect to an archived Ensembl version.
 #' @param mirror Ensembl mirror to use, helpful if the default connection fails with
 #' default settings, mirror can be specified. Default: 'NULL'
@@ -387,6 +388,7 @@ GetGOTerms <- function(obj = combined.obj,
   GO.gene.symbol.slot <- obj@misc$gruffi$GO[[make.names(GO)]]
   # GO.gene.symbol.slot <- obj@misc$gruffi$"GO_genes"[[assay]]
 
+  iprint("overwrite.misc.GO_genes", overwrite.misc.GO_genes)
   if(overwrite.misc.GO_genes) GO.gene.symbol.slot <- NULL # so it will be recomputed and overwritten
 
   if (is.null(GO.gene.symbol.slot)) {
@@ -417,10 +419,11 @@ GetGOTerms <- function(obj = combined.obj,
 
   } else {
     message("Pre-existing GO_genes results found in obj@misc$gruffi$GO[[make.names(GO)]].")
+    iprint("GO.gene.symbol.slot", head(GO.gene.symbol.slot))
     genes <- unlist(DOSE::geneInCategory(GO.gene.symbol.slot)[GO])
     message("Gene symbols taken from GO_genes.")
   }
-  message("\n", length(genes), " gene symbols used: ", kollapse(head(genes, n = genes.shown)))
+  message("\n", length(genes), " gene symbols used: ", Stringendo::kppws(head(genes, n = genes.shown)))
 
   # Intersect the downloaded genes with those expressed in the Seurat object
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
@@ -504,6 +507,7 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
 #'   the GO term scores. Defaults to `FALSE`.
 #' @param return.plot If `TRUE`, the function returns the plot object instead of the updated Seurat
 #'   object. Defaults to `FALSE`.
+#' @param overwrite.misc.GO_genes Overwrite preexisting gene set in `misc$gruffi$GO[[make.names(GO)]]`.
 #' @param ... Additional arguments passed to internal functions.
 #'
 #' @return Depending on the `return.plot` parameter, this function returns either a plot object or
@@ -529,6 +533,7 @@ CalculateAndPlotGoTermScores <- function(
     save.UMAP = TRUE,
     verbose = TRUE,
     return.plot = FALSE,
+    overwrite.misc.GO_genes = FALSE,
     ...) {
 
   # Backup the current default assay to restore it later
@@ -571,7 +576,8 @@ CalculateAndPlotGoTermScores <- function(
     obj@meta.data[, ScoreName] <- NULL
 
     # Retrieve and add GO terms and scores to the object
-    obj <- GetGOTerms(obj = obj, GO = GO, web.open = open.browser, data.base.access = data.base.access, mirror = mirror)
+    obj <- GetGOTerms(obj = obj, GO = GO, web.open = open.browser, data.base.access = data.base.access,
+                      mirror = mirror, overwrite.misc.GO_genes = overwrite.misc.GO_genes )
     GO.genes <- obj@misc$gruffi$GO[[GO.wDot]]
     if (verbose) print(head(GO.genes))
     obj <- AddGOScore(obj = obj, GO = GO)
@@ -587,7 +593,7 @@ CalculateAndPlotGoTermScores <- function(
   if (return.plot) {
     return(plot)
   } else {
-    message("Object updated in it's meta.data, with score ", ScoreName)
+    message("Object updated, meta.data now has GO-score: ", ScoreName)
     return(obj)
   }
 }
@@ -617,7 +623,9 @@ CalculateAndPlotGoTermScores <- function(
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @param clustering Which clustering to use (from metadata)? Default: GetGruffiClusteringName(obj)
 #' e.g. "integrated_snn_res.48.reassigned"
+#' @param overwrite.misc.GO_genes Overwrite preexisting gene set in `misc$gruffi$GO[[make.names(GO)]]`.
 #' @param ... Additional parameters to be passed to the CalculateAndPlotGoTermScores function.
+#'
 #' @export
 #' @importFrom Seurat Idents RenameIdents
 #' @importFrom Stringendo iprint
@@ -632,6 +640,7 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
                                                  description = NULL,
                                                  mirror = NULL,
                                                  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
+                                                 overwrite.misc.GO_genes = FALSE,
                                                  ...) {
 
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
@@ -639,7 +648,7 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
   # If new GO term score computation is requested
   if (new_GO_term_computation) {
     obj <- CalculateAndPlotGoTermScores(
-      GO = GO_term, save.UMAP = save.UMAP, obj = obj,
+      GO = GO_term, save.UMAP = save.UMAP, obj = obj, overwrite.misc.GO_genes = overwrite.misc.GO_genes,
       desc = description, plot.each.gene = plot.each.gene, mirror = mirror, ...
     )
   }
@@ -652,18 +661,23 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
     split_by = clustering
   )
 
-  # Remove 'cl.' prefix from cluster average score names
+  # Remove 'cl.' prefix from cluster average score names, if present
   names(cl.av) <- gsub("cl.", "", names(cl.av))
-  obj <- Seurat::RenameIdents(obj, cl.av)
+
 
   # Store cluster average scores in the metadata under a new column
-  mScoreColName <- paste0(clustering, "_cl.av_", GO_term)
-  obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
+  ColNameAverageScore <- paste0(clustering, "_cl.av_", make.names(GO_term))
 
-  # Reset the active identities to the original clustering
+  obj <- Seurat::RenameIdents(obj, cl.av) # This is a nifty trick to from nr.of.categories ->  nr.cells
+
+  # New way to store as numeric
+  obj@meta.data[ColNameAverageScore] <- as.numeric(as.character(Seurat::Idents(obj)))
+  # Old way to store as factor
+  # obj@meta.data[ColNameAverageScore] <- Seurat::Idents(obj)
+
+  stopifnot(is.numeric(obj@meta.data[ , ColNameAverageScore]))
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
-  message("New meta.data with granule average scores: ", mScoreColName)
-
+  message("New meta.data with granule average scores: ", ColNameAverageScore)
   return(obj)
 }
 
@@ -708,7 +722,7 @@ AddGOGeneList.manual <- function(obj = combined.obj, GO = "GO:0034976", web.open
 #' @importFrom Seurat AddModuleScore
 
 AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE) {
-  print("AddGOScore()")
+  message("Running AddGOScore()")
   GO.wDot <- make.names(GO)
   (genes.GO <- list(obj@misc$gruffi$GO[[GO.wDot]]))
   # print(genes.GO)
@@ -737,6 +751,7 @@ AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE) {
 #' @importFrom Stringendo ppp
 
 AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", FixName = TRUE) {
+  message("Running AddCustomScore()")
   ls.genes <- list(genes)
   if (!is.list(ls.genes)) ls.genes <- list(ls.genes) # idk why this structure is not consistent...
   (ScoreName <- Stringendo::ppp("Score", substitute(genes)))
@@ -789,10 +804,10 @@ CustomScoreEvaluation <- function(obj = combined.obj,
   )
   names(cl.av) <- gsub("cl.", "", names(cl.av))
   obj <- Seurat::RenameIdents(obj, cl.av)
-  mScoreColName <- paste0(clustering, "_cl.av_", custom.score.name)
-  obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
+  ColNameAverageScore <- paste0(clustering, "_cl.av_", custom.score.name)
+  obj@meta.data[ColNameAverageScore] <- Seurat::Idents(obj)
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
-  print(mScoreColName)
+  print(ColNameAverageScore)
   return(obj)
 }
 
@@ -1035,175 +1050,6 @@ FindThresholdsAuto <- function(
 
   return(obj)
 }
-
-
-# _________________________________________________________________________________________________
-#' @title Filter Stressed Cells from a Seurat Object
-#'
-#' @description Identifies and filters stressed cells based on specified GO terms and a quantile threshold.
-#' It supports optional plotting of exclusion results and saving of modified datasets.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param res Clustering resolution, Default: 'integrated_snn_res.30'
-#' @param quantile.thr Quantile threshold to cutoff stressed cells, Default: 0.9
-#' @param GOterms GO-terms to use for filtering, Default: c(`glycolytic process` = "GO:0006096", `response to endoplasmic reticulum stress` = "GO:0034976")
-#' @param direction filtering direction, above or below, Default: 'above'
-#' @param saveRDS Logical indicating if the filtered object should be saved as an RDS file, default is TRUE.
-#' @param saveRDS.Removed Logical indicating if a separate RDS file for removed cells should be saved, default is FALSE.
-#' @param PlotExclusionByEachScore Logical for plotting exclusion results by each score, default is TRUE.
-#' @param PlotSingleCellExclusion Logical for plotting single cell exclusion results, default is TRUE.
-#' @param GranuleExclusionScatterPlot Logical for plotting a scatter plot of granule exclusion, default is TRUE.
-#' @seealso
-#'  \code{\link[Stringendo]{iprint}}, \code{\link[Stringendo]{percentage_formatter}}
-#'  \code{\link[Seurat.utils]{calc.cluster.averages}}
-#'  \code{\link[MarkdownHelpers]{filter_HP}}, \code{\link[MarkdownHelpers]{llprint}}
-#'  \code{\link[dplyr]{reexports}}
-#' @export
-#'
-#' @importFrom CodeAndRoll2 matrix.fromNames which_names
-#' @importFrom dplyr tibble
-#' @importFrom ggExpress qscatter qhistogram
-#' @importFrom MarkdownHelpers filter_HP llprint
-#' @importFrom Seurat.utils clUMAP calc.cluster.averages isave.RDS
-#' @importFrom Stringendo iprint percentage_formatter
-FilterStressedCells <- function(
-    obj = combined.obj,
-    res = "integrated_snn_res.30",
-    quantile.thr = 0.9,
-    GOterms = c("glycolytic process" = "GO:0006096", "response to endoplasmic reticulum stress" = "GO:0034976"),
-    direction = "above",
-    saveRDS = TRUE, saveRDS.Removed = FALSE,
-    PlotExclusionByEachScore = TRUE,
-    PlotSingleCellExclusion = TRUE,
-    GranuleExclusionScatterPlot = TRUE) {
-  # Check arguments ____________________________________________________________
-  Meta <- obj@meta.data
-  MetaVars <- colnames(Meta)
-  if (!res %in% MetaVars) {
-    Stringendo::iprint("res", res, "is not found in the object.")
-  }
-
-  ScoreNames <- .convert.GO_term.2.score(GOterms)
-  if (!all(ScoreNames %in% MetaVars)) {
-    Stringendo::iprint(
-      "Some of the GO-term scores were not found in the object:", ScoreNames,
-      "Please call first: CalculateAndPlotGoTermScores(), or the actual GetGOTerms()"
-    )
-  }
-
-  cells.2.granules <- obj[[res]][, 1]
-
-  # Exclude granules ____________________________________________________________
-  mScoresFiltPass <- mScores <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = sort(unique(Meta[, res])), colname_vec = make.names(GOterms))
-  for (i in 1:length(GOterms)) {
-    scoreX <- as.character(ScoreNames[i])
-    print(scoreX)
-    scoreNameX <- names(ScoreNames)[i]
-    mScoresFiltPass[, i] <- Seurat.utils::calc.cluster.averages(
-      col_name = scoreX, split_by = res, quantile.thr = quantile.thr,
-      histogram = TRUE, subtitle = names(ScoreNames)[i],
-      filter = direction, obj = obj
-    )
-
-    if (GranuleExclusionScatterPlot) {
-      mScores[, i] <- Seurat.utils::calc.cluster.averages(
-        col_name = scoreX, split_by = res, quantile.thr = quantile.thr,
-        plot.UMAP.too = FALSE, plotit = FALSE,
-        filter = FALSE
-      )
-    }
-
-    if (PlotExclusionByEachScore) {
-      Seurat.utils::clUMAP(
-        ident = res, highlight.clusters = CodeAndRoll2::which_names(mScoresFiltPass[, i]),
-        label = FALSE, title = paste0("Stressed cells removed by ", scoreX),
-        plotname = paste0("Stressed cells removed by ", scoreX),
-        sub = scoreNameX,
-        sizes.highlight = .5, raster = FALSE
-      )
-    }
-  }
-
-  # PlotSingleCellExclusion ____________________________________________________________
-  if (PlotSingleCellExclusion) {
-    mSC_ScoresFiltPass <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = rownames(Meta), colname_vec = make.names(GOterms))
-    for (i in 1:length(GOterms)) {
-      scoreX <- as.character(ScoreNames[i])
-      print(scoreX)
-      scoreNameX <- names(ScoreNames)[i]
-      ScoreValuesSC <- Meta[, scoreX]
-      mSC_ScoresFiltPass[, i] <- MarkdownHelpers::filter_HP(
-        numeric_vector = ScoreValuesSC,
-        threshold = stats::quantile(x = ScoreValuesSC, quantile.thr), breaks = 100
-      )
-    }
-    cells.remove.SC <- rowSums(mSC_ScoresFiltPass) > 0
-    table(cells.remove.SC)
-    sc.filtered <- CodeAndRoll2::which_names(cells.remove.SC)
-    sc.kept <- CodeAndRoll2::which_names(!cells.remove.SC)
-
-    Seurat.utils::clUMAP(
-      cells.highlight = sc.filtered, label = FALSE,
-      title = "Single-cell filtering is not robust to remove stressed cells",
-      plotname = "Single-cell filtering is not robust to remove stressed cells",
-      suffix = "Stress.Filtering", sizes.highlight = .5, raster = FALSE
-    )
-
-
-    MeanZ.ER.stress <- c(
-      "mean.stressed" = mean(Meta[sc.filtered, scoreX]),
-      "mean.kept" = mean(Meta[sc.kept, scoreX])
-    )
-    qbarplot(MeanZ.ER.stress, ylab = scoreNameX, xlab.angle = 45, xlab = "", col = as.logical(0:1))
-
-    # if (TRUE) {
-    #   obj.Removed.by.SingleCells <- subset(x = obj, cells = sc.filtered) # remove stressed
-    #   Seurat.utils::isave.RDS(obj.Removed.by.SingleCells, inOutDir = TRUE, suffix = "Removed")
-    # }
-  } # if (PlotSingleCellExclusion)
-
-  # Plot excluded cells ____________________________________________________________
-  PASS <- (rowSums(mScoresFiltPass) == 0)
-  granules.excluded <- CodeAndRoll2::which_names(!PASS)
-  Seurat.utils::clUMAP(ident = res, highlight.clusters = granules.excluded, label = FALSE, title = "Stressed cells removed", suffix = "Stress.Filtering", sizes.highlight = .5, raster = FALSE)
-
-  if (GranuleExclusionScatterPlot) {
-    Av.GO.Scores <- dplyr::tibble(
-      "Average ER-stress score" = mScores[, 2],
-      "Average Glycolysis score" = mScores[, 1],
-      "Stressed" = !PASS,
-      "name" = rownames(mScores)
-    )
-
-    if (FALSE) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
-
-    ggExpress::qscatter(Av.GO.Scores,
-                        cols = "Stressed", w = 6, h = 6,
-                        vline = stats::quantile(mScores[, 2], quantile.thr),
-                        hline = stats::quantile(mScores[, 1], quantile.thr),
-                        title = "Groups of Stressed cells have high scores.",
-                        subtitle = "Thresholded at 90th percentile",
-                        label = "name",
-                        repel = TRUE,
-                        label.rectangle = TRUE
-    )
-  }
-
-
-  # Exclude cells & subset ____________________________________________________________
-
-  cells.discard <- which(cells.2.granules %in% granules.excluded)
-  cells.keep <- which(!(cells.2.granules %in% granules.excluded))
-  MarkdownHelpers::llprint(Stringendo::percentage_formatter(length(cells.keep) / length(cells.2.granules)), "cells kept.")
-
-  obj.noStress <- subset(x = obj, cells = cells.keep) # remove stressed
-  if (saveRDS) Seurat.utils::isave.RDS(obj.noStress, inOutDir = TRUE, suffix = "Cleaned")
-  if (saveRDS.Removed) {
-    obj.RemovedCells <- subset(x = obj, cells = cells.discard) # remove stressed
-    Seurat.utils::isave.RDS(obj.RemovedCells, inOutDir = TRUE, suffix = "Removed")
-  }
-  return(obj.noStress)
-}
-
 
 
 
