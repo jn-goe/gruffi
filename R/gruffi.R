@@ -243,9 +243,8 @@ ReassignSmallClusters <- function(obj = combined.obj,
 
   # Update the optimal granule resolution in the Seurat object's @misc slot
   obj@misc$gruffi$"optimal.granule.res" <- name.id.reassigned
-  message("Suggested Granule Resolution (meta.data colname) is stored in:
-          obj@misc$gruffi$optimal.granule.res:\n", name.id.reassigned)
-
+  message("Suggested Granule Resolution (meta.data colname) is stored in:")
+  message("obj@misc$gruffi$optimal.granule.res:\n", name.id.reassigned)
   message("\nCall PlotClustSizeDistr() to check results.\n")
 
   CalculateMedianClusterSize(columnName = ident, obj = obj)
@@ -312,19 +311,26 @@ CalculateMedianClusterSize <- function(
 # _____________________________________________________________________________________________ ----
 # 2. Obtain and prepare GO Terms ---------------------------------------------------------------------------
 
-
-#' @title GetGOTerms
+#' @title Retrieve Gene Ontology (GO) Terms and Associated Genes
 #'
-#' @description Get GO Terms
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param GO GO-term; Default: 'GO:0034976'
-#' @param use.ensemble Use ensemble database, Default: TRUE
-#' @param version = Def: NULL, Ensembl version to connect to when wanting to connect to an archived Ensembl version (via useEnsembl())
-#' @param GRCh = Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())
-#' @param web.open Open weblink for GO-term?, Default: FALSE
+#' @description Fetches genes associated with a specified Gene Ontology (GO) term and optionally
+#' opens the GO term page. The genes are retrieved using either the Ensembl database via biomaRt or
+#'  from precomputed enrichGO results stored in the Seurat object.
+
+#' @param obj A Seurat object potentially containing precomputed enrichGO results. Default: combined.obj
+#' @param GO The GO term identifier for which to fetch associated genes. Default: 'GO:0034976'
+#' @param assay Assay to consider when retrieving precomputed enrichGO results.
+#' @param use.ensemble Logical; if TRUE, uses the Ensembl database for gene retrieval.
+#' @param version Ensembl version, useful if wanting to connect to an archived Ensembl version.
+#' @param mirror Ensembl mirror to use, helpful if the default connection fails with
+#' default settings, mirror can be specified. Default: 'NULL'
+#' @param GRCh GRCh version if not using the current GRCh38, currently this can only be 37 (via useEnsembl())
+#' @param web.open Logical; if TRUE, opens the web page for the specified GO term.
 #' @param genes.shown Number of genes shown, Default: 10
-#' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl
-#' fails with default settings, mirror can be specified. Default: 'NULL'
+#'
+#' @return The input Seurat object with the retrieved genes associated with the
+#' specified GO term stored in `obj@misc$GO`.
+#'
 #' @seealso
 #'  \code{\link[biomaRt]{useEnsembl}}, \code{\link[biomaRt]{getBM}}
 #'  \code{\link[AnnotationDbi]{AnnotationDb-objects}}
@@ -338,51 +344,60 @@ CalculateMedianClusterSize <- function(
 
 GetGOTerms <- function(obj = combined.obj,
                        GO = "GO:0034976",
-                       use.ensemble = TRUE,
                        assay = "RNA",
-                       web.open = FALSE,
+                       use.ensemble = TRUE,
                        version = NULL,
                        GRCh = NULL,
                        genes.shown = 10,
+                       web.open = FALSE,
                        mirror = NULL) {
 
   message("Running GetGOTerms()")
   enrichGO_slot <- obj@misc$"enrichGO"[[assay]]
 
-  if (use.ensemble & is.null(enrichGO_slot)) {
-    if (!exists("ensembl")) {
-      print("biomaRt::useEnsembl()")
-      ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh, mirror = mirror)
+
+  if (is.null(enrichGO_slot)) {
+    message("No pre-existing enrichGO results found in obj@misc$enrichGO[[assay]].")
+
+    if (use.ensemble) { # If using Ensembl database, use biomaRt
+
+      # Check if Ensembl mart object already exists, if not, create one
+      if (!exists("ensembl")) {
+        message("Running biomaRt::useEnsembl()")
+        ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh, mirror = mirror)
+      }
+
+      # Retrieve gene symbols associated with the GO term using biomaRt
+      genes <- biomaRt::getBM(
+        attributes = c("hgnc_symbol"), # 'ensembl_transcript_id', 'go_id'
+        filters = "go_parent_term", uniqueRows = TRUE,
+        values = GO, mart = ensembl
+      )[, 1]
+      message(length(genes), " gene symbols downloaded via biomaRt::getBM(): ", head(genes, n = genes.shown))
+
+    } else { # If not using Ensembl database, use AnnotationDbi
+      message("Running AnnotationDbi::select()")
+      genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
+      message(length(genes), " gene symbols downloaded from AnnotationDbi / org.Hs.eg.db: ", head(genes, n = genes.shown))
     }
 
-    genes <- biomaRt::getBM(
-      attributes = c("hgnc_symbol"), # 'ensembl_transcript_id', 'go_id'
-      filters = "go_parent_term", uniqueRows = TRUE,
-      values = GO, mart = ensembl
-    )[, 1]
-    iprint(length(genes), "gene symbols downloaded via biomaRt::getBM():", head(genes, n = genes.shown))
-  }
-
-  if (!use.ensemble & !is.null(enrichGO_slot)) {
+  } else {
+    message("Pre-existing enrichGO results found in obj@misc$enrichGO[[assay]].")
     genes <- unlist(DOSE::geneInCategory(enrichGO_slot)[GO])
-    iprint(length(genes), "Gene symbols from enrichGO[[assay]]:", head(genes, n = genes.shown))
+    message(length(genes), " gene symbols from enrichGO[[assay]]: ", head(genes, n = genes.shown))
   }
 
-  if (!use.ensemble & is.null(enrichGO_slot)) {
-    print("AnnotationDbi::select()")
-    # genes <- clusterProfiler::bitr("GO:0006096",fromType="GO",toType="SYMBOL",OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
-    genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
-    iprint(length(genes), "gene symbols downloaded from AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db):", head(genes, n = genes.shown))
-  }
+  message(length(genes), " gene symbols downloaded: ", head(genes, n = genes.shown))
 
-  (GO.wDot <- make.names(GO))
-  Stringendo::iprint(length(genes), "Gene symbols downloaded:", head(genes, n = genes.shown))
-
+  # Intersect the downloaded genes with those expressed in the Seurat object
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
+  # Save the result in the Seurat object for later access
   if (is.null(obj@misc$GO)) obj@misc$GO <- list()
-  obj@misc$GO[[GO.wDot]] <- genes
-  Stringendo::iprint("Genes in", GO, "are saved under obj@misc$GO$", GO.wDot)
+  obj@misc$GO[[make.names(GO)]] <- genes
+  message("Genes in ", GO, " are saved under obj@misc$GO$", make.names(GO))
+
+  # Open the GO term web page if requ
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
   return(obj)
 }
@@ -889,6 +904,7 @@ Auto.GO.thresh <- function(
 #' @importFrom MarkdownHelpers filter_HP llprint
 #' @importFrom Seurat.utils clUMAP calc.cluster.averages isave.RDS
 #' @importFrom Stringendo iprint percentage_formatter
+
 FilterStressedCells <- function(
     obj = combined.obj,
     res = "integrated_snn_res.30",
