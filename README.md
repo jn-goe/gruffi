@@ -26,7 +26,7 @@ BiocManager::install("biomaRt")
 # Install custom dependencies
 install.packages('devtools')
 devtools::install_github(repo = "vertesy/Stringendo", upgrade = F)
-devtools::install_github(repo = "vertesy/CodeAndRoll2", ref = 'v2.3.4', upgrade = F)
+devtools::install_github(repo = "vertesy/CodeAndRoll2", upgrade = F)
 devtools::install_github(repo = "vertesy/ReadWriter", upgrade = F)
 devtools::install_github(repo = "vertesy/MarkdownHelpers", upgrade = F)
 devtools::install_github(repo = "vertesy/Markdownreports", upgrade = F)
