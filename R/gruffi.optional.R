@@ -122,6 +122,173 @@ UMAP3Dcubes <- function(obj = combined.obj,
 }
 
 
+# _________________________________________________________________________________________________
+#' @title Filter Stressed Cells from a Seurat Object
+#'
+#' @description Identifies and filters stressed cells based on specified GO terms and a quantile threshold.
+#' It supports optional plotting of exclusion results and saving of modified datasets.
+#' @param obj Seurat single cell object, Default: combined.obj
+#' @param res Clustering resolution, Default: 'integrated_snn_res.30'
+#' @param quantile.thr Quantile threshold to cutoff stressed cells, Default: 0.9
+#' @param GOterms GO-terms to use for filtering, Default: c(`glycolytic process` = "GO:0006096", `response to endoplasmic reticulum stress` = "GO:0034976")
+#' @param direction filtering direction, above or below, Default: 'above'
+#' @param saveRDS Logical indicating if the filtered object should be saved as an RDS file, default is TRUE.
+#' @param saveRDS.Removed Logical indicating if a separate RDS file for removed cells should be saved, default is FALSE.
+#' @param PlotExclusionByEachScore Logical for plotting exclusion results by each score, default is TRUE.
+#' @param PlotSingleCellExclusion Logical for plotting single cell exclusion results, default is TRUE.
+#' @param GranuleExclusionScatterPlot Logical for plotting a scatter plot of granule exclusion, default is TRUE.
+#' @seealso
+#'  \code{\link[Stringendo]{iprint}}, \code{\link[Stringendo]{percentage_formatter}}
+#'  \code{\link[Seurat.utils]{calc.cluster.averages}}
+#'  \code{\link[MarkdownHelpers]{filter_HP}}, \code{\link[MarkdownHelpers]{llprint}}
+#'  \code{\link[dplyr]{reexports}}
+#' @export
+#'
+#' @importFrom CodeAndRoll2 matrix.fromNames which_names
+#' @importFrom dplyr tibble
+#' @importFrom ggExpress qscatter qhistogram
+#' @importFrom MarkdownHelpers filter_HP llprint
+#' @importFrom Seurat.utils clUMAP calc.cluster.averages isave.RDS
+#' @importFrom Stringendo iprint percentage_formatter
+FilterStressedCells <- function(
+    obj = combined.obj,
+    res = "integrated_snn_res.30",
+    quantile.thr = 0.9,
+    GOterms = c("glycolytic process" = "GO:0006096", "response to endoplasmic reticulum stress" = "GO:0034976"),
+    direction = "above",
+    saveRDS = TRUE, saveRDS.Removed = FALSE,
+    PlotExclusionByEachScore = TRUE,
+    PlotSingleCellExclusion = TRUE,
+    GranuleExclusionScatterPlot = TRUE) {
+  # Check arguments ____________________________________________________________
+  Meta <- obj@meta.data
+  MetaVars <- colnames(Meta)
+  if (!res %in% MetaVars) {
+    Stringendo::iprint("res", res, "is not found in the object.")
+  }
+
+  ScoreNames <- .convert.GO_term.2.score(GOterms)
+  if (!all(ScoreNames %in% MetaVars)) {
+    Stringendo::iprint(
+      "Some of the GO-term scores were not found in the object:", ScoreNames,
+      "Please call first: CalculateAndPlotGoTermScores(), or the actual GetGOTerms()"
+    )
+  }
+
+  cells.2.granules <- obj[[res]][, 1]
+
+  # Exclude granules ____________________________________________________________
+  mScoresFiltPass <- mScores <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = sort(unique(Meta[, res])), colname_vec = make.names(GOterms))
+  for (i in 1:length(GOterms)) {
+    scoreX <- as.character(ScoreNames[i])
+    print(scoreX)
+    scoreNameX <- names(ScoreNames)[i]
+    mScoresFiltPass[, i] <- Seurat.utils::calc.cluster.averages(
+      col_name = scoreX, split_by = res, quantile.thr = quantile.thr,
+      histogram = TRUE, subtitle = names(ScoreNames)[i],
+      filter = direction, obj = obj
+    )
+
+    if (GranuleExclusionScatterPlot) {
+      mScores[, i] <- Seurat.utils::calc.cluster.averages(
+        col_name = scoreX, split_by = res, quantile.thr = quantile.thr,
+        plot.UMAP.too = FALSE, plotit = FALSE,
+        filter = FALSE
+      )
+    }
+
+    if (PlotExclusionByEachScore) {
+      Seurat.utils::clUMAP(
+        ident = res, highlight.clusters = CodeAndRoll2::which_names(mScoresFiltPass[, i]),
+        label = FALSE, title = paste0("Stressed cells removed by ", scoreX),
+        plotname = paste0("Stressed cells removed by ", scoreX),
+        sub = scoreNameX,
+        sizes.highlight = .5, raster = FALSE
+      )
+    }
+  }
+
+  # PlotSingleCellExclusion ____________________________________________________________
+  if (PlotSingleCellExclusion) {
+    mSC_ScoresFiltPass <- CodeAndRoll2::matrix.fromNames(fill = NaN, rowname_vec = rownames(Meta), colname_vec = make.names(GOterms))
+    for (i in 1:length(GOterms)) {
+      scoreX <- as.character(ScoreNames[i])
+      print(scoreX)
+      scoreNameX <- names(ScoreNames)[i]
+      ScoreValuesSC <- Meta[, scoreX]
+      mSC_ScoresFiltPass[, i] <- MarkdownHelpers::filter_HP(
+        numeric_vector = ScoreValuesSC,
+        threshold = stats::quantile(x = ScoreValuesSC, quantile.thr), breaks = 100
+      )
+    }
+    cells.remove.SC <- rowSums(mSC_ScoresFiltPass) > 0
+    table(cells.remove.SC)
+    sc.filtered <- CodeAndRoll2::which_names(cells.remove.SC)
+    sc.kept <- CodeAndRoll2::which_names(!cells.remove.SC)
+
+    Seurat.utils::clUMAP(
+      cells.highlight = sc.filtered, label = FALSE,
+      title = "Single-cell filtering is not robust to remove stressed cells",
+      plotname = "Single-cell filtering is not robust to remove stressed cells",
+      suffix = "Stress.Filtering", sizes.highlight = .5, raster = FALSE
+    )
+
+
+    MeanZ.ER.stress <- c(
+      "mean.stressed" = mean(Meta[sc.filtered, scoreX]),
+      "mean.kept" = mean(Meta[sc.kept, scoreX])
+    )
+    qbarplot(MeanZ.ER.stress, ylab = scoreNameX, xlab.angle = 45, xlab = "", col = as.logical(0:1))
+
+    # if (TRUE) {
+    #   obj.Removed.by.SingleCells <- subset(x = obj, cells = sc.filtered) # remove stressed
+    #   Seurat.utils::isave.RDS(obj.Removed.by.SingleCells, inOutDir = TRUE, suffix = "Removed")
+    # }
+  } # if (PlotSingleCellExclusion)
+
+  # Plot excluded cells ____________________________________________________________
+  PASS <- (rowSums(mScoresFiltPass) == 0)
+  granules.excluded <- CodeAndRoll2::which_names(!PASS)
+  Seurat.utils::clUMAP(ident = res, highlight.clusters = granules.excluded, label = FALSE, title = "Stressed cells removed", suffix = "Stress.Filtering", sizes.highlight = .5, raster = FALSE)
+
+  if (GranuleExclusionScatterPlot) {
+    Av.GO.Scores <- dplyr::tibble(
+      "Average ER-stress score" = mScores[, 2],
+      "Average Glycolysis score" = mScores[, 1],
+      "Stressed" = !PASS,
+      "name" = rownames(mScores)
+    )
+
+    if (FALSE) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
+
+    ggExpress::qscatter(Av.GO.Scores,
+                        cols = "Stressed", w = 6, h = 6,
+                        vline = stats::quantile(mScores[, 2], quantile.thr),
+                        hline = stats::quantile(mScores[, 1], quantile.thr),
+                        title = "Groups of Stressed cells have high scores.",
+                        subtitle = "Thresholded at 90th percentile",
+                        label = "name",
+                        repel = TRUE,
+                        label.rectangle = TRUE
+    )
+  }
+
+
+  # Exclude cells & subset ____________________________________________________________
+
+  cells.discard <- which(cells.2.granules %in% granules.excluded)
+  cells.keep <- which(!(cells.2.granules %in% granules.excluded))
+  MarkdownHelpers::llprint(Stringendo::percentage_formatter(length(cells.keep) / length(cells.2.granules)), "cells kept.")
+
+  obj.noStress <- subset(x = obj, cells = cells.keep) # remove stressed
+  if (saveRDS) Seurat.utils::isave.RDS(obj.noStress, inOutDir = TRUE, suffix = "Cleaned")
+  if (saveRDS.Removed) {
+    obj.RemovedCells <- subset(x = obj, cells = cells.discard) # remove stressed
+    Seurat.utils::isave.RDS(obj.RemovedCells, inOutDir = TRUE, suffix = "Removed")
+  }
+  return(obj.noStress)
+}
+
 
 
 
