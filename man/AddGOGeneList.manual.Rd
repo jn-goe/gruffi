@@ -21,7 +21,7 @@ AddGOGeneList.manual(
 \item{genes}{Charcter vector of genes, Default: c("A0A140VKG3", "ARX", "CNTN2", "DRD1", "DRD2", "FEZF2", "LHX6")}
 }
 \description{
-Add a GO-term gene list under obj@misc$GO$xxxx.
+Add a GO-term gene list under obj@misc$gruffi$GO$xxxx.
 }
 \seealso{
 \code{\link[Stringendo]{iprint}}

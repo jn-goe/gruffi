@@ -255,6 +255,7 @@ ReassignSmallClusters <- function(obj = combined.obj,
 
 # _________________________________________________________________________________________________
 #' @title Calculate Median Cluster Size
+#'
 #' @description This function calculates and returns the median size of clusters for a given assay
 #' and resolution in a Seurat object. It provides an option to display the median size via message.
 #'
@@ -315,12 +316,13 @@ CalculateMedianClusterSize <- function(
 #'
 #' @description Fetches genes associated with a specified Gene Ontology (GO) term and optionally
 #' opens the GO term page. The genes are retrieved using either the Ensembl database via biomaRt or
-#'  from precomputed enrichGO results stored in the Seurat object.
-
-#' @param obj A Seurat object potentially containing precomputed enrichGO results. Default: combined.obj
+#'  from precomputed GO_genes results stored in the Seurat object.
+#'
+#' @param obj A Seurat object potentially containing precomputed GO_genes results. Default: combined.obj
 #' @param GO The GO term identifier for which to fetch associated genes. Default: 'GO:0034976'
-#' @param assay Assay to consider when retrieving precomputed enrichGO results.
-#' @param use.ensemble Logical; if TRUE, uses the Ensembl database for gene retrieval.
+#' @param assay Assay to consider when retrieving precomputed GO_genes results.
+#' @param data.base.access Which tool to use to access gene list databases? Options:
+#' biomaRt (deault) or AnnotationDbi.
 #' @param version Ensembl version, useful if wanting to connect to an archived Ensembl version.
 #' @param mirror Ensembl mirror to use, helpful if the default connection fails with
 #' default settings, mirror can be specified. Default: 'NULL'
@@ -329,41 +331,45 @@ CalculateMedianClusterSize <- function(
 #' @param genes.shown Number of genes shown, Default: 10
 #'
 #' @return The input Seurat object with the retrieved genes associated with the
-#' specified GO term stored in `obj@misc$GO`.
+#' specified GO term stored in `obj@misc$gruffi$GO`.
 #'
 #' @seealso
 #'  \code{\link[biomaRt]{useEnsembl}}, \code{\link[biomaRt]{getBM}}
 #'  \code{\link[AnnotationDbi]{AnnotationDb-objects}}
 #'  \code{\link[org.Hs.eg.db]{org.Hs.eg.db}}
-#'  \code{\link[Stringendo]{iprint}}
+#'  \code{\link[Stringendo]{kollapse}}
 #' @export
 #' @importFrom biomaRt useEnsembl getBM
 #' @importFrom AnnotationDbi select
 #' @importFrom org.Hs.eg.db org.Hs.eg.db
-#' @importFrom Stringendo iprint
+#' @importFrom Stringendo kollapse
+#' @importFrom DOSE geneInCategory
 
 GetGOTerms <- function(obj = combined.obj,
                        GO = "GO:0034976",
                        assay = "RNA",
-                       use.ensemble = TRUE,
+                       data.base.access = c("biomaRt", "AnnotationDbi")[1],
                        version = NULL,
                        GRCh = NULL,
                        genes.shown = 10,
                        web.open = FALSE,
+                       overwrite.misc.GO_genes = FALSE,
                        mirror = NULL) {
 
   message("Running GetGOTerms()")
-  enrichGO_slot <- obj@misc$"enrichGO"[[assay]]
 
+  GO.gene.symbol.slot <- obj@misc$gruffi$GO[[make.names(GO)]]
+  # GO.gene.symbol.slot <- obj@misc$gruffi$"GO_genes"[[assay]]
 
-  if (is.null(enrichGO_slot)) {
-    message("No pre-existing enrichGO results found in obj@misc$enrichGO[[assay]].")
+  if(overwrite.misc.GO_genes) GO.gene.symbol.slot <- NULL # so it will be recomputed and overwritten
 
-    if (use.ensemble) { # If using Ensembl database, use biomaRt
+  if (is.null(GO.gene.symbol.slot)) {
+    message("No pre-existing GO_genes results found in obj@misc$gruffi$GO[[make.names(GO)]].")
+
+    if (data.base.access == "biomaRt") { # If using biomaRt to access Ensembl database
 
       # Check if Ensembl mart object already exists, if not, create one
-      if (!exists("ensembl")) {
-        message("Running biomaRt::useEnsembl()")
+      if (!exists("ensembl")) { message("Running biomaRt::useEnsembl()")
         ensembl <<- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl", version = version, GRCh = GRCh, mirror = mirror)
       }
 
@@ -373,29 +379,30 @@ GetGOTerms <- function(obj = combined.obj,
         filters = "go_parent_term", uniqueRows = TRUE,
         values = GO, mart = ensembl
       )[, 1]
-      message(length(genes), " gene symbols downloaded via biomaRt::getBM(): ", head(genes, n = genes.shown))
+      message("Gene symbols downloaded from ensembl via biomaRt::getBM()")
 
-    } else { # If not using Ensembl database, use AnnotationDbi
-      message("Running AnnotationDbi::select()")
-      genes <- unique(AnnotationDbi::select(org.Hs.eg.db::org.Hs.eg.db, GO, c("SYMBOL"), "GOALL")$SYMBOL)
-      message(length(genes), " gene symbols downloaded from AnnotationDbi / org.Hs.eg.db: ", head(genes, n = genes.shown))
+    } else if (data.base.access == "AnnotationDbi") { message("Running AnnotationDbi::select()")
+      genes <- unique(AnnotationDbi::select(x = org.Hs.eg.db::org.Hs.eg.db, keys = GO, columns = c("SYMBOL"), keytype = "GOALL")$SYMBOL)
+      message("Gene symbols downloaded from AnnotationDbi / org.Hs.eg.db")
+
+    } else {
+      stop("Choose either AnnotationDbi or biomaRt for gene list retrieval.")
     }
 
   } else {
-    message("Pre-existing enrichGO results found in obj@misc$enrichGO[[assay]].")
-    genes <- unlist(DOSE::geneInCategory(enrichGO_slot)[GO])
-    message(length(genes), " gene symbols from enrichGO[[assay]]: ", head(genes, n = genes.shown))
+    message("Pre-existing GO_genes results found in obj@misc$gruffi$GO[[make.names(GO)]].")
+    genes <- unlist(DOSE::geneInCategory(GO.gene.symbol.slot)[GO])
+    message("Gene symbols taken from GO_genes.")
   }
-
-  message(length(genes), " gene symbols downloaded: ", head(genes, n = genes.shown))
+  message("\n", length(genes), " gene symbols used: ", kollapse(head(genes, n = genes.shown)))
 
   # Intersect the downloaded genes with those expressed in the Seurat object
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
   # Save the result in the Seurat object for later access
-  if (is.null(obj@misc$GO)) obj@misc$GO <- list()
-  obj@misc$GO[[make.names(GO)]] <- genes
-  message("Genes in ", GO, " are saved under obj@misc$GO$", make.names(GO))
+  if (is.null(obj@misc$gruffi$"GO")) obj@misc$gruffi$GO <- list()
+  obj@misc$gruffi$GO[[make.names(GO)]] <- genes
+  message("Genes in ", GO, " are saved under obj@misc$gruffi$GO$", make.names(GO))
 
   # Open the GO term web page if requ
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
@@ -413,7 +420,7 @@ GetGOTerms <- function(obj = combined.obj,
 #' @param obj A Seurat object containing metadata with GO term score columns, default: `combined.obj`.
 #' @param return.obj Logical indicating whether to return the modified Seurat object.
 #'
-#' @return A modified Seurat object with GO terms annotated in `misc$GO.Lookup` or
+#' @return A modified Seurat object with GO terms annotated in `misc$gruffi$GO.Lookup` or
 #' a vector of GO term names.
 #' @seealso
 #'  \code{\link[CodeAndRoll2]{grepv}}
@@ -436,8 +443,8 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
   GO.names <- AnnotationDbi::Term(object = .convert.score.2.GO_term(GOx))
 
   if (return.obj) {
-    obj@misc$"GO.Lookup" <- GO.names
-    print("GO IDs present in @meta.data are now saved in misc$GO.Lookup")
+    obj@misc$gruffi$"GO.Lookup" <- GO.names
+    print("GO IDs present in @meta.data are now saved in misc$gruffi$GO.Lookup")
     cat(head(GO.names), "...")
     return(obj)
   } else {
@@ -451,8 +458,80 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
 # 3. Calculate GO Scores ---------------------------------------------------------------------------
 
 
+#' @title Assign granule average scores from Gene Ontology (GO) terms.
+#'
+#' @description  Calculates and assigns granule average scores from Gene Ontology (GO) term in a
+#' Seurat object. It can compute new GO term scores, plot gene expressions, and save UMAP visualizations.
+#' The function updates the Seurat object with cluster average scores for the specified GO term.
+#'
+#' @param obj Seurat single cell object, Default: combined.obj
+#' @param GO_term The GO term identifier for evaluation, default: 'GO:0034976'.
+#' @param new_GO_term_computation Calculate new GO-term score? (or use am existing one?) Default: FALSE
+#' @param clustering The clustering identity to use for evaluation, default: `GetGruffiClusteringName(obj)`.
+#' @param save.UMAP Logical indicating whether to save UMAP plots, default: `FALSE`.
+#' @param plot.each.gene Logical indicating whether to plot each gene's expression on UMAP, default: `FALSE`.
+#' @param assay The assay type to use, default: 'RNA'.
+#' @param description Description to added to plot title, e.g. GO-terms name, Default: 'NULL'
+#' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl
+#' fails with default settings, mirror can be specified. Default: 'NULL'
+#' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
+#' @param clustering Which clustering to use (from metadata)? Default: GetGruffiClusteringName(obj)
+#' e.g. "integrated_snn_res.48.reassigned"
+#' @param ... Additional parameters to be passed to the PlotGoTermScores function.
+#' @export
+#' @importFrom Seurat Idents RenameIdents
+#' @importFrom Stringendo iprint
+
+AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
+                                                 GO_term = "GO:0034976",
+                                                 new_GO_term_computation = FALSE,
+                                                 clustering = GetGruffiClusteringName(obj),
+                                                 save.UMAP = FALSE,
+                                                 plot.each.gene = FALSE,
+                                                 assay = "RNA",
+                                                 description = NULL,
+                                                 mirror = NULL,
+                                                 stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
+                                                 ...) {
+
+  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
+
+  # If new GO term score computation is requested
+  if (new_GO_term_computation) {
+    obj <- PlotGoTermScores(
+      GO = GO_term, save.UMAP = save.UMAP, obj = obj,
+      desc = description, plot.each.gene = plot.each.gene, mirror = mirror, ...
+    )
+  }
+  message("Calculating granule average scores")
+
+  cl.av <- CalcClusterAverages_Gruffi(
+    obj = obj,
+    stat = stat.av,
+    col_name = .convert.GO_term.2.score(GO_term),
+    split_by = clustering
+  )
+
+  # Remove 'cl.' prefix from cluster average score names
+  names(cl.av) <- gsub("cl.", "", names(cl.av))
+  obj <- Seurat::RenameIdents(obj, cl.av)
+
+  # Store cluster average scores in the metadata under a new column
+  mScoreColName <- paste0(clustering, "_cl.av_", GO_term)
+  obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
+
+  # Reset the active identities to the original clustering
+  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
+  message("New meta.data with granule average scores: ", mScoreColName)
+
+  return(obj)
+}
+
+
+# _____________________________________________________________________________________________
 #' @title AddGOGeneList.manual
-#' @description Add a GO-term gene list under obj@misc$GO$xxxx.
+#'
+#' @description Add a GO-term gene list under obj@misc$gruffi$GO$xxxx.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param GO GO-term; Default: 'GO:0034976'
 #' @param web.open Open weblink, Default: FALSE
@@ -467,9 +546,9 @@ AddGOGeneList.manual <- function(obj = combined.obj, GO = "GO:0034976", web.open
   print(head(genes, n = 15))
   genes <- IntersectWithExpressed(obj = obj, genes = genes)
 
-  if (is.null(obj@misc$GO)) obj@misc$GO <- list()
-  obj@misc$GO[[make.names(GO)]] <- genes
-  Stringendo::iprint("Genes in", GO, "are saved under obj@misc$GO$", make.names(GO))
+  if (is.null(obj@misc$gruffi$GO)) obj@misc$gruffi$GO <- list()
+  obj@misc$gruffi$GO[[make.names(GO)]] <- genes
+  Stringendo::iprint("Genes in", GO, "are saved under obj@misc$gruffi$GO$", make.names(GO))
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
   return(obj)
 }
@@ -491,9 +570,9 @@ AddGOGeneList.manual <- function(obj = combined.obj, GO = "GO:0034976", web.open
 AddGOScore <- function(obj = combined.obj, GO = "GO:0034976", FixName = TRUE) {
   print("AddGOScore()")
   GO.wDot <- make.names(GO)
-  (genes.GO <- list(obj@misc$GO[[GO.wDot]]))
+  (genes.GO <- list(obj@misc$gruffi$GO[[GO.wDot]]))
   # print(genes.GO)
-  (ScoreName <- paste0("Score.", make.names(GO)))
+  ScoreName <- paste0("Score.", make.names(GO))
   if (!is.list(genes.GO)) genes.GO <- list(genes.GO) # idk why this structure is not consistent...
   obj <- Seurat::AddModuleScore(object = obj, features = genes.GO, name = ScoreName)
 
@@ -531,64 +610,6 @@ AddCustomScore <- function(obj = combined.obj, genes = "", assay.use = "RNA", Fi
 
 
 # _________________________________________________________________________________________________
-#' @title GOscoreEvaluation
-#'
-#' @description GO-score evaluation for filtering.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param GO_term GO-term; Default: 'GO:0034976'
-#' @param new_GO_term_computation Calculate new GO-term score? (or use exisitng one?) Default: FALSE
-#' @param save.UMAP Save umap into a file. Default: FALSE
-#' @param plot.each.gene Plot each gene's expression, Default: FALSE
-#' @param assay Which assay to use?, Default: 'RNA'
-#' @param description Description to added to plot title, e.g. GO-terms name, Default: 'NULL'
-#' @param mirror Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl fails with default settings, mirror can be specified. Default: 'NULL'
-#' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
-#' @param clustering Which clustering to use (from metadata)? Default: GetGruffiClusteringName(obj)
-#' e.g. "integrated_snn_res.48.reassigned"
-#' @param ... Additional parameters to be passed to the function.
-#' @seealso
-#'  \code{\link[Seurat]{reexports}}
-#'  \code{\link[Stringendo]{iprint}}
-#' @export
-#' @importFrom Seurat Idents RenameIdents
-#' @importFrom Stringendo iprint
-
-GOscoreEvaluation <- function(obj = combined.obj,
-                              GO_term = "GO:0034976",
-                              new_GO_term_computation = FALSE,
-                              clustering = GetGruffiClusteringName(obj),
-                              save.UMAP = FALSE,
-                              plot.each.gene = FALSE,
-                              assay = "RNA",
-                              description = NULL,
-                              mirror = NULL,
-                              stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
-                              ...) {
-  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
-  all.genes <- rownames(obj@assays[[assay]])
-
-  if (new_GO_term_computation) {
-    obj <- PlotGoTermScores(
-      GO = GO_term, save.UMAP = save.UMAP, obj = obj,
-      desc = description, plot.each.gene = plot.each.gene, mirror = mirror, ...
-    )
-  }
-
-  print("Calculating cl. average score")
-  cl.av <- CalcClusterAverages_Gruffi(
-    obj = obj,
-    stat = stat.av,
-    col_name = .convert.GO_term.2.score(GO_term),
-    split_by = clustering
-  )
-  names(cl.av) <- gsub("cl.", "", names(cl.av))
-  obj <- Seurat::RenameIdents(obj, cl.av)
-  mScoreColName <- paste0(clustering, "_cl.av_", GO_term)
-  obj@meta.data[mScoreColName] <- Seurat::Idents(obj)
-  Seurat::Idents(obj) <- obj@meta.data[[clustering]]
-  print(mScoreColName)
-  return(obj)
-}
 
 
 
@@ -904,7 +925,6 @@ Auto.GO.thresh <- function(
 #' @importFrom MarkdownHelpers filter_HP llprint
 #' @importFrom Seurat.utils clUMAP calc.cluster.averages isave.RDS
 #' @importFrom Stringendo iprint percentage_formatter
-
 FilterStressedCells <- function(
     obj = combined.obj,
     res = "integrated_snn_res.30",
@@ -1056,9 +1076,12 @@ FilterStressedCells <- function(
 # _________________________________________________________________________________________________
 #' @title PlotGoTermScores
 #'
-#' @description Plot GO-term scores.
+#' @description Automates retrieving, processing and plotting GO term based gene scores.
 #' @param obj Seurat single cell object, Default: combined.obj
-#' @param use.ensemble Use ensemble to obtain scores? Default: TRUE
+#' @param data.base.access Which tool to use to access gene list databases? Options:
+#' biomaRt (deault) or AnnotationDbi.
+#' @param mirror Ensembl mirror to use, helpful if the default connection fails with
+#' default settings, mirror can be specified. Default: 'NULL'
 #' @param desc GO-score description on the plot, Default: ""
 #' @param only.draw.plot Only show GO term score umap plot, Default: FALSE
 #' @param openBrowser Open website for GO term? Default: FALSE
@@ -1072,20 +1095,22 @@ FilterStressedCells <- function(
 #'  \code{\link[Stringendo]{iprint}}
 #' @export
 #' @importFrom Seurat DefaultAssay
-#' @importFrom Stringendo iprint
+#' @importFrom Stringendo iprint ppp
 #' @importFrom Seurat.utils clUMAP multiFeaturePlot.A4
-#' @importFrom Stringendo ppp
+
 PlotGoTermScores <- function(
     obj = combined.obj,
-    use.ensemble = TRUE,
-    only.draw.plot = FALSE # Automate retrieving, processing and plotting GO term based gene scores.
-    , openBrowser = FALSE,
+    data.base.access = c("biomaRt", "AnnotationDbi")[1],
+    mirror = NULL,
+    only.draw.plot = FALSE,
+    openBrowser = FALSE,
     plot.each.gene = FALSE,
     desc = "",
     save.UMAP = TRUE,
     verbose = TRUE,
     GO = "GO:0009651",
     ...) {
+
   backup.assay <- Seurat::DefaultAssay(obj)
 
   if (grepl(x = GO, pattern = "^GO:", perl = TRUE)) {
@@ -1098,28 +1123,30 @@ PlotGoTermScores <- function(
     GO.wDot <- make.names(GO)
     ScoreName <- paste0("Score.", GO.wDot)
     print(ScoreName)
+
   } else {
-    iprint("Assuming you provided direclty a score name in the 'GO' parameter ", ScoreName)
+    message("Assuming you provided direclty a score name in the 'GO' parameter ", ScoreName)
     ScoreName <- GO
   }
 
 
   if (Seurat::DefaultAssay(obj) != "RNA") {
-    print("For GO score computation assay is set to RNA. It will be reset to Seurat::DefaultAssay() afterwards.")
+    message("For GO score computation assay is set to RNA. It will be reset to Seurat::DefaultAssay() afterwards.")
     Seurat::DefaultAssay(obj) <- "RNA"
   }
+
   if (ScoreName %in% colnames(obj@meta.data)) {
-    print("GENE SCORE FOUND IN @meta.data")
+    message("GENE SCORE FOUND IN @meta.data")
   } else {
-    Stringendo::iprint(ScoreName, "not found. Need to call GetGOTerms(). set only.draw.plot = FALSE.")
+    message(ScoreName, " not found. Need to call GetGOTerms(). set only.draw.plot = FALSE.")
   }
 
   if (!only.draw.plot) {
-    print("GENE SCORE WILL NOW BE SET / OVERWRITTEN")
+    message("\nGENE SCORE WILL NOW BE SET / OVERWRITTEN")
     obj@meta.data[, ScoreName] <- NULL
 
-    obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, use.ensemble = use.ensemble)
-    GO.genes <- obj@misc$GO[[GO.wDot]]
+    obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, data.base.access = data.base.access, mirror = mirror)
+    GO.genes <- obj@misc$gruffi$GO[[GO.wDot]]
     if (verbose) print(head(GO.genes))
     obj <- AddGOScore(obj = obj, GO = GO)
   }
@@ -1127,6 +1154,7 @@ PlotGoTermScores <- function(
   plot <- FeaturePlotSaveGO(obj = obj, GO.score = ScoreName, save.plot = save.UMAP, name_desc = desc, ...)
   if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, "UMAPs"))
   Seurat::DefaultAssay(obj) <- backup.assay
+
   if (only.draw.plot) {
     return(plot)
   } else {
@@ -1199,7 +1227,7 @@ FeaturePlotSaveGO <- function(
     h = 7, PNG = TRUE, ...) {
 
   proper.GO <- paste(stringr::str_split_fixed(string = GO.score, pattern = "\\.", n = 3)[2:3], collapse = ":")
-  (genes.GO <- obj@misc$GO[[make.names(proper.GO)]])
+  (genes.GO <- obj@misc$gruffi$GO[[make.names(proper.GO)]])
 
   ggplot.obj <-
     Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95", reduction = "umap", ...) +
@@ -1292,6 +1320,7 @@ PlotNormAndSkew <- function(x, q,
   }
   return(thresh)
 }
+
 
 
 
@@ -1513,7 +1542,8 @@ ClusterUMAPthresholding <- function(
 
 # _________________________________________________________________________________________________
 #' @title CalcTranscriptomePercentageGO
-#' @description Calculate the percentage of transcriptome, for a given GO-term gene set already stored`in obj@misc$GO[[GO.score]].
+#' @description Calculate the percentage of transcriptome, for a given GO-term gene set
+#' already stored`in obj@misc$gruffi$GO[[GO.score]].
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param GO.score GO Term. String of form "GO:xxxxxxx", Default: 'GO.0061621'
 #' @seealso
@@ -1525,7 +1555,7 @@ ClusterUMAPthresholding <- function(
 
 CalcTranscriptomePercentageGO <- function(obj = combined.obj, GO.score = "GO.0061621") {
   total_expr <- Matrix::colSums(Seurat::GetAssayData(object = obj))
-  Matrix::colSums(obj[obj@misc$GO[[GO.score]], ]) / total_expr
+  Matrix::colSums(obj[obj@misc$gruffi$GO[[GO.score]], ]) / total_expr
 }
 
 
@@ -1881,7 +1911,6 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 }
 
 
-
 # _________________________________________________________________________________________________
 #' @title Parse GO Term from Granule-score Name
 #'
@@ -1899,14 +1928,6 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
   strsplit(x = ident, split = pattern, ...)[[1]][2]
 }
 
-
-
-# ww.get.gr.res <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
-#                                 pattern = "_cl\\.av_", ...) {
-#   strsplit(x = ident, split = pattern, ...)[[1]][1]
-# }
-
-
 # _____________________________________________________________________________________________ ----
 # 8. Deprecated  ---------------------------------------------------------------------------
 
@@ -1914,116 +1935,17 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 
 
 aut.res.clustering <- function() .Deprecated("gruffi::AutoFindGranuleResolution()")
+reassign.small.clusters <- function() .Deprecated("gruffi::ReassignSmallClusters()")
+GOscoreEvaluation <- function() .Deprecated("gruffi::AssignGranuleAverageScoresFromGOterm()")
+GO_score_evaluation <- function() .Deprecated("gruffi::AssignGranuleAverageScoresFromGOterm()")
+
 stand_dev_skewed <- function() .Deprecated("gruffi::CalcStandDevSkewedDistr()")
 GetAllGOTerms <- function() .Deprecated("gruffi::GetAllGOTerms()")
-GO_score_evaluation <- function() .Deprecated("gruffi::GOscoreEvaluation()")
 
 calc.cluster.averages.gruff <- function() .Deprecated("gruffi::CalcClusterAverages_Gruffi()")
-reassign.small.clusters <- function() .Deprecated("gruffi::ReassignSmallClusters()")
 ww.convert.GO_term.2.score.Rd <- function() .Deprecated("gruffi:::.convert.GO_term.2.score.Rd()")
 ww.convert.score.2.GO_term.Rd <- function() .Deprecated("gruffi:::.convert.score.2.GO_term.Rd()")
 fix.metad.colname.rm.trailing.1 <- function() .Deprecated("gruffi:::.fix.metad.colname.rm.trailing.1()")
 plot.clust.size.distr <- function() .Deprecated("gruffi::PlotClustSizeDistr()")
 plot_norm_and_skew <- function() .Deprecated("gruffi::PlotNormAndSkew()")
-
-
-
-# _________________________________________________________________________________________________
-# #' @title GetNamedClusteringRuns
-# #' @description Get annotated clustering resolutions present in a Seurat single cell object.
-# #' @param obj Seurat single cell object, Default: combined.obj
-# #' @param res Clustering resolution, Default: c(FALSE, 0.5)[1]
-# #' @param topgene Look for clustering run, where clusters are named by top gene. See github/vertesy/Seurat.pipeline, Default: FALSE
-# #' @param pat Search pattern to match in the name of the clustering run. Default: '^cl.names.Known.*[0,1]\.[0-9]$'
-# #' @seealso
-# #'  \code{\link[CodeAndRoll2]{grepv}}
-# #' @export
-# #' @importFrom CodeAndRoll2 grepv
-
-# GetNamedClusteringRuns <- function(
-    #     obj = combined.obj # Get Clustering Runs: metadata column names
-#     , res = c(FALSE, 0.5)[1],
-#     topgene = FALSE,
-#     pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
-#   if (res) pat <- gsub(x = pat, pattern = "\\[.*\\]", replacement = res)
-#   if (topgene) pat <- gsub(x = pat, pattern = "Known", replacement = "top")
-#   clustering.results <- CodeAndRoll2::grepv(x = colnames(obj@meta.data), pattern = pat)
-#   if (identical(clustering.results, character(0))) {
-#     print("Warning: NO matching column found! Trying Seurat.utils::GetClusteringRuns(..., pat = '*_res.*[0,1]\\.[0-9]$)")
-#     clustering.results <- Seurat.utils::GetClusteringRuns(obj = obj, res = FALSE, pat = "*_res.*[0,1]\\.[0-9]$")
-#   }
-#   return(clustering.results)
-# }
-
-
-
-# # _________________________________________________________________________________________________
-# #' @title saveData
-# #' @description Save data as RDS.
-# #' @param new.thresh.glycolytic Threshold value for glycolysis
-# #' @param new.thresh.ER.stress Threshold value for ER.stress
-# #' @param save.dir Directory to save to, Default: OutDir
-# #' @export
-
-# saveData <- function(new.thresh.glycolytic, new.thresh.ER.stress, save.dir = OutDir) {
-#   thresholds <- list("glycolytic" = new.thresh.glycolytic, "ER.stress" = new.thresh.ER.stress)
-#   saveRDS(thresholds, file = paste0(OutDir, "GO.thresholds.RDS"))
-# }
-
-
-# # _________________________________________________________________________________________________
-# #' @title saveRDS.compress.in.BG
-# #' @description Save data as RDS and compress file in the background.
-# #' @param obj Seurat single cell object
-# #' @param compr Compress saved object? Default: FALSE
-# #' @param fname Filename, if manually specified.
-# #' @seealso
-# #'  \code{\link[tictoc]{tic}}
-# #' @export
-# #' @importFrom tictoc tic toc
-
-# saveRDS.compress.in.BG <- function(obj, compr = FALSE, fname) {
-#   try(tictoc::tic(), silent = TRUE)
-#   saveRDS(object = obj, compress = compr, file = fname)
-#   try(tictoc::toc(), silent = TRUE)
-#   print(paste("Saved, being compressed", fname))
-#   system(paste("gzip", fname), wait = FALSE) # execute in the background
-#   try(say(), silent = TRUE)
-# }
-
-
-# # _________________________________________________________________________________________________
-# #' @title sparse.cor
-# #' @description Sparse correlation
-# #' @param smat Sparse matrix
-# #' @seealso
-# #'  \code{\link[Matrix]{character(0)}}
-# #' @export
-# #' @importFrom Matrix colMeans
-
-# sparse.cor <- function(smat) {
-#   n <- nrow(smat)
-#   cMeans <- Matrix::colMeans(smat)
-#   covmat <- (as.matrix(crossprod(smat)) - n * tcrossprod(cMeans)) / (n - 1)
-#   sdvec <- sqrt(diag(covmat))
-#   cormat <- covmat / tcrossprod(sdvec)
-#   list(cov = covmat, cor = cormat)
-# }
-
-
-# # _________________________________________________________________________________________________
-# #' @title PasteUniqueGeneList
-# #' @description Paste unique gene list
-# #' @seealso
-# #'  \code{\link[clipr]{read_clip}}
-# #' @export
-# #' @importFrom clipr read_clip
-
-# PasteUniqueGeneList <- function() {
-#   dput(sort(unique(clipr::read_clip())))
-# }
-
-# # _________________________________________________________________________________________________
-
-
 

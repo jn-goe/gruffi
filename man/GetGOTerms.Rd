@@ -8,22 +8,24 @@ GetGOTerms(
   obj = combined.obj,
   GO = "GO:0034976",
   assay = "RNA",
-  use.ensemble = TRUE,
+  data.base.access = c("biomaRt", "AnnotationDbi")[1],
   version = NULL,
   GRCh = NULL,
   genes.shown = 10,
   web.open = FALSE,
+  overwrite.misc.GO_genes = FALSE,
   mirror = NULL
 )
 }
 \arguments{
-\item{obj}{A Seurat object potentially containing precomputed enrichGO results. Default: combined.obj}
+\item{obj}{A Seurat object potentially containing precomputed GO_genes results. Default: combined.obj}
 
 \item{GO}{The GO term identifier for which to fetch associated genes. Default: 'GO:0034976'}
 
-\item{assay}{Assay to consider when retrieving precomputed enrichGO results.}
+\item{assay}{Assay to consider when retrieving precomputed GO_genes results.}
 
-\item{use.ensemble}{Logical; if TRUE, uses the Ensembl database for gene retrieval.}
+\item{data.base.access}{Which tool to use to access gene list databases? Options:
+biomaRt (deault) or AnnotationDbi.}
 
 \item{version}{Ensembl version, useful if wanting to connect to an archived Ensembl version.}
 
@@ -38,16 +40,16 @@ default settings, mirror can be specified. Default: 'NULL'}
 }
 \value{
 The input Seurat object with the retrieved genes associated with the
-specified GO term stored in \code{obj@misc$GO}.
+specified GO term stored in \code{obj@misc$gruffi$GO}.
 }
 \description{
 Fetches genes associated with a specified Gene Ontology (GO) term and optionally
 opens the GO term page. The genes are retrieved using either the Ensembl database via biomaRt or
-from precomputed enrichGO results stored in the Seurat object.
+from precomputed GO_genes results stored in the Seurat object.
 }
 \seealso{
 \code{\link[biomaRt]{useEnsembl}}, \code{\link[biomaRt]{getBM}}
 \code{\link[AnnotationDbi]{AnnotationDb-objects}}
 \code{\link[org.Hs.eg.db]{org.Hs.eg.db}}
-\code{\link[Stringendo]{iprint}}
+\code{\link[Stringendo]{kollapse}}
 }

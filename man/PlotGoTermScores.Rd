@@ -6,7 +6,8 @@
 \usage{
 PlotGoTermScores(
   obj = combined.obj,
-  use.ensemble = TRUE,
+  data.base.access = c("biomaRt", "AnnotationDbi")[1],
+  mirror = NULL,
   only.draw.plot = FALSE,
   openBrowser = FALSE,
   plot.each.gene = FALSE,
@@ -20,7 +21,11 @@ PlotGoTermScores(
 \arguments{
 \item{obj}{Seurat single cell object, Default: combined.obj}
 
-\item{use.ensemble}{Use ensemble to obtain scores? Default: TRUE}
+\item{data.base.access}{Which tool to use to access gene list databases? Options:
+biomaRt (deault) or AnnotationDbi.}
+
+\item{mirror}{Ensembl mirror to use, helpful if the default connection fails with
+default settings, mirror can be specified. Default: 'NULL'}
 
 \item{only.draw.plot}{Only show GO term score umap plot, Default: FALSE}
 
@@ -39,7 +44,7 @@ PlotGoTermScores(
 \item{...}{Pass any other parameter to the internally called functions (most of them should work).}
 }
 \description{
-Plot GO-term scores.
+Automates retrieving, processing and plotting GO term based gene scores.
 }
 \seealso{
 \code{\link[Seurat]{reexports}}
