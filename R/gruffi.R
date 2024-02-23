@@ -1835,10 +1835,11 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 #'
 #' @return GO Term as string, e.g. "GO:0006096"
 #' @examples
-#' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
-.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
+#' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO.0006096")
+.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO.0006096",
                       pattern = "_cl\\.av_", ...) {
-  strsplit(x = ident, split = pattern, ...)[[1]][2]
+  dot_sep_term <- strsplit(x = ident, split = pattern, ...)[[1]][2]
+  gsub(x = dot_sep_term, pattern = "GO.", replacement = "GO:")
 }
 
 # _____________________________________________________________________________________________ ----
