@@ -1,7 +1,7 @@
 # Configuration for the Package
 DESCRIPTION <- list(
   package.name = "gruffi"
-  , version = "1.2.6"
+  , version = "1.2.7"
   , title = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets."
   , "Author" = c(
     person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),
@@ -14,10 +14,11 @@ DESCRIPTION <- list(
   , "License" = "GPL-3 + file LICENSE"
   , "Packaged" =  Sys.time()
   , "Depends" =  "Seurat, magrittr, Stringendo (>= 0.5.0), MarkdownReports"
-  , "Imports" = "cowplot, dplyr, ggplot2, raster, DOSE
-                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr, sm, AnnotationDbi
-                    , IRanges, Matrix, biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
-  # , "Suggests" = ""
+  , "Imports" = "cowplot, dplyr, ggplot2, DOSE
+                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr, AnnotationDbi
+                    , IRanges, Matrix, biomaRt, clipr, org.Hs.eg.db, rlang, shiny, tictoc, viridis"
+  , "Suggests" = "raster, viridis, rgl, htmlwidgets, sm"
   , "BugReports"= "https://github.com/jn-goe/gruffi/issues/"
 )
+
 

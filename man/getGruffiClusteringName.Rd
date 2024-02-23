@@ -4,7 +4,11 @@
 \alias{GetGruffiClusteringName}
 \title{Retrieve First Clustering Run or First Matching Pattern Run}
 \usage{
-GetGruffiClusteringName(obj, pattern = ".reassigned")
+GetGruffiClusteringName(
+  obj,
+  pattern = ".reassigned",
+  granule.res.slot = "optimal.granule.res"
+)
 }
 \arguments{
 \item{obj}{A Seurat object with clustering results in meta.data.}

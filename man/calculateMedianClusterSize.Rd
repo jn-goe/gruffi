@@ -6,10 +6,11 @@
 \usage{
 CalculateMedianClusterSize(
   obj,
-  assay,
-  res,
-  q = 0.5,
+  assay = NULL,
+  res = NULL,
   suffix = "_snn_res.",
+  columnName = NULL,
+  q = 0.5,
   verbose = TRUE
 )
 }
@@ -20,9 +21,11 @@ CalculateMedianClusterSize(
 
 \item{res}{The resolution level for which to calculate the median cluster size.}
 
-\item{q}{quantile. Default: 0.5, i.e: the median.}
-
 \item{suffix}{String suffix for clustering name}
+
+\item{columnName}{Directly provide a meta.data column name instead of parsing it.}
+
+\item{q}{quantile. Default: 0.5, i.e: the median.}
 
 \item{verbose}{Logical; if TRUE, prints the median cluster size to the console. Defaults to TRUE.}
 }
