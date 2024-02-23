@@ -66,7 +66,7 @@ $`package:gruffi`
  [1] "AddGOScore"                         "CalcClusterAverages_Gruffi"      
  [3] "CalculateMedianClusterSize"         "FeaturePlotSaveGO"                 
  [5] "GetGOTerms"                         "IntersectWithExpressed"            
- [7] "PlotGoTermScores"                   "PlotNormAndSkew"                   
+ [7] "CalculateAndPlotGoTermScores"                   "PlotNormAndSkew"                   
  [9] "CalcStandDevSkewedDistr"                   ".convert.GO_term.2.score"        
 [11] ".convert.score.2.GO_term"         ".fix.metad.colname.rm.trailing.1"
 

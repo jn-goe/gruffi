@@ -25,8 +25,10 @@
 #' Defaults to: `round(ncol(obj)/1000)`.
 #' @param assay Specifies the assay to use for clustering. Default is 'integrated, with
 #' "RNA" as an alternative taken from on `Seurat::DefaultAssay(obj)`.
-#' @param max.loop Maximum number of iterations for adjusting clustering resolution. Default is 20.
+#' @param max.iter Maximum number of iterations for adjusting clustering resolution. Default is 20.
 # #' @param n.threads Number of threads to use for parallel computation. Default is 1.
+#' @param clust.method  A Seurat method for running leiden (defaults to matrix which is fast for
+#' small datasets). Enable method = "igraph" to avoid casting large data to a dense matrix.
 #'
 #' @return A Seurat object with updated clustering at the optimal resolution found, including
 #' modifications to `obj@meta.data` and `Idents(obj)` to reflect the new clustering.
@@ -47,7 +49,8 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
                                       min.res = round(ncol(obj) / 1e4),
                                       max.res = round(ncol(obj) / 1e3),
                                       assay = c("integrated", "RNA")[1], # Seurat::DefaultAssay(obj),
-                                      max.loop = 20,
+                                      max.iter = 20,
+                                      clust.method =  NULL, # "matrix" or "igraph"
                                       n.threads = 1) {
   message(
     ncol(combined.obj), " cells in object. Searching for optimal resolution between res: ",
@@ -63,68 +66,87 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     assay <- assays.present[1]
   }
 
-  r.current <- min.res
-  r.lower <- min.res
+  r.current <- r.lower <- min.res
   r.upper <- max.res
 
+  # Setup for parallel computation if more than one thread is requested
   if (n.threads > 1) {
-    warning("Using multicore for parallel computation is not debgugged.", immediate. = TRUE)
-    z <- require(future)
-    stopifnot("future package needed for multicore" = z)
+    warning("Using multicore for parallel computation is not fully debgugged.", immediate. = TRUE)
+    message("Seurat FindClusters only uses it, if clustering over multiple resolutions.")
+    message("future::plan(multisession) may OOM fail unless you clean up your working memory.")
+    stopifnot("future package needed for multicore" = require(future))
+
     future::plan("multisession", workers = n.threads)
     message("Threads: ", future::nbrOfWorkers())
   }
 
-  message("\nClustering at res.: ", r.current)
-  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE); tictoc::toc()
-  m <- CalculateMedianClusterSize(obj, assay, res = r.current)
+  # Start clustering at the initial resolutions
+  res_init <- unique(c(min.res, max.res))
+  message("\nClustering at res.: ", paste(res_init, collapse = ","))
+  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = res_init, method = clust.method, verbose = FALSE); tictoc::toc()
+
+
+  # Calculate median cluster sizes at initial resolutions
+  m <- CalculateMedianClusterSize(obj, assay, res = min.res)
   stopifnot("Define a lower `min.res` or decrease `min.med.granule.size` if necessary. Granule size too small" = m > min.med.granule.size)
 
-
-  message("\nClustering at res.: ", r.upper)
-  tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.upper, verbose = FALSE); tictoc::toc()
-  m.up <- CalculateMedianClusterSize(obj, assay, res = r.upper)
+  m.up <- CalculateMedianClusterSize(obj, assay, res = max.res)
   stopifnot("Define a higher `max.res`. Granule size too big" = m.up < max.med.granule.size)
 
 
-
+  # Iteratively adjust the resolution to find the optimal cluster granularity
   loop.count <- 1
   while (m > max.med.granule.size | m < min.med.granule.size) {
     # message("Current clustering resolution: ", r.current)
     # message("Current median cluster size: ", m)
 
+    # Clean-up metadata for previous work-in-progress resolution
     obj@meta.data[[paste0(assay, "_snn_res.", r.current)]] <- NULL
 
+    # If the current median cluster size is larger than the maximum acceptable size, replace r.lower.
+    # Calculate the new current resolution as the mean of the current and the upper limiting resolutions.
     if (m > max.med.granule.size) {
       r.lower <- r.current
-      r.current <- round((max.res - r.current) / 2 + r.current)
+      # r.current <- round((max.res - r.current) / 2 + r.current)
+      r.current <- round(mean(c(r.upper, r.current)))
     }
 
+    # If the current median cluster size is smaller than the minimum acceptable size, replace r.upper
+    # Calculate the new current resolution as the mean of the current and the lower limiting resolutions.
     if (m < min.med.granule.size) {
       r.upper <- r.current
-      r.current <- round((r.current - min.res) / 2 + min.res)
+      # r.current <- round((r.current - min.res) / 2 + min.res)
+      r.current <-  round(mean(c(r.current, r.lower)))
     }
 
+    # Perform clustering at the new resolution
     message("\nSearch between resolutions: ", r.lower, " & ", r.upper, ".")
-    tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, verbose = FALSE); tictoc::toc()
+    tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, method = clust.method,
+                                               verbose = FALSE); tictoc::toc()
 
+    # Recalculate the median cluster size
     res.name <- paste0(assay, "_snn_res.", r.current)
     m <- CalculateMedianClusterSize(obj, assay, res = r.current)
 
     loop.count <- loop.count + 1
-    if (loop.count > max.loop) {
-      next
+    if (loop.count > max.iter) {
+      # next
+      break # Exit loop if max iterations reached
     }
-  }
+  } # while
+
+
+  # Finalize and store the optimal resolution
   res.name <- paste0(assay, "_snn_res.", r.current)
   clustering <- obj@meta.data[[res.name]]
-
   obj@misc$gruffi$"optimal.granule.res" <- res.name
   message("Suggested Granule resolution (meta.data colname) is stored in: obj@misc$gruffi$optimal.granule.res:\n",
           res.name)
 
+  # Set the final clustering resolution as the active identity in the Seurat object
   Seurat::Idents(obj) <- clustering
 
+  # Checks the number of clusters and their size variability
   nr.granules <- length(unique(clustering))
   if (nr.granules < 100) {
     warning("Too few granules is too small. Try to define a higher `min.res`.", immediate. = TRUE)
@@ -143,7 +165,11 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     " The median numbers of cells per cluster is ", m,
     ". The number of clusters is ", length(unique(clustering))
   ))
+
+  if (n.threads > 1) future::plan(sequential) # shut down mult session
+
   return(obj)
+
 }
 
 
@@ -404,7 +430,7 @@ GetGOTerms <- function(obj = combined.obj,
   obj@misc$gruffi$GO[[make.names(GO)]] <- genes
   message("Genes in ", GO, " are saved under obj@misc$gruffi$GO$", make.names(GO))
 
-  # Open the GO term web page if requ
+  # Open the GO term web page if requested
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
   return(obj)
 }
@@ -453,6 +479,120 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
 }
 
 
+# _________________________________________________________________________________________________
+#' @title Calculate and Plot GO Term Scores
+#'
+#' @description Automates the process of obtaining and calculating of Gene Ontology (GO) term-based
+#'   gene set scores and it's visualization through UMAP plots.
+#'
+#' @param obj A Seurat single-cell object.
+#' @param GO The GO term to be analyzed, with a default value of "GO:0009651".
+#' @param data.base.access Specifies the method to access gene list databases, with "biomaRt" as the
+#'   default option and "AnnotationDbi" as an alternative.
+#' @param mirror Specifies an Ensembl mirror to use if the default connection fails, with `NULL` as
+#'   the default indicating no mirror is specified.
+#' @param get.go.terms.if.missing Retrieves GO terms if they are missing in the data.
+#'  Defaults to `TRUE`.
+#' @param open.browser If `TRUE`, opens the corresponding GO term page in a web browser. Defaults to
+#'   `FALSE`.
+#' @param save.UMAP If `TRUE`, the UMAP plot is saved to a file. Defaults to `TRUE`.
+#' @param desc A description for the GO term to be included on the plot, with an empty string as the
+#'   default.
+#' @param verbose If `TRUE`, enables the printing of detailed messages throughout the function
+#'   execution. Defaults to `TRUE`.
+#' @param plot.each.gene If `TRUE`, generates a UMAP plot for each gene's expression in addition to
+#'   the GO term scores. Defaults to `FALSE`.
+#' @param return.plot If `TRUE`, the function returns the plot object instead of the updated Seurat
+#'   object. Defaults to `FALSE`.
+#' @param ... Additional arguments passed to internal functions.
+#'
+#' @return Depending on the `return.plot` parameter, this function returns either a plot object or
+#'   an updated Seurat object with new GO term scores added.
+#'
+#' @seealso
+#'  \code{\link[Seurat]{reexports}}
+#'  \code{\link[Stringendo]{iprint}}
+#' @export
+#' @importFrom Seurat DefaultAssay
+#' @importFrom Stringendo iprint ppp
+#' @importFrom Seurat.utils clUMAP multiFeaturePlot.A4
+
+CalculateAndPlotGoTermScores <- function(
+    obj = combined.obj,
+    GO = "GO:0009651",
+    data.base.access = c("biomaRt", "AnnotationDbi")[1],
+    mirror = NULL,
+    get.go.terms.if.missing = TRUE,
+    open.browser = FALSE,
+    plot.each.gene = FALSE,
+    desc = "",
+    save.UMAP = TRUE,
+    verbose = TRUE,
+    return.plot = FALSE,
+    ...) {
+
+  # Backup the current default assay to restore it later
+  backup.assay <- Seurat::DefaultAssay(obj)
+
+  # Check if the GO parameter is a valid GO term format
+  if (grepl(x = GO, pattern = "^GO:", perl = TRUE)) {
+    # stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
+    stopifnot(
+      "Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
+        !grepl(pattern = "Score.", x = GO)
+    )
+
+    # Handle GO term formatting and score name generation
+    GO.wDot <- make.names(GO)
+    ScoreName <- paste0("Score.", GO.wDot)
+    print(ScoreName)
+
+  } else {
+    message("Assuming you provided direclty a score name in the 'GO' parameter: ", ScoreName)
+    ScoreName <- GO
+  }
+
+  # Set assay to RNA for GO score computation if not already set
+  if (Seurat::DefaultAssay(obj) != "RNA") {
+    message("For GO score computation assay is set to RNA. It will be reset to Seurat::DefaultAssay() afterwards.")
+    Seurat::DefaultAssay(obj) <- "RNA"
+  }
+
+  # Check if the gene score is already present in the metadata
+  ScoreFound <- ScoreName %in% colnames(obj@meta.data)
+  if (!ScoreFound) {
+    message(ScoreName, " not found. Need to call GetGOTerms(), performed if get.go.terms.if.missing = TRUE")
+  }
+
+  # Check if the gene score is already present in the metadata
+  if (get.go.terms.if.missing) {
+
+    if (ScoreFound) warning(paste("Gene score", ScoreName, "will now be overwritten"), immediate. = TRUE)
+    obj@meta.data[, ScoreName] <- NULL
+
+    # Retrieve and add GO terms and scores to the object
+    obj <- GetGOTerms(obj = obj, GO = GO, web.open = open.browser, data.base.access = data.base.access, mirror = mirror)
+    GO.genes <- obj@misc$gruffi$GO[[GO.wDot]]
+    if (verbose) print(head(GO.genes))
+    obj <- AddGOScore(obj = obj, GO = GO)
+  }
+
+  # Plot GO term score
+  plot <- FeaturePlotSaveGO(obj = obj, GO.score = ScoreName, save.plot = save.UMAP, name_desc = desc, ...)
+  if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, "UMAPs"))
+
+  # Restore the original default assay
+  Seurat::DefaultAssay(obj) <- backup.assay
+
+  if (return.plot) {
+    return(plot)
+  } else {
+    message("Object updated in it's meta.data, with score ", ScoreName)
+    return(obj)
+  }
+}
+
+
 
 # _____________________________________________________________________________________________ ----
 # 3. Calculate GO Scores ---------------------------------------------------------------------------
@@ -477,7 +617,7 @@ GetAllGOTermNames <- function(obj = combined.obj, return.obj = TRUE) {
 #' @param stat.av How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")[3]
 #' @param clustering Which clustering to use (from metadata)? Default: GetGruffiClusteringName(obj)
 #' e.g. "integrated_snn_res.48.reassigned"
-#' @param ... Additional parameters to be passed to the PlotGoTermScores function.
+#' @param ... Additional parameters to be passed to the CalculateAndPlotGoTermScores function.
 #' @export
 #' @importFrom Seurat Idents RenameIdents
 #' @importFrom Stringendo iprint
@@ -498,7 +638,7 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
 
   # If new GO term score computation is requested
   if (new_GO_term_computation) {
-    obj <- PlotGoTermScores(
+    obj <- CalculateAndPlotGoTermScores(
       GO = GO_term, save.UMAP = save.UMAP, obj = obj,
       desc = description, plot.each.gene = plot.each.gene, mirror = mirror, ...
     )
@@ -681,7 +821,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 #'
 #' @export
 #' @importFrom shiny runApp shinyApp
-Shiny.GO.thresh <- function(
+FindThresholdsShiny <- function(
     obj = combined.obj,
     proposed.method = c("fitted", "empirical")[1],
     quantile = c(.99, .9)[1],
@@ -797,7 +937,7 @@ Shiny.GO.thresh <- function(
 #' default: `TRUE`.
 #'
 #' @export
-Auto.GO.thresh <- function(
+FindThresholdsAuto <- function(
     obj = combined.obj,
     proposed.method = c("fitted", "empirical")[1],
     quantile = c(.99, .9)[1],
@@ -946,7 +1086,7 @@ FilterStressedCells <- function(
   if (!all(ScoreNames %in% MetaVars)) {
     Stringendo::iprint(
       "Some of the GO-term scores were not found in the object:", ScoreNames,
-      "Please call first: PlotGoTermScores(), or the actual GetGOTerms()"
+      "Please call first: CalculateAndPlotGoTermScores(), or the actual GetGOTerms()"
     )
   }
 
@@ -1071,96 +1211,6 @@ FilterStressedCells <- function(
 
 # _____________________________________________________________________________________________ ----
 # 5. Visualization ---------------------------------------------------------------------------
-
-
-# _________________________________________________________________________________________________
-#' @title PlotGoTermScores
-#'
-#' @description Automates retrieving, processing and plotting GO term based gene scores.
-#' @param obj Seurat single cell object, Default: combined.obj
-#' @param data.base.access Which tool to use to access gene list databases? Options:
-#' biomaRt (deault) or AnnotationDbi.
-#' @param mirror Ensembl mirror to use, helpful if the default connection fails with
-#' default settings, mirror can be specified. Default: 'NULL'
-#' @param desc GO-score description on the plot, Default: ""
-#' @param only.draw.plot Only show GO term score umap plot, Default: FALSE
-#' @param openBrowser Open website for GO term? Default: FALSE
-#' @param plot.each.gene Plot each gene's expression on a combined umap? Default: FALSE
-#' @param save.UMAP Save umap into a file. Default: TRUE
-#' @param verbose Verbose output? Default: TRUE
-#' @param GO GO-term; Default: 'GO:0009651'
-#' @param ... Pass any other parameter to the internally called functions (most of them should work).
-#' @seealso
-#'  \code{\link[Seurat]{reexports}}
-#'  \code{\link[Stringendo]{iprint}}
-#' @export
-#' @importFrom Seurat DefaultAssay
-#' @importFrom Stringendo iprint ppp
-#' @importFrom Seurat.utils clUMAP multiFeaturePlot.A4
-
-PlotGoTermScores <- function(
-    obj = combined.obj,
-    data.base.access = c("biomaRt", "AnnotationDbi")[1],
-    mirror = NULL,
-    only.draw.plot = FALSE,
-    openBrowser = FALSE,
-    plot.each.gene = FALSE,
-    desc = "",
-    save.UMAP = TRUE,
-    verbose = TRUE,
-    GO = "GO:0009651",
-    ...) {
-
-  backup.assay <- Seurat::DefaultAssay(obj)
-
-  if (grepl(x = GO, pattern = "^GO:", perl = TRUE)) {
-    # stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
-    stopifnot(
-      "Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
-        !grepl(pattern = "Score.", x = GO)
-    )
-
-    GO.wDot <- make.names(GO)
-    ScoreName <- paste0("Score.", GO.wDot)
-    print(ScoreName)
-
-  } else {
-    message("Assuming you provided direclty a score name in the 'GO' parameter ", ScoreName)
-    ScoreName <- GO
-  }
-
-
-  if (Seurat::DefaultAssay(obj) != "RNA") {
-    message("For GO score computation assay is set to RNA. It will be reset to Seurat::DefaultAssay() afterwards.")
-    Seurat::DefaultAssay(obj) <- "RNA"
-  }
-
-  if (ScoreName %in% colnames(obj@meta.data)) {
-    message("GENE SCORE FOUND IN @meta.data")
-  } else {
-    message(ScoreName, " not found. Need to call GetGOTerms(). set only.draw.plot = FALSE.")
-  }
-
-  if (!only.draw.plot) {
-    message("\nGENE SCORE WILL NOW BE SET / OVERWRITTEN")
-    obj@meta.data[, ScoreName] <- NULL
-
-    obj <- GetGOTerms(obj = obj, GO = GO, web.open = openBrowser, data.base.access = data.base.access, mirror = mirror)
-    GO.genes <- obj@misc$gruffi$GO[[GO.wDot]]
-    if (verbose) print(head(GO.genes))
-    obj <- AddGOScore(obj = obj, GO = GO)
-  }
-
-  plot <- FeaturePlotSaveGO(obj = obj, GO.score = ScoreName, save.plot = save.UMAP, name_desc = desc, ...)
-  if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, "UMAPs"))
-  Seurat::DefaultAssay(obj) <- backup.assay
-
-  if (only.draw.plot) {
-    return(plot)
-  } else {
-    return(obj)
-  }
-}
 
 
 # _________________________________________________________________________________________________
@@ -1938,6 +1988,9 @@ aut.res.clustering <- function() .Deprecated("gruffi::AutoFindGranuleResolution(
 reassign.small.clusters <- function() .Deprecated("gruffi::ReassignSmallClusters()")
 GOscoreEvaluation <- function() .Deprecated("gruffi::AssignGranuleAverageScoresFromGOterm()")
 GO_score_evaluation <- function() .Deprecated("gruffi::AssignGranuleAverageScoresFromGOterm()")
+Shiny.GO.thresh <- function() .Deprecated("gruffi::FindThresholdsShiny()")
+Auto.GO.thresh <- function() .Deprecated("gruffi::FindThresholdsAuto()")
+PlotGoTermScores <- function() .Deprecated("gruffi::CalculateAndCalculateAndPlotGoTermScores()")
 
 stand_dev_skewed <- function() .Deprecated("gruffi::CalcStandDevSkewedDistr()")
 GetAllGOTerms <- function() .Deprecated("gruffi::GetAllGOTerms()")

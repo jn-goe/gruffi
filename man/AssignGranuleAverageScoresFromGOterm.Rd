@@ -41,7 +41,7 @@ fails with default settings, mirror can be specified. Default: 'NULL'}
 
 \item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
 
-\item{...}{Additional parameters to be passed to the PlotGoTermScores function.}
+\item{...}{Additional parameters to be passed to the CalculateAndPlotGoTermScores function.}
 }
 \description{
 Calculates and assigns granule average scores from Gene Ontology (GO) term in a

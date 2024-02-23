@@ -105,13 +105,13 @@ After finding the right granule resolution, first GO scores per cells, then aver
 
 ```R
 # Glycolytic process	GO:0006096
-combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- AssignGranuleAverageScoresFromGOterm(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # ER stress 	GO:0034976
-combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- AssignGranuleAverageScoresFromGOterm(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # Gliogenesis		GO:0042063
-combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- AssignGranuleAverageScoresFromGOterm(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 ```
 
 These functions store the resulting scores in `combined.obj@meta.data`.
@@ -120,7 +120,7 @@ These functions store the resulting scores in `combined.obj@meta.data`.
 
 ### 4. <u>Stress filtering</u>
 
-We will now call a Shiny Interface to auto-estimate and/or manually adjust the stress assignment threeholds via `Shiny.GO.thresh()`.
+We will now call a Shiny Interface to auto-estimate and/or manually adjust the stress assignment threeholds via `FindThresholdsShiny()`.
 
 - The first 2 scores are for features to filter out (e.g.: cells with high ER stress and glycolysis), 
 - and the last 2 scores are for features we want to keep  (e.g.: cells with high gliogenesis). 
@@ -133,7 +133,7 @@ Example code for filtering cells high in glycolytic process and ER stress but lo
 (i3 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go3))
 
 # Call Shiny app
-combined.obj <- Shiny.GO.thresh(obj = combined.obj,
+combined.obj <- FindThresholdsShiny(obj = combined.obj,
                                 stress.ident1 = i1,
                                 stress.ident2 = i2,
                                 notstress.ident3 = i3,

@@ -47,7 +47,7 @@ i1 <- kppu(granule.res.4.gruffi, 'cl.av', go1)
 i2 <- kppu(granule.res.4.gruffi, 'cl.av', go2)
 i3 <- kppu(granule.res.4.gruffi, 'cl.av', go3)
 
-combined.obj <- Shiny.GO.thresh(obj = combined.obj,
+combined.obj <- FindThresholdsShiny(obj = combined.obj,
                                 stress.ident1 = i1,
                                 stress.ident2 = i2,
                                 notstress.ident3 = i3,

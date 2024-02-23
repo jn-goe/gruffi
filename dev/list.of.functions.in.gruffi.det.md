@@ -27,14 +27,14 @@ GOscoreEvaluation. GO-score evaluation for filtering.
 - #### 9 `CustomScoreEvaluation()`
 CustomScoreEvaluation. Custom gene-set derived score evaluation for filtering.
 
-- #### 10 `Shiny.GO.thresh()`
-Shiny.GO.thresh. GO-thresholding for the Shiny app.
+- #### 10 `FindThresholdsShiny()`
+FindThresholdsShiny. GO-thresholding for the Shiny app.
 
 - #### 11 `FilterStressedCells()`
 Filter Stressed Cells from a Seurat Object. Identifies and filters stressed cells based on specified GO terms and a quantile threshold.  It supports optional plotting of exclusion results and saving of modified datasets.
 
-- #### 12 `PlotGoTermScores()`
-PlotGoTermScores. Plot GO-term scores.
+- #### 12 `CalculateAndPlotGoTermScores()`
+CalculateAndPlotGoTermScores. Plot GO-term scores.
 
 - #### 13 `FeaturePlotSaveCustomScore()`
 FeaturePlotSaveCustomScore. Plot and save a Seurat FeaturePlot with a custom score in the meta data.

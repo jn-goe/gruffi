@@ -6,10 +6,10 @@
 flowchart LR
 
   GetGOTerms(GetGOTerms) --> IntersectWithExpressed(IntersectWithExpressed)
-  PlotGoTermScores(PlotGoTermScores) --> FeaturePlotSaveGO(FeaturePlotSaveGO)
-  PlotGoTermScores(PlotGoTermScores) --> GetGOTerms(GetGOTerms)
-  PlotGoTermScores(PlotGoTermScores) --> AddGOScore(AddGOScore)
-  GOscoreEvaluation(GOscoreEvaluation) --> PlotGoTermScores(PlotGoTermScores)
+  CalculateAndPlotGoTermScores(CalculateAndPlotGoTermScores) --> FeaturePlotSaveGO(FeaturePlotSaveGO)
+  CalculateAndPlotGoTermScores(CalculateAndPlotGoTermScores) --> GetGOTerms(GetGOTerms)
+  CalculateAndPlotGoTermScores(CalculateAndPlotGoTermScores) --> AddGOScore(AddGOScore)
+  GOscoreEvaluation(GOscoreEvaluation) --> CalculateAndPlotGoTermScores(CalculateAndPlotGoTermScores)
   GOscoreEvaluation(GOscoreEvaluation) --> .convert.GO_term.2.score(.convert.GO_term.2.score)
   GOscoreEvaluation(GOscoreEvaluation) -->   CalcClusterAverages_Gruffi(CalcClusterAverages_Gruffi)
   FilterStressedCells(FilterStressedCells) --> .convert.GO_term.2.score(.convert.GO_term.2.score)
@@ -19,8 +19,8 @@ flowchart LR
   AddGOGeneList.manual(AddGOGeneList.manual) --> IntersectWithExpressed(IntersectWithExpressed)
   AddCustomScore(AddCustomScore) --> .fix.metad.colname.rm.trailing.1(.fix.metad.colname.rm.trailing.1)
 
-  Shiny.GO.thresh(Shiny.GO.thresh) --> PlotNormAndSkew(PlotNormAndSkew)
-  Auto.GO.thresh(Auto.GO.thresh) --> PlotNormAndSkew(PlotNormAndSkew)
+  FindThresholdsShiny(FindThresholdsShiny) --> PlotNormAndSkew(PlotNormAndSkew)
+  FindThresholdsAuto(FindThresholdsAuto) --> PlotNormAndSkew(PlotNormAndSkew)
   PlotNormAndSkew(PlotNormAndSkew) --> CalcStandDevSkewedDistr(CalcStandDevSkewedDistr)
 
   GetAllGOTermNames(GetAllGOTermNames) --> .convert.score.2.GO_term(.convert.score.2.GO_term)
@@ -71,11 +71,11 @@ Updated: 2024/02/15 00:28
 
   Custom gene-set derived score evaluation for filtering.
 
-- #### 10 `Shiny.GO.thresh()`
+- #### 10 `FindThresholdsShiny()`
 
   Launch Shiny App for GO Term-based Thresholding. Launches a Shiny application to interactively apply GO term-based thresholding  for identifying stressed cells in a Seurat object. This function calculates the  "granule average GO-scores" for individual GO terms and updates the object with a combined stress  identification based on these thresholds.#'
 
-- #### 11 `Auto.GO.thresh()`
+- #### 11 `FindThresholdsAuto()`
 
   Automated GO Term-based Thresholding without using a Shiny app.. Automatically applies granular GO term-based thresholding to identify stressed cells  in a Seurat object without launching a Shiny app. This function calculates the  "granule average GO-scores" for individual GO terms and updates the object with a combined stress  identification based on these thresholds.
 
@@ -83,7 +83,7 @@ Updated: 2024/02/15 00:28
 
   Filter Stressed Cells from a Seurat Object. Identifies and filters stressed cells based on specified GO terms and a quantile threshold.  It supports optional plotting of exclusion results and saving of modified datasets.
 
-- #### 13 `PlotGoTermScores()`
+- #### 13 `CalculateAndPlotGoTermScores()`
 
   Plot GO-term scores.
 
