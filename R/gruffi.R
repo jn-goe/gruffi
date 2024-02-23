@@ -120,7 +120,7 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     }
 
     # Perform clustering at the new resolution
-    message("\nSearch between resolutions: ", r.lower, " & ", r.upper, ".")
+    message("\nSearch between resolutions: ", r.lower, " & ", r.upper, ", starting at: ", r.current)
     tictoc::tic(); obj <- Seurat::FindClusters(obj, resolution = r.current, method = clust.method,
                                                verbose = FALSE); tictoc::toc()
 
@@ -1780,7 +1780,7 @@ CalcClusterAverages_Gruffi <- function(
         warning("histogram plotting is not debugged. May contain errors.", immediate. = TRUE)
         p <- ggExpress::qhistogram(
           vec = av.score, save = FALSE,
-          vline =  = cutoff,
+          vline = cutoff,
           plotname = title,
           suffix = quantile.thr,
           subtitle = subtitle,
