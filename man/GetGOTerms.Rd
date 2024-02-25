@@ -35,6 +35,8 @@ biomaRt (deault) or AnnotationDbi.}
 
 \item{web.open}{Logical; if TRUE, opens the web page for the specified GO term.}
 
+\item{overwrite.misc.GO_genes}{Overwrite preexisting gene set in \code{misc$gruffi$GO[[make.names(GO)]]}.}
+
 \item{mirror}{Ensembl mirror to use, helpful if the default connection fails with
 default settings, mirror can be specified. Default: 'NULL'}
 }

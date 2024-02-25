@@ -1,12 +1,49 @@
 Package: gruffi
 Title: Gruffi identifies and removes stressed cells from brain organoid
     single-cell datasets.
-Version: 1.3.0
-Authors@R: 
-    person(, role = c("aut", "cre"))
-Author: [aut, cre]
-BugReports: 
+Version: 1.5.0
+Authors@R:
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Author: Julia Naas <julia.naas@meduniwien.ac.at> [aut, cre]; Abel Vertesy
+    <abel.vertesy@imba.oeaw.ac.at> [aut, cre]
+Description: The Gruffi R package helps you (1) to identify stressed cells
+    in single-cell RNA-seq datasets using *granular funcitonal filtering*,
+    and (2) you can use it to calculate any GO-term defined gene set's
+    pathway activity. Gruffi integrates into single-cell analysis with
+    Seurat and comes with a graphical user interface.
+License: GPL-3 + file LICENSE
+BugReports: https://github.com/jn-goe/gruffi/issues/
+Depends:
+    magrittr,
+    MarkdownReports,
+    Seurat,
+    Stringendo
+Imports:
+    AnnotationDbi,
+    biomaRt,
+    clipr,
+    CodeAndRoll2,
+    cowplot,
+    DOSE,
+    dplyr,
+    ggExpress,
+    ggplot2,
+    htmlwidgets,
+    IRanges,
+    MarkdownHelpers,
+    Matrix,
+    org.Hs.eg.db,
+    raster,
+    rgl,
+    rlang,
+    Seurat.utils,
+    shiny,
+    sm,
+    stringr,
+    tictoc,
+    viridis
 Encoding: UTF-8
-Packaged: 2024-02-23 14:26:25.683845
+Packaged: 2024-02-26 00:01:40.353682
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

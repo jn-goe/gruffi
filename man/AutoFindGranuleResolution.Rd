@@ -11,7 +11,8 @@ AutoFindGranuleResolution(
   min.res = round(ncol(obj)/10000),
   max.res = round(ncol(obj)/1000),
   assay = c("integrated", "RNA")[1],
-  max.loop = 20,
+  max.iter = 20,
+  clust.method = NULL,
   n.threads = 1
 )
 }
@@ -31,7 +32,10 @@ Defaults to: \code{round(ncol(obj)/1000)}.}
 \item{assay}{Specifies the assay to use for clustering. Default is 'integrated, with
 "RNA" as an alternative taken from on \code{Seurat::DefaultAssay(obj)}.}
 
-\item{max.loop}{Maximum number of iterations for adjusting clustering resolution. Default is 20.}
+\item{max.iter}{Maximum number of iterations for adjusting clustering resolution. Default is 20.}
+
+\item{clust.method}{A Seurat method for running leiden (defaults to matrix which is fast for
+small datasets). Enable method = "igraph" to avoid casting large data to a dense matrix.}
 }
 \value{
 A Seurat object with updated clustering at the optimal resolution found, including

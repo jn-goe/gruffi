@@ -15,6 +15,7 @@ AssignGranuleAverageScoresFromGOterm(
   description = NULL,
   mirror = NULL,
   stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
+  overwrite.misc.GO_genes = FALSE,
   ...
 )
 }
@@ -40,6 +41,8 @@ e.g. "integrated_snn_res.48.reassigned"}
 fails with default settings, mirror can be specified. Default: 'NULL'}
 
 \item{stat.av}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
+
+\item{overwrite.misc.GO_genes}{Overwrite preexisting gene set in \code{misc$gruffi$GO[[make.names(GO)]]}.}
 
 \item{...}{Additional parameters to be passed to the CalculateAndPlotGoTermScores function.}
 }

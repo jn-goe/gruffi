@@ -2,7 +2,7 @@
 % Please edit documentation in R/gruffi.R
 \name{CalcClusterAverages_Gruffi}
 \alias{CalcClusterAverages_Gruffi}
-\title{CalcClusterAverages_Gruffi}
+\title{Calculate Cluster Averages for Granules in a Seurat Object}
 \usage{
 CalcClusterAverages_Gruffi(
   col_name = "Score.GO.0006096",
@@ -15,7 +15,7 @@ CalcClusterAverages_Gruffi(
   plotit = FALSE,
   save.plot = FALSE,
   return.plot = FALSE,
-  max.bin.plot = 200,
+  max.bin.plot = 50,
   simplify = TRUE,
   suffix = NULL,
   ylab.text = paste("Cluster", stat, "score"),
@@ -36,15 +36,18 @@ CalcClusterAverages_Gruffi(
 )
 }
 \arguments{
-\item{col_name}{Numeric metadata column name, Default: 'Score.GO.0006096'}
+\item{col_name}{Name of the numeric metadata column to calculate averages for.
+Default: 'Score.GO.0006096'.}
 
 \item{obj}{Seurat single cell object, Default: combined.obj}
 
-\item{split_by}{Clustering to split by (categorical metadata column name), Default: Seurat.utils::GetClusteringRuns(obj)\link{1}}
+\item{split_by}{Name of the clustering (categorical metadata column) to calculate averages within.
+Default: First clustering result from \code{Seurat.utils::GetClusteringRuns(obj)}.}
 
-\item{stat}{How to caluclate the central tendency? Default: c("mean", "median", "normalized.mean", "normalized.median")\link{3}}
+\item{stat}{Method to calculate the central tendency. Options are "mean", "median",
+"normalized.mean", and "normalized.median". Default: "normalized.mean".}
 
-\item{scale.zscore}{Scale as zscore?, Default: FALSE}
+\item{scale.zscore}{Logical flag to scale the calculated scores as z-scores. Default: FALSE.}
 
 \item{quantile.thr}{Quantile threshold for cutoff, Default: 0.99}
 
@@ -52,15 +55,12 @@ CalcClusterAverages_Gruffi(
 
 \item{plotit}{Draw a plot? Default: FALSE}
 
-\item{save.plot}{Save plot into a file. Default: FALSE}
+\item{save.plot}{Save plot into a file? Default: FALSE}
 
-\item{return.plot}{Return the plot as output of the function? Default: FALSE}
+\item{max.bin.plot}{Maximum number of clusters for which a barplot is considered feasible,
+otherwise a histogram is drawn. Default: 50.}
 
-\item{max.bin.plot}{What is considered too many clusters for a histogram to plot? Default: 200}
-
-\item{simplify}{Simplify output? Default: TRUE}
-
-\item{suffix}{What suffix to append at the end of the plotname/file name? Default: NULL}
+\item{suffix}{Suffix to append to the plot/file name. Default: NULL.}
 
 \item{ylab.text}{Y-axis label. Default: paste("Cluster", stat, "score")}
 
@@ -72,15 +72,14 @@ CalcClusterAverages_Gruffi(
 
 \item{height}{Plot height, Default: 6}
 
-\item{xlb}{X-axis label, Default: if (absolute.thr) paste("Threshold at", absolute.thr) else paste("Black lines: ",
-Stringendo::kppd(Stringendo::percentage_formatter(quantile.thr)), "quantiles |",
-"Cl. >", Stringendo::percentage_formatter(quantile.thr),
-"are highlighted. |", split_by)}
+\item{xlb}{X-axis label for the plot, with dynamic content based on \code{absolute.thr} and \code{quantile.thr}.
+Default varies based on these parameters.}
 
-\item{...}{Pass any other parameter to the internally called functions (most of them should work).}
+\item{...}{Additional parameters passed to internally called functions.}
 }
 \description{
-Calculate granule (cluster) averages scores.
+Calculates the central tendency (mean or median) of specified scores for clusters (granules)
+within a Seurat object and optionally plots these averages.
 }
 \seealso{
 \code{\link[Stringendo]{percentage_formatter}}, \code{\link[Stringendo]{iprint}}
