@@ -831,6 +831,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 #' @param notstress.ident3 Identifier for the first non-stress-related GO term. Idents 3 and 4 act
 #'  as a negative filter for stress identification.
 #' @param notstress.ident4 Identifier for the second non-stress-related GO term, optional.
+#' @param step.size Slider step size. Default: 0.001.
 #' @param plot.cluster.shiny The clustering run to be used for plotting in the Shiny app,
 #' default: `Seurat.utils::GetClusteringRuns(obj)[1]`.
 #'
@@ -844,7 +845,11 @@ FindThresholdsShiny <- function(
     stress.ident2,
     notstress.ident3,
     notstress.ident4 = NULL,
+    step.size = 0.001,
     plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
+
+  i4 = if(is.null(notstress.ident4)) FALSE else TRUE
+
   app_env <- new.env()
   meta <- obj@meta.data
 
@@ -855,10 +860,11 @@ FindThresholdsShiny <- function(
   stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
   # Convert categorical scores to numeric for thresholding
-  gr.av.stress.scores1 <- as.numeric(levels(meta[, stress.ident1]))
-  gr.av.stress.scores2 <- as.numeric(levels(meta[, stress.ident2]))
-  gr.av.notstress.scores3 <- as.numeric(levels(meta[, notstress.ident3]))
-  gr.av.notstress.scores4 <- as.numeric(levels(meta[, notstress.ident4]))
+
+  gr.av.stress.scores1 <-    as.numeric(meta[, stress.ident1])
+  gr.av.stress.scores2 <-    as.numeric(meta[, stress.ident2])
+  gr.av.notstress.scores3 <- as.numeric(meta[, notstress.ident3])
+  gr.av.notstress.scores4 <- as.numeric(meta[, notstress.ident4])
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
   app_env$"thresh.stress.ident1" <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = FALSE)
@@ -870,19 +876,19 @@ FindThresholdsShiny <- function(
   # These values define the range and granularity of threshold adjustments within the Shiny app
   min.x.stress.ident1 <- floor(min(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
   max.x.stress.ident1 <- ceiling(max(gr.av.stress.scores1, app_env$"thresh.stress.ident1"))
-  step.stress.ident1 <- 0.001
+  # step.stress.ident1 <- step.size
 
   min.x.stress.ident2 <- floor(min(gr.av.stress.scores2, app_env$"thresh.stress.ident2"))
   max.x.stress.ident2 <- ceiling(max(gr.av.stress.scores2, app_env$"thresh.stress.ident2"))
-  step.stress.ident2 <- 0.001
+  # step.stress.ident2 <- 0.001
 
   min.x.notstress.ident3 <- floor(min(gr.av.notstress.scores3, app_env$"thresh.notstress.ident3"))
   max.x.notstress.ident3 <- ceiling(max(gr.av.notstress.scores3, app_env$"thresh.notstress.ident3"))
-  step.notstress.ident3 <- 0.001
+  # step.notstress.ident3 <- 0.001
 
   min.x.notstress.ident4 <- floor(min(gr.av.notstress.scores4, app_env$"thresh.notstress.ident4"))
   max.x.notstress.ident4 <- ceiling(max(gr.av.notstress.scores4, app_env$"thresh.notstress.ident4"))
-  step.notstress.ident4 <- 0.001
+  # step.notstress.ident4 <- 0.001
 
   # Define the environment for the Shiny app as `app_env`.
   app_env$"idents" <- list(
@@ -894,13 +900,13 @@ FindThresholdsShiny <- function(
 
   app_env$"sliders" <- list(
     "min.x.stress.ident1" = min.x.stress.ident1, "max.x.stress.ident1" = max.x.stress.ident1,
-    "step.stress.ident1" = step.stress.ident1,
+    "step.stress.ident1" = step.size,
     "min.x.stress.ident2" = min.x.stress.ident2, "max.x.stress.ident2" = max.x.stress.ident2,
-    "step.stress.ident2" = step.stress.ident2,
+    "step.stress.ident2" = step.size,
     "min.x.notstress.ident3" = min.x.notstress.ident3, "max.x.notstress.ident3" = max.x.notstress.ident3,
-    "step.notstress.ident3" = step.notstress.ident3,
+    "step.notstress.ident3" = step.size,
     "min.x.notstress.ident4" = min.x.notstress.ident4, "max.x.notstress.ident4" = max.x.notstress.ident4,
-    "step.notstress.ident4" = step.notstress.ident4
+    "step.notstress.ident4" = step.size
   )
 
   app_env$"average.vec" <- list(
@@ -948,6 +954,7 @@ FindThresholdsShiny <- function(
 #' @param notstress.ident3 Identifier for the first non-stress-related GO term. Idents 3 and 4 act
 #'  as a negative filter for stress identification.
 #' @param notstress.ident4 Identifier for the second non-stress-related GO term, optional.
+#' @param step.size Digit precision, equivalent to FindThresholdsShinys step size. Default: 0.001.
 #' @param plot.results Boolean flag to control the plotting of results on UMAPs and histograms,
 #' default: `TRUE`.
 #'
@@ -960,8 +967,10 @@ FindThresholdsAuto <- function(
     stress.ident2,
     notstress.ident3,
     notstress.ident4 = NULL,
-    plot.results = TRUE,
+    step.size = 0.001,
+    plot.results = T,
     ...) {
+
   meta <- obj@meta.data
   # Ensure that provided GO term identifiers exist in the metadata
   stopifnot(stress.ident1 %in% colnames(meta) | is.null(stress.ident1))
@@ -970,16 +979,18 @@ FindThresholdsAuto <- function(
   stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
   # Convert categorical scores to numeric for thresholding
-  gr.av.stress.scores1 <- as.numeric(levels(meta[, stress.ident1]))
-  gr.av.stress.scores2 <- as.numeric(levels(meta[, stress.ident2]))
-  gr.av.notstress.scores3 <- as.numeric(levels(meta[, notstress.ident3]))
-  gr.av.notstress.scores4 <- as.numeric(levels(meta[, notstress.ident4]))
+  gr.av.stress.scores1 <- as.numeric(meta[, stress.ident1])
+  gr.av.stress.scores2 <- as.numeric(meta[, stress.ident2])
+  gr.av.notstress.scores3 <- as.numeric(meta[, notstress.ident3])
+  gr.av.notstress.scores4 <- as.numeric(meta[, notstress.ident4])
+  iprint('gr.av.notstress.scores4', gr.av.notstress.scores4)
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
-  thresh.stress.ident1 <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = FALSE)
-  thresh.stress.ident2 <- PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = FALSE)
-  thresh.notstress.ident3 <- PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = FALSE)
-  thresh.notstress.ident4 <- PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = FALSE)
+  dgt <- nchar(step.size) - 2
+  thresh.stress.ident1 <-    .round(PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
+  thresh.stress.ident2 <-    .round(PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
+  thresh.notstress.ident3 <- .round(PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
+  thresh.notstress.ident4 <- .round(PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
 
   # Store computed thresholds in the Seurat object's misc slot for later reference
   if (!is.null(stress.ident1)) obj@misc$gruffi$"thresh.stress.ident1" <- thresh.stress.ident1
@@ -995,9 +1006,11 @@ FindThresholdsAuto <- function(
     gr.av.scores.2 <- meta[, stress.ident2]
 
     # Check if the numeric score is greater than the threshold for stress
-    i1.bool <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > thresh.stress.ident1
+    i1.bool <- gr.av.scores.1 > thresh.stress.ident1
+    # i1.bool <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > thresh.stress.ident1
     if (!is.null(stress.ident2)) {
-      i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
+      i2.bool <- gr.av.scores.2 > thresh.stress.ident2
+      # i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
       stress.bool <- i1.bool | i2.bool # Combine both boolean vectors for stress determination
     } else {
       stress.bool <- i1.bool # Use only stress.ident1 for stress determination
@@ -1005,7 +1018,8 @@ FindThresholdsAuto <- function(
   } else {
     # Process only the second stress identifier if the first one is null
     if (!is.null(stress.ident2)) {
-      i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
+      i2.bool <- gr.av.scores.2 > thresh.stress.ident2
+      # i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > thresh.stress.ident2
       stress.bool <- i2.bool
     }
   }
@@ -1017,16 +1031,19 @@ FindThresholdsAuto <- function(
 
   # Determine not stressed cells based on the thresholds for notstress.ident3 and potentially notstress.ident4
   if (!is.null(notstress.ident3)) {
-    i3.bool <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > thresh.notstress.ident3
+    i3.bool <- gr.av.scores.3 > thresh.notstress.ident3
+    # i3.bool <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > thresh.notstress.ident3
     if (!is.null(notstress.ident4)) {
-      i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
+      i4.bool <- gr.av.scores.4 > thresh.notstress.ident4
+      # i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
       notstress.bool <- i3.bool | i4.bool # Combine boolean vectors for notstress.ident3 and notstress.ident4
     } else {
       notstress.bool <- i3.bool # Use only notstress.ident3 for not stress determination
     }
   } else { # aka IF notstress.ident3 is null
     if (!is.null(notstress.ident4)) {
-      i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
+      i4.bool <- gr.av.scores.4 > thresh.notstress.ident4
+      # i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > thresh.notstress.ident4
       notstress.bool <- i4.bool
     }
   }
@@ -1039,8 +1056,24 @@ FindThresholdsAuto <- function(
   }
 
   if (plot.results) {
-    message("plot.results not yet implemented")
-  }
+    message("plot.results is not yet fully implemented. May contain errors.")
+    Seurat.utils::clUMAP(obj = obj, ident = "is.Stressed", label = F, save.plot = T)
+
+    GrScoreUMAP(obj = obj, colname = stress.ident1, miscname = 'thresh.stress.ident1')
+    GrScoreUMAP(obj = obj, colname = stress.ident2, miscname = 'thresh.stress.ident2')
+    GrScoreUMAP(obj = obj, colname = notstress.ident3, miscname = 'thresh.notstress.ident3')
+    GrScoreUMAP(obj = obj, colname = notstress.ident4, miscname = 'thresh.notstress.ident4')
+
+    GrScoreHistogram(obj = obj, colname = stress.ident1, miscname = 'thresh.stress.ident1')
+    GrScoreHistogram(obj = obj, colname = stress.ident2, miscname = 'thresh.stress.ident2')
+    GrScoreHistogram(obj = obj, colname = notstress.ident3, miscname = 'thresh.notstress.ident3')
+    GrScoreHistogram(obj = obj, colname = notstress.ident4, miscname = 'thresh.notstress.ident4')
+
+    FeaturePlotSaveGO(obj = obj, GO.score = stress.ident1)
+    FeaturePlotSaveGO(obj = obj, GO.score = stress.ident2)
+    FeaturePlotSaveGO(obj = obj, GO.score = notstress.ident3)
+    FeaturePlotSaveGO(obj = obj, GO.score = notstress.ident4)
+  } # plot.results
 
   message("Seurat object now contains:")
   message(" --  A new metadata column: `is.Stressed`:")
@@ -1061,6 +1094,7 @@ FindThresholdsAuto <- function(
 
 # _________________________________________________________________________________________________
 #' @title FeaturePlotSaveCustomScore
+#'
 #' @description Plot and save a Seurat FeaturePlot with a custom score in the meta data.
 #' @param obj Seurat single cell object, Default: combined.obj
 #' @param genes Charcter vector of genes, Default: ""
@@ -1079,7 +1113,7 @@ FindThresholdsAuto <- function(
 #' @importFrom MarkdownHelpers ww.FnP_parser
 #' @importFrom cowplot save_plot
 
-FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes = "", name_desc = NULL, h = 7, PNG = TRUE, ...) { # Plot and save a FeaturePlot, e.g. showing gene set scores.
+FeaturePlotSaveCustomScore <- function(obj = combined.obj, genes = "", name_desc = NULL, h = 7, PNG = TRUE, ...) {
   ScoreName <- paste0("Score.", substitute(genes))
 
   ggplot.obj <-
@@ -1122,12 +1156,19 @@ FeaturePlotSaveGO <- function(
     title_ = paste(GO.score, name_desc),
     h = 7, PNG = TRUE, ...) {
 
-  proper.GO <- paste(stringr::str_split_fixed(string = GO.score, pattern = "\\.", n = 3)[2:3], collapse = ":")
+  if(is.null(GO.score)) {message("GO.score is NULL"); return(NULL)}
+
+  proper.GO <- .parse.GO(GO.score)
   (genes.GO <- obj@misc$gruffi$GO[[make.names(proper.GO)]])
 
+  CPT <- paste("Score calc. from", length(genes.GO), "expr. genes from @misc$gruffi$GO.",
+               paste0("https://www.ebi.ac.uk/QuickGO/search/", proper.GO))
   ggplot.obj <-
-    Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95", reduction = "umap", ...) +
-    ggplot2::labs(title = title_, caption = paste("Score calc. from", length(genes.GO), "expr. genes from BioMart.", paste0("https://www.ebi.ac.uk/QuickGO/search/", proper.GO)))
+    Seurat::FeaturePlot(obj, features = GO.score, min.cutoff = "q05", max.cutoff = "q95",
+                        reduction = "umap", ...) +
+    ggplot2::labs(title = title_, caption = CPT) +
+    Seurat::NoAxes()
+
   pname <- paste0("FeaturePlot.", (GO.score))
   fname <- MarkdownHelpers::ww.FnP_parser(Stringendo::kpp(pname, name_desc), if (PNG) "png" else "pdf")
   if (save.plot) {
@@ -1187,34 +1228,46 @@ PlotClustSizeDistr <- function(obj = combined.obj,
 #' @param tresholding Tresholding calculation method, Default: c("fitted", "empirical")[1]
 #' @param plot.hist Draw a histogram? Default: TRUE
 #' @param ... Pass any other parameter to the internally called functions (most of them should work).
+#' @importFrom ggExpress qhistogram
+#'
 #' @export
 PlotNormAndSkew <- function(x, q,
                             tresholding = c("fitted", "empirical")[1],
                             plot.hist = TRUE, ...) {
-  m <- median(x)
-  stde_skewed <- CalcStandDevSkewedDistr(x, mean_x = m)
+  if(length(x) == 0 | is.null(x)) {
+    message("Threshold ", substitute(x), " not found.")
+    return(NULL)
+  } else {
+    stopifnot(is.numeric(x), length(x) > 0, all(!is.na(x)), # x must be a non-empty numeric vector without NA values
+              is.numeric(q), q > 0 && q < 1, # q must be numeric and between 0 and 1
+              is.character(tresholding), tresholding %in% c("fitted", "empirical"), # tresholding must be either "fitted" or "empirical"
+              is.logical(plot.hist)) # plot.hist must be a logical value
 
-  thresh <-
-    if (tresholding == "fitted") {
-      stats::qnorm(q, mean = m, sd = stde_skewed)
-    } else if (tresholding == "empirical") {
-      stats::quantile(x, q)
-    } else {
-      print("Unknown tresholding method")
+    m <- median(x)
+    stde_skewed <- CalcStandDevSkewedDistr(x, mean_x = m)
+
+    thresh <-
+      if (tresholding == "fitted") {
+        stats::qnorm(q, mean = m, sd = stde_skewed)
+      } else if (tresholding == "empirical") {
+        stats::quantile(x, q)
+      } else {
+        print("Unknown tresholding method")
+      }
+
+    if (plot.hist) {
+      Score.threshold.estimate <- x
+      sb <- print(paste(
+        "The computed", tresholding, paste0("q", q), "threshold is:",
+        signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
+      ))
+      ggExpress::qhistogram(Score.threshold.estimate,
+                            vline = thresh, subtitle = sb, xlab = "Score",
+                            plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+      )
     }
-
-  if (plot.hist) {
-    Score.threshold.estimate <- x
-    sb <- print(paste(
-      "The computed", tresholding, paste0("q", q), "threshold is:",
-      signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
-    ))
-    qhistogram(Score.threshold.estimate,
-               vline = thresh, subtitle = sb, xlab = "Score",
-               plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
-    )
-  }
-  return(thresh)
+    return(thresh)
+  } # else
 }
 
 
@@ -1254,6 +1307,9 @@ GrScoreUMAP <- function(obj = combined.obj,
                         miscname = "thresh.stress.ident1",
                         auto = TRUE,
                         ...) {
+
+  if(is.null(colname)) {message("Score is NULL"); return(NULL)}
+
   stopifnot(
     inherits(obj, "Seurat"), !is.null(obj@misc$gruffi),
     miscname %in% names(obj@misc$gruffi),
@@ -1333,6 +1389,9 @@ GrScoreHistogram <- function(obj = combined.obj,
                              miscname = "thresh.stress.ident1",
                              auto = TRUE,
                              ...) {
+
+  if(is.null(colname)) { message("Score is NULL"); return(NULL) }
+
   # Argument assertions
   stopifnot(
     inherits(obj, "Seurat"), !is.null(obj@misc$gruffi),
@@ -1835,12 +1894,37 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 #'
 #' @return GO Term as string, e.g. "GO:0006096"
 #' @examples
-#' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO.0006096")
-.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO.0006096",
+#' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
+.parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
                       pattern = "_cl\\.av_", ...) {
   dot_sep_term <- strsplit(x = ident, split = pattern, ...)[[1]][2]
   gsub(x = dot_sep_term, pattern = "GO.", replacement = "GO:")
 }
+
+
+
+#' @title Safe Rounding Function
+#'
+#' @description Rounds numbers to the specified number of decimal places. Unlike `round`, it
+#' handles `NULL` inputs gracefully by returning `NULL` and optionally prints a warning.
+#'
+#' @param x Numeric vector or NULL.
+#' @param digits Integer indicating the number of decimal places to round to.
+#' @param verbose Logical; if `TRUE`, prints a warning when `x` is NULL.
+#' @return Rounded number or NULL if input is NULL.
+#' @examples
+#' roundSafe(3.14159, digits = 2)
+#' roundSafe(NULL) # returns NULL with a warning
+#' @export
+.round <- function(x, digits = 0, verbose = FALSE) {
+  if (is.null(x)) {
+    if (verbose) warning("Input is NULL. Returning NULL.")
+    return(NULL)
+  } else {
+    return(round(x, digits = digits))
+  }
+}
+
 
 # _____________________________________________________________________________________________ ----
 # 8. Deprecated  ---------------------------------------------------------------------------
