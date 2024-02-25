@@ -59,9 +59,9 @@ server <- shiny::shinyServer(function(input, output, session) {
     gr.av.scores.1 <- meta2[, idents$"stress.ident1"]
     gr.av.scores.2 <- meta2[, idents$"stress.ident2"]
     if (!is.null(stress.ident1)) {
-      i1.bool <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > i.stress.ident1
+      i1.bool <- gr.av.scores.1 > i.stress.ident1
       if (!is.null(stress.ident2)) {
-        i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > i.stress.ident2
+        i2.bool <- gr.av.scores.2 > i.stress.ident2
         stress.bool <- i1.bool | i2.bool # Combine both boolean vectors for stress determination
       } else {
         stress.bool <- i1.bool # Use only stress.ident1 for stress determination
@@ -69,7 +69,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     } else {
       # Process only the second stress identifier if the first one is null
       if (!is.null(stress.ident2)) {
-        i2.bool <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > i.stress.ident2
+        i2.bool <- gr.av.scores.2 > i.stress.ident2
         stress.bool <- i2.bool # Use only stress.ident2 for stress determination
       }
     }
@@ -81,16 +81,16 @@ server <- shiny::shinyServer(function(input, output, session) {
 
     # Determine not stressed cells based on the thresholds for notstress.ident3 and potentially notstress.ident4
     if (!is.null(notstress.ident3)) {
-      i3.bool <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > i.notstress.ident3
+      i3.bool <- gr.av.scores.3 > i.notstress.ident3
       if (!is.null(notstress.ident4)) {
-        i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > i.notstress.ident4
+        i4.bool <- gr.av.scores.4 > i.notstress.ident4
         notstress.bool <- i3.bool | i4.bool # Combine boolean vectors for notstress.ident3 and notstress.ident4
       } else {
         notstress.bool <- i3.bool # Use only notstress.ident3 for not stress determination
       }
     } else {
       if (!is.null(notstress.ident4)) {
-        i4.bool <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > i.notstress.ident4
+        i4.bool <- gr.av.scores.4 > i.notstress.ident4
         notstress.bool <- i4.bool
       }
     }
@@ -116,28 +116,28 @@ server <- shiny::shinyServer(function(input, output, session) {
 
     if (!is.null(stress.ident1)) {
       gr.av.scores.1 <- meta2[, idents$"stress.ident1"]
-      obj2$"stress.ident1.thresh_cluster" <- as.numeric(levels(gr.av.scores.1))[gr.av.scores.1] > i.stress.ident1
+      obj2$"stress.ident1.thresh_cluster" <- gr.av.scores.1 > i.stress.ident1
       obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == FALSE] <- F
       obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(stress.ident2)) {
       gr.av.scores.2 <- meta2[, idents$"stress.ident2"]
-      obj2$"stress.ident2.thresh_cluster" <- as.numeric(levels(gr.av.scores.2))[gr.av.scores.2] > i.stress.ident2
+      obj2$"stress.ident2.thresh_cluster" <- gr.av.scores.2 > i.stress.ident2
       obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == FALSE] <- F
       obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident3)) {
       gr.av.scores.3 <- meta2[, idents$"notstress.ident3"]
-      obj2$"notstress.ident3.thresh_cluster" <- as.numeric(levels(gr.av.scores.3))[gr.av.scores.3] > i.notstress.ident3
+      obj2$"notstress.ident3.thresh_cluster" <- gr.av.scores.3 > i.notstress.ident3
       obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == FALSE] <- F
       obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident4)) {
       gr.av.scores.4 <- meta2[, idents$"notstress.ident4"]
-      obj2$"notstress.ident4.thresh_cluster" <- as.numeric(levels(gr.av.scores.4))[gr.av.scores.4] > i.notstress.ident4
+      obj2$"notstress.ident4.thresh_cluster" <- gr.av.scores.4 > i.notstress.ident4
       obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == FALSE] <- F
       obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == TRUE] <- T
     }
@@ -213,7 +213,7 @@ server <- shiny::shinyServer(function(input, output, session) {
   # stress assignment UMAP
   output$stress.umap <- shiny::renderPlot({
     obj2 <- obj2.data()
-    Seurat.utils::clUMAP(obj = obj2, ident = "is.Stressed", save.plot = F) + Seurat::NoAxes() +
+    Seurat.utils::clUMAP(obj = obj2, ident = "is.Stressed", label = F, save.plot = F) + Seurat::NoAxes() +
       ggplot2::scale_color_manual(values = colorz)
   })
 
