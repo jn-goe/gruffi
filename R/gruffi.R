@@ -1763,7 +1763,7 @@ CalcClusterAverages_Gruffi <- function(
 #'
 #' @export
 #' @importFrom Stringendo iprint
-GetGruffiClusteringName <- function(obj, pattern = ".reassigned",
+GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
                                     granule.res.slot = "optimal.granule.res") {
   res <- obj@misc$gruffi[[granule.res.slot]]
 
@@ -1771,10 +1771,10 @@ GetGruffiClusteringName <- function(obj, pattern = ".reassigned",
     message("obj@misc$gruffi$optimal.granule.res not found. Searching for pattern in meta.data: *", pattern)
 
     # Retrieve all clustering runs from the Seurat object
-    clusteringRuns <- Seurat.utils::GetClusteringRuns(obj)
+    matchingRuns <- Seurat.utils::GetClusteringRuns(obj, pat = pattern)
 
     # Check for clustering runs that match the given pattern
-    matchingRuns <- clusteringRuns[grepl(pattern, clusteringRuns)]
+    # matchingRuns <- clusteringRuns[grepl(pattern, clusteringRuns)]
 
     # Return the first matching run if any exist, otherwise return the first clustering run
     if (length(matchingRuns) == 1) {
