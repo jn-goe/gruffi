@@ -836,7 +836,7 @@ CustomScoreEvaluation <- function(obj = combined.obj,
 #'  as a negative filter for stress identification.
 #' @param notstress.ident4 Identifier for the second non-stress-related GO term, optional.
 #' @param step.size Slider step size. Default: 0.001.
-#' @param plot.cluster.shiny The clustering run to be used for plotting in the Shiny app,
+#' @param stress.barplot.x.axis How to split the data for the stress fraction barplot?
 #' default: `Seurat.utils::GetClusteringRuns(obj)[1]`.
 #'
 #' @export
@@ -850,7 +850,7 @@ FindThresholdsShiny <- function(
     notstress.ident3,
     notstress.ident4 = NULL,
     step.size = 0.001,
-    plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]) {
+    stress.barplot.x.axis = Seurat.utils::GetClusteringRuns(obj)[1]) {
   i4 <- if (is.null(notstress.ident4)) FALSE else TRUE
 
   app_env <- new.env()
@@ -920,7 +920,7 @@ FindThresholdsShiny <- function(
   )
 
   app_env$"obj" <- obj
-  app_env$"plot.cluster.shiny" <- plot.cluster.shiny
+  app_env$"stress.barplot.x.axis" <- stress.barplot.x.axis
 
   # Launch the Shiny app
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
@@ -973,6 +973,7 @@ FindThresholdsAuto <- function(
     step.size = 0.001,
     plot.results = TRUE,
     ...) {
+
   meta <- obj@meta.data
   # Ensure that provided GO term identifiers exist in the metadata
   stopifnot(stress.ident1 %in% colnames(meta) | is.null(stress.ident1))
@@ -1059,7 +1060,7 @@ FindThresholdsAuto <- function(
 
   if (plot.results) {
     message("plot.results is not yet fully implemented. May contain errors.")
-    Seurat.utils::clUMAP(obj = obj, ident = "is.Stressed", label = FALSE, save.plot = TRUE)
+    StressUMAP(combined.obj)
 
     GrScoreUMAP(obj = obj, colname = stress.ident1, miscname = "thresh.stress.ident1")
     GrScoreUMAP(obj = obj, colname = stress.ident2, miscname = "thresh.stress.ident2")
@@ -1317,6 +1318,7 @@ GrScoreUMAP <- function(obj = combined.obj,
                         miscname = "thresh.stress.ident1",
                         auto = TRUE,
                         ...) {
+
   if (is.null(colname)) {
     message("Score is NULL")
     return(NULL)
@@ -1330,8 +1332,9 @@ GrScoreUMAP <- function(obj = combined.obj,
 
   thr <- obj@misc$gruffi[[miscname]] # Retrieve threshold from object
 
-  # Convert granule scores to numeric with names
-  granule_scores <- CodeAndRoll2::as.numeric.wNames.character(obj@meta.data[[colname]], verbose = FALSE)
+  # # Convert granule scores to numeric with names
+  # granule_scores <- CodeAndRoll2::as.numeric.wNames.character(obj@meta.data[[colname]], verbose = FALSE)
+  granule_scores <- obj@meta.data[ , colname ]
 
   # Apply threshold to create a logical vector for identification
   obj[["pass"]] <- (granule_scores < thr)
@@ -1344,13 +1347,10 @@ GrScoreUMAP <- function(obj = combined.obj,
 
   components <- strsplit(colname, "_cl\\.av_")[[1]]
 
-  nr.clust <- NaN
-  try(nr.clust <- length(unique(obj@meta.data[[components[1]]])), silent = TRUE)
-
   subt <- paste(
     "threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[["pass"]]), " | ",
-    ncol(obj), "cells |", nr.clust, "clusters."
-  )
+    ncol(obj), "cells.")
+
   # Call clUMAP with the thresholded identification and any additional arguments
   Seurat.utils::clUMAP(
     ident = "pass", obj = obj, label = FALSE,
@@ -1374,6 +1374,7 @@ GrScoreUMAP <- function(obj = combined.obj,
 #' Default is `'thresh.stress.ident1'`.
 #' @param auto A logical flag indicating whether to automatically invert the filtering logic
 #' for a specific `miscname` condition. Default is TRUE.
+#' @param show.q90 Show 90th quantile of the distribution
 #' @param ... Additional parameters to be passed to `ggExpress::qhistogram`.
 #'
 #' @details The function first verifies the structure and content of the provided `obj`, ensuring it
@@ -1400,6 +1401,8 @@ GrScoreHistogram <- function(obj = combined.obj,
                              colname = i1,
                              miscname = "thresh.stress.ident1",
                              auto = TRUE,
+                             show.q90 = TRUE,
+                             w = 8, h = 5,
                              ...) {
   if (is.null(colname)) {
     message("Score is NULL")
@@ -1440,8 +1443,13 @@ GrScoreHistogram <- function(obj = combined.obj,
                                 sub = subt, palette_use = "npg",
                                 plotname = paste("Granule Thresholding", make.names(components[2])),
                                 xlab = "Granule Median Score", ylab = "Nr. of Granules",
-                                vline = thr, filtercol = colX, ...
-  )
+                                vline = thr, filtercol = colX,
+                                w = w, h = h,
+                                ...)
+  if(show.q90) {
+    pobj <- pobj + geom_vline(xintercept = quantile(granule_scores, 0.9), linetype = "dashed" ) +
+      labs(caption = "Dashed marks the 90th quantile of the data.")
+  }
   print(pobj)
 
   # Optionally, handle the 'auto' and 'miscname' parameters for additional logic
@@ -1475,6 +1483,7 @@ ClusterUMAPthresholding <- function(
     obj = combined.obj, plot.barplot = FALSE,
     subt = "response to ER stress", plotUMAP = TRUE,
     ...) {
+
   clusters.keep <- Seurat.utils::calc.cluster.averages(
     col_name = q.meta.col, split_by = c.meta.col, absolute.thr = absolute.cutoff,
     quantile.thr = quantile, plotit = plot.barplot
@@ -1501,15 +1510,83 @@ ClusterUMAPthresholding <- function(
 }
 
 
+# _________________________________________________________________________________________________
+#' @title Plot Stress Assignment UMAP
+#'
+#' @description Plot Stress Assignment UMAP after running the gruffi pipeline
+#'
+#' @param obj An object containing the data and miscellaneous threshold information.
+#' Default is `combined.obj`.
+#' @param colname Name of the column containing granule scores.
+#' Default is `'RNA_snn_res.6.reassigned_cl.av_GO:0042063'`.
+#' @param GO.terms used for the computation
+#' @param ... Additional arguments to be passed to `clUMAP`.
+#'
+#' @importFrom Seurat.utils clUMAP
+#' @importFrom CodeAndRoll2 as.numeric.wNames.character
+#'
+#' @examples
+#' StressUMAP(combined.obj)
+#' @export
+StressUMAP <- function(obj = combined.obj,
+                       colname = "is.Stressed",
+                       GO.terms = names(obj@misc$gruffi$GO),
+                       ...) {
+
+  stopifnot(inherits(obj, "Seurat"),
+            !is.null(obj@misc$gruffi),
+            colname %in% names(obj@meta.data) )
+
+  components <- strsplit(colname, "_cl\\.av_")[[1]]
+  nr.clust <- NaN
+  try(nr.clust <- length(unique(obj@meta.data[[components[1]]])), silent = TRUE)
+
+  subt <- paste(
+    pc_TRUE(obj@meta.data[[colname]]), "stressed cells | ",
+    ncol(obj), "cells |", nr.clust, "clusters."
+  )
+
+  # Call clUMAP with the thresholded identification and any additional arguments
+  Seurat.utils::clUMAP(
+    obj = obj, label = FALSE, ident = colname,
+    cols = rev(scales::hue_pal()(2)),
+    title = paste("Stress identifcation"),
+    prefix = colname, sub = subt,
+    caption = paste("meta.data:", colname, "| based on", Stringendo::kpps(GO.terms))
+    , ... )
+}
 
 
+# _________________________________________________________________________________________________
+#' @title Stress Barplot Per Cluster
+#'
+#' @description This function generates a bar plot for cell fractions, filled by stress status across clusters.
+#' It utilizes the first clustering run for grouping and applies a custom color scale.
+#'
+#' @param fill.by A character string indicating the column to use for fill. Default is 'is.Stressed'.
+#' @param group.by A character string or a vector indicating the column(s) to use for grouping.
+#'                 If NULL, uses the first clustering run.
+#' @param color_scale A color scale to use for the plot. Defaults to the reverse of the hue palette.
+#' @param custom_col_palette A logical value indicating whether to use a custom color palette. Default is TRUE.
+#'
+#' @return A bar plot visualizing the cell fractions per cluster, filled by the specified fill criteria.
+#' @importFrom scales hue_pal
+#' @export
+StressBarplotPerCluster <- function(obj = combined.obj, fill.by = 'is.Stressed',
+                                    group.by = GetClusteringRuns()[1],
+                                    color_scale = rev(scales::hue_pal()(2)),
+                                    custom_col_palette = TRUE, ...) {
+
+  scBarplot.CellFractions(fill.by = fill.by, group.by = group.by, obj = obj
+                          color_scale = color_scale, custom_col_palette = custom_col_palette, ...)
+}
 
 
 # _____________________________________________________________________________________________ ----
 # 6. Stats and Math ---------------------------------------------------------------------------
 
 
-# _________________________________________________________________________________________________
+
 #' @title CalcTranscriptomePercentageGO
 #' @description Calculate the percentage of transcriptome, for a given GO-term gene set
 #' already stored`in obj@misc$gruffi$GO[[GO.score]].

@@ -162,7 +162,7 @@ combined.obj <- FindThresholdsShiny(obj = combined.obj,
 "Dont forget to click the button in the app: Save New Thresholds"
 
 ```
-The interfacte allows automatic estimation and manual adjustment of thresholds for stress scores: 
+The interface allows automatic estimation and manual adjustment of thresholds for stress scores: 
 
 <img width="396" alt="ShinyInterface_Vel Org7 d90 ImpV" src="https://user-images.githubusercontent.com/72695751/156938645-d80fd987-36b1-46dd-b350-4fc26f62035e.png">
 
@@ -170,17 +170,21 @@ The interfacte allows automatic estimation and manual adjustment of thresholds f
 
 After pushing the **<u>Save new thresholds</u>** button in the Shiny graphical user interface, thresholds are saved in `combined.obj@misc$gruffi` and the stress assignment is stored as a new `@meta.data` column, `is.Stressed`. Check results with:
 
+### 5. <u>Visualize results</u>
 ```r
-Seurat.utils::clUMAP('is.Stressed', label = F)
+StressUMAP(combined.obj)
+StressBarplotPerCluster(combined.obj,  group.by = GetClusteringRuns()[1])
+GrScoreHistogram(combined.obj, colname = i1, miscname = "thresh.stress.ident1")
+# and more
 ```
 
-### 5. <u>Remove stressed cells</u>
+### 6. <u>Remove stressed cells</u>
 
 ```R
 cellIDs.keep <- which_names(!combined.obj$'is.Stressed')
 subset.obj <- subset(x = combined.obj, cells = cellIDs.keep)  
 
-Seurat.utils::clUMAP('is.Stressed', label = F, obj = subset.obj)
+StressUMAP(combined.obj)
 ```
 
 
