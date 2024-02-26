@@ -13,7 +13,7 @@ FindThresholdsAuto(
   notstress.ident3,
   notstress.ident4 = NULL,
   step.size = 0.001,
-  plot.results = T,
+  plot.results = TRUE,
   ...
 )
 }

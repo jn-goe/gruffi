@@ -13,7 +13,7 @@ FindThresholdsShiny(
   notstress.ident3,
   notstress.ident4 = NULL,
   step.size = 0.001,
-  plot.cluster.shiny = Seurat.utils::GetClusteringRuns(obj)[1]
+  stress.barplot.x.axis = Seurat.utils::GetClusteringRuns(obj)[1]
 )
 }
 \arguments{
@@ -36,7 +36,7 @@ as a negative filter for stress identification.}
 
 \item{step.size}{Slider step size. Default: 0.001.}
 
-\item{plot.cluster.shiny}{The clustering run to be used for plotting in the Shiny app,
+\item{stress.barplot.x.axis}{How to split the data for the stress fraction barplot?
 default: \code{Seurat.utils::GetClusteringRuns(obj)[1]}.}
 }
 \description{

@@ -9,6 +9,9 @@ GrScoreHistogram(
   colname = i1,
   miscname = "thresh.stress.ident1",
   auto = TRUE,
+  show.q90 = TRUE,
+  w = 8,
+  h = 5,
   ...
 )
 }
@@ -24,6 +27,8 @@ Default is \code{'thresh.stress.ident1'}.}
 
 \item{auto}{A logical flag indicating whether to automatically invert the filtering logic
 for a specific \code{miscname} condition. Default is TRUE.}
+
+\item{show.q90}{Show 90th quantile of the distribution}
 
 \item{...}{Additional parameters to be passed to \code{ggExpress::qhistogram}.}
 }

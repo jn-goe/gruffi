@@ -1577,7 +1577,7 @@ StressBarplotPerCluster <- function(obj = combined.obj, fill.by = 'is.Stressed',
                                     color_scale = rev(scales::hue_pal()(2)),
                                     custom_col_palette = TRUE, ...) {
 
-  scBarplot.CellFractions(fill.by = fill.by, group.by = group.by, obj = obj
+  scBarplot.CellFractions( obj = obj, fill.by = fill.by, group.by = group.by,
                           color_scale = color_scale, custom_col_palette = custom_col_palette, ...)
 }
 

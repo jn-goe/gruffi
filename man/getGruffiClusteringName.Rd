@@ -6,7 +6,7 @@
 \usage{
 GetGruffiClusteringName(
   obj,
-  pattern = ".reassigned",
+  pattern = ".reassigned$",
   granule.res.slot = "optimal.granule.res"
 )
 }

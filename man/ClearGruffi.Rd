@@ -8,7 +8,8 @@ ClearGruffi(
   obj,
   pattern.GO.score = "^Score\\\\.GO\\\\.[0-9]+",
   pattern.granule.score = ".*_snn_res\\\\..*\\\\_cl\\\\.av_GO\\\\.[0-9]+",
-  stress.assignment = "is.Stressed"
+  stress.assignment = "is.Stressed",
+  remove.granules = FALSE
 )
 }
 \arguments{
@@ -22,7 +23,10 @@ followed by any number of digits.}
 removed. Default is ".\emph{_snn_res\\..}\\_cl\\.av_GO\\.\link{0-9}+", matching a specific pattern
 related to granule scores.}
 
-\item{stress.assignment}{The name of the stress assignment column. Default: "is.Stressed"}
+\item{stress.assignment}{The name of the stress assignment column. Default: "is.Stressed".}
+
+\item{remove.granules}{Option to also remove the optimal granule resolution. Default: FALSE,
+because it can take very long time to recompute.}
 }
 \value{
 The modified Seurat object with specified columns removed from @meta.data
