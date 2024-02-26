@@ -222,13 +222,13 @@ server <- shiny::shinyServer(function(input, output, session) {
     obj2 <- obj2.data()
     meta2 <- obj2@meta.data
 
-    ident.plot <- plot.cluster.shiny
-    ggplot2::ggplot(meta2, ggplot2::aes(x = ident.plot, fill = is.Stressed, stat = "count")) +
+    ggplot2::ggplot(meta2, ggplot2::aes(x = stress.barplot.x.axis, fill = is.Stressed, stat = "count")) +
       ggplot2::scale_fill_manual(values = colorz) +
       ggplot2::theme_minimal() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, vjust = 0.5, hjust = 1)) +
       ggplot2::geom_bar() +
-      ggplot2::xlab("")
+      ggplot2::xlab("") +
+      ggplot2::ylab("Cells")
   })
 
   output$"go.score" <- shiny::renderPlot(
