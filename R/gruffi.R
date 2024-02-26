@@ -971,7 +971,7 @@ FindThresholdsAuto <- function(
     notstress.ident3,
     notstress.ident4 = NULL,
     step.size = 0.001,
-    plot.results = T,
+    plot.results = TRUE,
     ...) {
   meta <- obj@meta.data
   # Ensure that provided GO term identifiers exist in the metadata
@@ -1059,7 +1059,7 @@ FindThresholdsAuto <- function(
 
   if (plot.results) {
     message("plot.results is not yet fully implemented. May contain errors.")
-    Seurat.utils::clUMAP(obj = obj, ident = "is.Stressed", label = F, save.plot = T)
+    Seurat.utils::clUMAP(obj = obj, ident = "is.Stressed", label = FALSE, save.plot = TRUE)
 
     GrScoreUMAP(obj = obj, colname = stress.ident1, miscname = "thresh.stress.ident1")
     GrScoreUMAP(obj = obj, colname = stress.ident2, miscname = "thresh.stress.ident2")
