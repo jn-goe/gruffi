@@ -9,6 +9,29 @@ The Gruffi R package helps you (1) to identify stressed cells in single-cell RNA
 `Gruffi` integrates into any `Seurat` analysis pipelione & it comes with a graphical user interface.
 
 
+
+
+## News
+
+- `v1.5.*` is released, that fixes critical problems which arose with changes in dependencies and made the installation / pipeline break.  Additionally it contains 
+- Now it is more explicit that GO-annotation can either be obtained via `BioMart` or `AnnotationDbi`, which is helpful, as BioMart connection is not always working. For the same reason, it now allows the usage of alternative mirrors for BioMart (thanks to `@zuzkamat`).
+- Major consistency update in function names, see below.
+- Consistency update in variable names (in @misc and @meta.data), for the latter, this update is not backward compatible, meaning earlier results needs manual adjustments in those names to run. Recommended is to rerun the new version.
+- Major cleanup and of the codebase. Granule average scores are now stored as numeric rather than factor.
+
+<u>*Added  functionality*</u>
+
+- `FindThresholdsAuto()` that is a shiny free version  `FindThresholdsShiny()`, which allows an automated workflow without the need for graphical output (thanks to `@heyfl`).  We still strongly recommend the shiny based workflow that enforces users to look at the results and intermediate steps instead of blidnly taking a TRUE / FALSE column.
+- New visualization functions, incuding:
+  ```r
+  GrScoreUMAP(obj = combined.obj, colname = 'RNA_snn_res.6_cl.av_GO.0042063', miscname = 'thresh.stress.ident1')
+  GrScoreHistogram(obj = combined.obj, colname = 'RNA_snn_res.6_cl.av_GO.0042063', miscname = 'thresh.stress.ident1')
+  ```
+- New helper functions that allow a simpler workflow and shorter codebase.
+
+
+
+
 ## Installation
 
 You can install dependencies from **CRAN, Bioconductor and GitHub** via **devtools**:
@@ -63,12 +86,9 @@ If you want to store multiple UMAP's, you have to keep them in backup slot (in c
 Prepare GO-terms and gene-sets
 
 ```r
-ensembl <- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
-
 go1 <- "GO:0006096" # Glycolysis
 go2 <- "GO:0034976" # ER-stress
 go3 <- "GO:0042063" # Gliogenesis, negative filtering
-
 ```
 
 ### 2. <u>Granule partitioning</u>
@@ -128,9 +148,9 @@ We will now call a Shiny Interface to auto-estimate and/or manually adjust the s
 Example code for filtering cells high in glycolytic process and ER stress but low in gliogenesis: 
 ```R
 # Create score names:
-(i1 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', make.names(go1)))
-(i2 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', make.names(go2)))
-(i3 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', make.names(go3)))
+(i1 <- ParseGruffiGranuleScoreName(goID = go1))
+(i2 <- ParseGruffiGranuleScoreName(goID = go3))
+(i3 <- ParseGruffiGranuleScoreName(goID = go3))
 
 # Call Shiny app
 combined.obj <- FindThresholdsShiny(obj = combined.obj,
@@ -148,10 +168,10 @@ The interfacte allows automatic estimation and manual adjustment of thresholds f
 
 
 
-After pushing the **<u>Save new thresholds</u>** button in the Shiny graphical user interface, thresholds are saved in `combined.obj@misc$gruffi` and the stress assignment is stored as a new meta data column `is.Stressed`. Check results as:
+After pushing the **<u>Save new thresholds</u>** button in the Shiny graphical user interface, thresholds are saved in `combined.obj@misc$gruffi` and the stress assignment is stored as a new `@meta.data` column, `is.Stressed`. Check results with:
 
 ```r
-Seurat.utils::clUMAP('is.Stressed', label =F)
+Seurat.utils::clUMAP('is.Stressed', label = F)
 ```
 
 ### 5. <u>Remove stressed cells</u>

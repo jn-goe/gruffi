@@ -55,5 +55,6 @@ Finally continue with the Gruffi pipeline as normal, by calling the Shiny app. T
 
 
 
+## 4. Does it work with Seurat v5+?
 
-
+Yes, it should. Please  raise an `issue` if you experience problems.

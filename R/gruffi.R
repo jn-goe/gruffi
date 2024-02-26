@@ -1780,6 +1780,24 @@ GetGruffiClusteringName <- function(obj, pattern = ".reassigned",
 
 
 # _________________________________________________________________________________________________
+#' @title Generate Gruffi Granule Score Name
+#'
+#' @description This function creates a standardized score name using granule resolution and a
+#' Gene Ontology (GO) identifier.
+#' @param goID The Gene Ontology (GO) identifier.
+#' @param granuleRes The granule resolution identifier.
+#' @param obj A Seurat object with clustering results in meta.data.
+#' @return A character string representing the standardized score name.
+#' @examples
+#' GetGruffiGranuleScoreName(granuleRes = granule.res.4.gruffi, goID = "GO:0006096")
+#' @export
+ParseGruffiGranuleScoreName <- function(goID, obj = combined.obj, granuleRes = GetGruffiClusteringName(obj)) {
+    Stringendo::kppu(granuleRes, 'cl.av', make.names(goID))
+}
+
+
+
+# _________________________________________________________________________________________________
 #' @title CleanDuplicateScorenames
 #' @description Remove duplicate scorenames from obj@mata.data.
 #' @param obj Seurat single cell object, Default: obj
@@ -1835,6 +1853,61 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 
 
 # _________________________________________________________________________________________________
+#' @title Remove gruffi results from the Seurat object
+#'
+#' @description Removes corresponding metadata columns and clear @misc$gruffi slot
+#'
+#' @param obj A Seurat object.
+#' @param pattern.GO.score A regex pattern to match GO score columns that should be removed.
+#'        Default is "^Score\\.GO\\.[0-9]+", which matches columns starting with "Score.GO."
+#'        followed by any number of digits.
+#' @param pattern.granule.score A regex pattern to match granule score columns that should be
+#'        removed. Default is ".*_snn_res\\..*\\_cl\\.av_GO\\.[0-9]+", matching a specific pattern
+#'        related to granule scores.
+#' @param stress.assignment The name of the stress assignment column. Default: "is.Stressed"
+#' @return The modified Seurat object with specified columns removed from @meta.data
+#'         and the @misc$gruffi slot cleared.
+#' @examples
+#' obj <- removeColumnsAndClearGruffi(obj)
+#' @export
+ClearGruffi <- function(obj,
+                        pattern.GO.score  = "^Score\\.GO\\.[0-9]+",
+                        pattern.granule.score  = ".*_snn_res\\..*\\_cl\\.av_GO\\.[0-9]+",
+                        stress.assignment = "is.Stressed") {
+
+  # Find and remove columns matching the pattern
+  patterns <- paste(c(pattern.GO.score, pattern.granule.score, stress.assignment), collapse = "|")
+  colsToRemove <- grep(patterns, colnames(obj@meta.data), value = TRUE)
+
+  # Use @misc slot to find additional columns to remove
+  if (!is.null(obj@misc$gruffi$optimal.granule.res)) {
+    additionalCols <- c(obj@misc$gruffi$optimal.granule.res, paste0(obj@misc$gruffi$optimal.granule.res, ".reassigned"))
+    colsToRemove <- unique(c(colsToRemove, additionalCols))
+  }
+
+  # Remove the identified columns
+  obj@meta.data <- obj@meta.data[, !colnames(obj@meta.data) %in% colsToRemove]
+
+  # Clear the @misc$gruffi slot
+  obj@misc$gruffi <- NULL
+
+  # Report the removed columns
+  if (length(colsToRemove) > 0) {
+    message("Removed ", length(colsToRemove), " columns from @meta.data: ", paste(colsToRemove, collapse = ", "))
+  } else {
+    message("No columns matched the criteria for removal.")
+  }
+
+  message("The @misc$gruffi slot has been cleared.")
+
+  return(obj)
+}
+
+
+# _____________________________________________________________________________________________ ----
+# 8. Internal Helpers  ---------------------------------------------------------------------------
+
+
 #' @title .convert.GO_term.2.score
 #' @description Convert a string GO_term-name to Score-name.
 #' @param GO_term GO-term; Default: "GO:0006096"
@@ -1848,7 +1921,6 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
     GO_term
   }
 }
-
 
 
 # _________________________________________________________________________________________________
@@ -1927,7 +1999,7 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 
 
 # _____________________________________________________________________________________________ ----
-# 8. Deprecated  ---------------------------------------------------------------------------
+# 9. Deprecated  ---------------------------------------------------------------------------
 
 # These functions may have been used in the publication, but are not needed for the pipeline.
 
