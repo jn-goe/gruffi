@@ -125,8 +125,8 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     message("\nSearch between resolutions: ", r.lower, " & ", r.upper, ", starting at: ", r.current)
     tictoc::tic()
     obj <- Seurat::FindClusters(obj,
-      resolution = r.current, method = clust.method,
-      verbose = FALSE
+                                resolution = r.current, method = clust.method,
+                                verbose = FALSE
     )
     tictoc::toc()
 
@@ -925,14 +925,14 @@ FindThresholdsShiny <- function(
   # Launch the Shiny app
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
-    local = new.env(parent = app_env),
-    echo = FALSE, keep.source = TRUE
+                   local = new.env(parent = app_env),
+                   echo = FALSE, keep.source = TRUE
   )$value
 
   # Call the server.R file
   app_server <- source(file.path(app_dir, "server.R"),
-    local = new.env(parent = app_env),
-    echo = FALSE, keep.source = TRUE
+                       local = new.env(parent = app_env),
+                       echo = FALSE, keep.source = TRUE
   )$value
 
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
@@ -1171,8 +1171,8 @@ FeaturePlotSaveGO <- function(
   )
   ggplot.obj <-
     Seurat::FeaturePlot(obj,
-      features = GO.score, min.cutoff = "q05", max.cutoff = "q95",
-      reduction = "umap", ...
+                        features = GO.score, min.cutoff = "q05", max.cutoff = "q95",
+                        reduction = "umap", ...
     ) +
     ggplot2::labs(title = title_, caption = CPT) +
     Seurat::NoAxes()
@@ -1214,9 +1214,9 @@ PlotClustSizeDistr <- function(obj = combined.obj,
 
   if (length(clust.size.distr) < thr.hist) {
     ggExpress::qbarplot(clust.size.distr,
-      plotname = Stringendo::ppp("clust.size.distr", (category)),
-      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
-      ...
+                        plotname = Stringendo::ppp("clust.size.distr", (category)),
+                        subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+                        ...
     )
   } else {
     ggExpress::qhistogram(
@@ -1272,8 +1272,8 @@ PlotNormAndSkew <- function(x, q,
         signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
       ))
       ggExpress::qhistogram(Score.threshold.estimate,
-        vline = thresh, subtitle = sb, xlab = "Score",
-        plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+                            vline = thresh, subtitle = sb, xlab = "Score",
+                            plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
       )
     }
     return(thresh)
@@ -1437,10 +1437,10 @@ GrScoreHistogram <- function(obj = combined.obj,
 
   # Plot histogram with ggExpress::qhistogram
   pobj <- ggExpress::qhistogram(granule_scores,
-    sub = subt, palette_use = "npg",
-    plotname = paste("Granule Thresholding", make.names(components[2])),
-    xlab = "Granule Median Score", ylab = "Nr. of Granules",
-    vline = thr, filtercol = colX, ...
+                                sub = subt, palette_use = "npg",
+                                plotname = paste("Granule Thresholding", make.names(components[2])),
+                                xlab = "Granule Median Score", ylab = "Nr. of Granules",
+                                vline = thr, filtercol = colX, ...
   )
   print(pobj)
 
@@ -1855,11 +1855,13 @@ CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a
 #' @export
 #' @importFrom Stringendo iprint
 
-IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) { # Intersect a set of genes with genes in the Seurat object.
-  print("IntersectWithExpressed()")
-  # print(utils::head(genes, n=15))
+IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) {
+
+  message("Running IntersectWithExpressed()")
   diff <- setdiff(genes, rownames(obj))
-  Stringendo::iprint(length(diff), "genes (of", length(genes), ") are MISSING from the Seurat object:", utils::head(diff, genes.shown))
+  Stringendo::iprint(length(diff), "genes (of", length(genes),
+                     ") are MISSING from the Seurat object:",
+                     head(diff, genes.shown))
   return(intersect(rownames(obj), genes))
 }
 
@@ -1877,7 +1879,9 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 #' @param pattern.granule.score A regex pattern to match granule score columns that should be
 #'        removed. Default is ".*_snn_res\\..*\\_cl\\.av_GO\\.[0-9]+", matching a specific pattern
 #'        related to granule scores.
-#' @param stress.assignment The name of the stress assignment column. Default: "is.Stressed"
+#' @param stress.assignment The name of the stress assignment column. Default: "is.Stressed".
+#' @param remove.granules Option to also remove the optimal granule resolution. Default: FALSE,
+#' because it can take very long time to recompute.
 #' @return The modified Seurat object with specified columns removed from @meta.data
 #'         and the @misc$gruffi slot cleared.
 #' @examples
@@ -1886,15 +1890,22 @@ IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) 
 ClearGruffi <- function(obj,
                         pattern.GO.score = "^Score\\.GO\\.[0-9]+",
                         pattern.granule.score = ".*_snn_res\\..*\\_cl\\.av_GO\\.[0-9]+",
-                        stress.assignment = "is.Stressed") {
+                        stress.assignment = "is.Stressed",
+                        remove.granules = FALSE) {
+
+  message("@misc$GO$... gene lists are not removed.")
+
   # Find and remove columns matching the pattern
   patterns <- paste(c(pattern.GO.score, pattern.granule.score, stress.assignment), collapse = "|")
   colsToRemove <- grep(patterns, colnames(obj@meta.data), value = TRUE)
 
   # Use @misc slot to find additional columns to remove
-  if (!is.null(obj@misc$gruffi$optimal.granule.res)) {
-    additionalCols <- c(obj@misc$gruffi$optimal.granule.res, paste0(obj@misc$gruffi$optimal.granule.res, ".reassigned"))
+  if (!is.null(obj@misc$gruffi$optimal.granule.res) & remove.granules) {
+    granules <- obj@misc$gruffi$optimal.granule.res
+    additionalCols <- c(granules, paste0(granules, ".reassigned"))
     colsToRemove <- unique(c(colsToRemove, additionalCols))
+  } else {
+    message("Granule clustering results not removed by default.")
   }
 
   # Remove the identified columns
