@@ -43,7 +43,6 @@ UMAP3Dcubes <- function(obj = combined.obj,
                         reduction = c("umap", "pca", "tsne")[1],
                         ident = Seurat.utils::GetClusteringRuns(obj)[1],
                         PCA_dim = 50) {
-
   warning("This function is not part of the standard workflow, and thus not fully supported.\n
           It requires the following additional packages: raster, viridis, rgl, htmlwidgets, sm")
 
@@ -76,11 +75,11 @@ UMAP3Dcubes <- function(obj = combined.obj,
 
   for (l in 1:dim(xzy$x)[1]) {
     cells_in_cube <- which(umap_1 <= (xzy$x[l, 1] + x_width / 2) &
-                             umap_2 <= (xzy$x[l, 2] + y_width / 2) &
-                             umap_3 <= (xzy$x[l, 3] + z_width / 2) &
-                             umap_1 > (xzy$x[l, 1] - x_width / 2) &
-                             umap_2 > (xzy$x[l, 2] - y_width / 2) &
-                             umap_3 > (xzy$x[l, 3] - z_width / 2))
+      umap_2 <= (xzy$x[l, 2] + y_width / 2) &
+      umap_3 <= (xzy$x[l, 3] + z_width / 2) &
+      umap_1 > (xzy$x[l, 1] - x_width / 2) &
+      umap_2 > (xzy$x[l, 2] - y_width / 2) &
+      umap_3 > (xzy$x[l, 3] - z_width / 2))
 
     cube_ID[cells_in_cube] <- xzy$cube_ID[l]
 
@@ -262,14 +261,14 @@ FilterStressedCells <- function(
     if (FALSE) colnames(Av.GO.Scores)[1:2] <- names(GOterms)
 
     ggExpress::qscatter(Av.GO.Scores,
-                        cols = "Stressed", w = 6, h = 6,
-                        vline = stats::quantile(mScores[, 2], quantile.thr),
-                        hline = stats::quantile(mScores[, 1], quantile.thr),
-                        title = "Groups of Stressed cells have high scores.",
-                        subtitle = "Thresholded at 90th percentile",
-                        label = "name",
-                        repel = TRUE,
-                        label.rectangle = TRUE
+      cols = "Stressed", w = 6, h = 6,
+      vline = stats::quantile(mScores[, 2], quantile.thr),
+      hline = stats::quantile(mScores[, 1], quantile.thr),
+      title = "Groups of Stressed cells have high scores.",
+      subtitle = "Thresholded at 90th percentile",
+      label = "name",
+      repel = TRUE,
+      label.rectangle = TRUE
     )
   }
 
@@ -305,7 +304,7 @@ FilterStressedCells <- function(
 # #' @importFrom CodeAndRoll2 grepv
 
 # GetNamedClusteringRuns <- function(
-    #     obj = combined.obj # Get Clustering Runs: metadata column names
+#     obj = combined.obj # Get Clustering Runs: metadata column names
 #     , res = c(FALSE, 0.5)[1],
 #     topgene = FALSE,
 #     pat = "^cl.names.Known.*[0,1]\\.[0-9]$") {
@@ -396,5 +395,3 @@ FilterStressedCells <- function(
 
 
 # # _________________________________________________________________________________________________
-
-
