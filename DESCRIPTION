@@ -1,7 +1,7 @@
 Package: gruffi
 Title: Gruffi identifies and removes stressed cells from brain organoid
     single-cell datasets.
-Version: 1.5.0
+Version: 1.5.2
 Authors@R:
     person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
@@ -44,6 +44,6 @@ Imports:
     tictoc,
     viridis
 Encoding: UTF-8
-Packaged: 2024-02-26 00:01:40.353682
+Packaged: 2024-02-27 14:10:48.517485
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
