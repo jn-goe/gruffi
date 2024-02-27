@@ -15,7 +15,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     df.data.stress.ident1 <- shiny::reactive({
       i <- input$"t.stress.ident1"
       df <- data.frame(gr.av.stress.scores1 = average.vec$"gr.av.stress.scores1", assignment = F)
-      df$assignment[df$"gr.av.stress.scores1" > i] <- T
+      df$assignment[df$"gr.av.stress.scores1" > i] <- TRUE
       df
     })
   }
@@ -23,7 +23,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     df.data.stress.ident2 <- shiny::reactive({
       i <- input$"t.stress.ident2"
       df <- data.frame(gr.av.stress.scores2 = average.vec$"gr.av.stress.scores2", assignment = F)
-      df$assignment[df$"gr.av.stress.scores2" > i] <- T
+      df$assignment[df$"gr.av.stress.scores2" > i] <- TRUE
       df
     })
   }
@@ -31,7 +31,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     df.data.notstress.ident3 <- shiny::reactive({
       i <- input$"t.notstress.ident3"
       df <- data.frame(gr.av.notstress.scores3 = average.vec$"gr.av.notstress.scores3", assignment = F)
-      df$assignment[df$"gr.av.notstress.scores3" > i] <- T
+      df$assignment[df$"gr.av.notstress.scores3" > i] <- TRUE
       df
     })
   }
@@ -39,7 +39,7 @@ server <- shiny::shinyServer(function(input, output, session) {
     df.data.notstress.ident4 <- shiny::reactive({
       i <- input$"t.notstress.ident4"
       df <- data.frame(gr.av.notstress.scores4 = average.vec$"gr.av.notstress.scores4", assignment = F)
-      df$assignment[df$"gr.av.notstress.scores4" > i] <- T
+      df$assignment[df$"gr.av.notstress.scores4" > i] <- TRUE
       df
     })
   }
@@ -117,29 +117,29 @@ server <- shiny::shinyServer(function(input, output, session) {
     if (!is.null(stress.ident1)) {
       gr.av.scores.1 <- meta2[, idents$"stress.ident1"]
       obj2$"stress.ident1.thresh_cluster" <- gr.av.scores.1 > i.stress.ident1
-      obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == FALSE] <- F
-      obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == TRUE] <- T
+      # obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == FALSE] <- F
+      # obj2$"stress.ident1.thresh_cluster"[obj2$"stress.ident1.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(stress.ident2)) {
       gr.av.scores.2 <- meta2[, idents$"stress.ident2"]
       obj2$"stress.ident2.thresh_cluster" <- gr.av.scores.2 > i.stress.ident2
-      obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == FALSE] <- F
-      obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == TRUE] <- T
+      # obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == FALSE] <- F
+      # obj2$"stress.ident2.thresh_cluster"[obj2$"stress.ident2.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident3)) {
       gr.av.scores.3 <- meta2[, idents$"notstress.ident3"]
       obj2$"notstress.ident3.thresh_cluster" <- gr.av.scores.3 > i.notstress.ident3
-      obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == FALSE] <- F
-      obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == TRUE] <- T
+      # obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == FALSE] <- F
+      # obj2$"notstress.ident3.thresh_cluster"[obj2$"notstress.ident3.thresh_cluster" == TRUE] <- T
     }
 
     if (!is.null(notstress.ident4)) {
       gr.av.scores.4 <- meta2[, idents$"notstress.ident4"]
       obj2$"notstress.ident4.thresh_cluster" <- gr.av.scores.4 > i.notstress.ident4
-      obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == FALSE] <- F
-      obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == TRUE] <- T
+      # obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == FALSE] <- F
+      # obj2$"notstress.ident4.thresh_cluster"[obj2$"notstress.ident4.thresh_cluster" == TRUE] <- T
     }
 
     obj2
@@ -151,13 +151,16 @@ server <- shiny::shinyServer(function(input, output, session) {
   # GO score histograms
   if (!is.null(stress.ident1)) {
     output$"hist.stress.ident1" <- shiny::renderPlot({
+      # In Shiny, reactive expressions are used to create reactive sources of data that
+      # automatically update outputs (like plots) when inputs change.
       df <- df.data.stress.ident1()
+
       ggplot2::ggplot(df, ggplot2::aes(x = gr.av.stress.scores1, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = colorz) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.stress.scores1) / length(gr.av.stress.scores1)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.stress.scores1, 0.9)), colour = "black") +
-        ggplot2::ylab("count") +
+        ggplot2::ylab("Granule count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.stress.scores1, 0.9), y = Inf, label = "90% quantile")) +
         ggplot2::coord_cartesian(xlim = c(sliders$"min.x.stress.ident1", sliders$"max.x.stress.ident1")) +
         ggplot2::xlab("GO Score") +
@@ -166,13 +169,13 @@ server <- shiny::shinyServer(function(input, output, session) {
   }
   if (!is.null(stress.ident2)) {
     output$"hist.stress.ident2" <- shiny::renderPlot({
-      df <- df.data.stress.ident2()
+      df <- df.data.stress.ident2() # Shiny reactive expressions
       ggplot2::ggplot(df, ggplot2::aes(x = gr.av.stress.scores2, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = colorz) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.stress.scores2) / length(gr.av.stress.scores2)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.stress.scores2, 0.9)), colour = "black") +
-        ggplot2::ylab("count") +
+        ggplot2::ylab("Granule count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.stress.scores2, 0.9), y = Inf, label = "90% quantile")) +
         ggplot2::coord_cartesian(xlim = c(sliders$"min.x.stress.ident2", sliders$"max.x.stress.ident2")) +
         ggplot2::xlab("GO Score") +
@@ -181,13 +184,13 @@ server <- shiny::shinyServer(function(input, output, session) {
   }
   if (!is.null(notstress.ident3)) {
     output$"hist.notstress.ident3" <- shiny::renderPlot({
-      df <- df.data.notstress.ident3()
+      df <- df.data.notstress.ident3() # Shiny reactive expressions
       ggplot2::ggplot(df, ggplot2::aes(x = gr.av.notstress.scores3, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = rev(colorz)) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.notstress.scores3) / length(gr.av.notstress.scores3)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.notstress.scores3, 0.9)), colour = "black") +
-        ggplot2::ylab("count") +
+        ggplot2::ylab("Granule count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.notstress.scores3, 0.9), y = Inf, label = "90% quantile")) +
         ggplot2::coord_cartesian(xlim = c(sliders$"min.x.notstress.ident3", sliders$"max.x.notstress.ident3")) +
         ggplot2::xlab("GO Score") +
@@ -196,13 +199,13 @@ server <- shiny::shinyServer(function(input, output, session) {
   }
   if (!is.null(notstress.ident4)) {
     output$"hist.notstress.ident4" <- shiny::renderPlot({
-      df <- df.data.notstress.ident4()
+      df <- df.data.notstress.ident4() # Shiny reactive expressions
       ggplot2::ggplot(df, ggplot2::aes(x = gr.av.notstress.scores4, fill = factor(assignment))) +
         ggplot2::scale_fill_manual(values = rev(colorz)) +
         ggplot2::geom_histogram(binwidth = (2 * IQR(gr.av.notstress.scores4) / length(gr.av.notstress.scores4)^(1 / 3))) +
         ggplot2::theme_minimal() +
         ggplot2::geom_vline(ggplot2::aes(xintercept = quantile(gr.av.notstress.scores4, 0.9)), colour = "black") +
-        ggplot2::ylab("count") +
+        ggplot2::ylab("Granule count") +
         ggplot2::geom_text(hjust = -.1, vjust = 10, mapping = ggplot2::aes(x = quantile(gr.av.notstress.scores4, 0.9), y = Inf, label = "90% quantile")) +
         ggplot2::coord_cartesian(xlim = c(sliders$"min.x.notstress.ident4", sliders$"max.x.notstress.ident4")) +
         ggplot2::xlab("GO Score") +

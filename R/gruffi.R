@@ -649,6 +649,10 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
                                                  ...) {
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
 
+  if(!grepl("reassigned", clustering)) {
+    warning("Non-reassigned granules are used in 'clustering'. Are you sure?", immediate. = TRUE)
+  }
+
   # If new GO term score computation is requested
   if (new_GO_term_computation) {
     obj <- CalculateAndPlotGoTermScores(
@@ -678,6 +682,16 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
   obj@meta.data[ColNameAverageScore] <- as.numeric(as.character(Seurat::Idents(obj)))
   # Old way to store as factor
   # obj@meta.data[ColNameAverageScore] <- Seurat::Idents(obj)
+
+  # Check nr of granules in output
+  nr.granule.scores <- length(unique(obj@meta.data[ColNameAverageScore]))
+  nr.granules <- length(unique(obj@meta.data[clustering]))
+  if(nr.granule.scores != nr.granules) {
+    MSG <- paste("Nr. of granules / granule-scores not matching:", nr.granule.scores , "/" ,
+                 nr.granules.re)
+    # This can be bc of numeric equivalence or, or the use of non-reassigned gr. res.
+    warning(MSG, immediate. = T)
+  }
 
   stopifnot(is.numeric(obj@meta.data[, ColNameAverageScore]))
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
@@ -862,12 +876,12 @@ FindThresholdsShiny <- function(
   stopifnot(notstress.ident3 %in% colnames(meta) | is.null(notstress.ident3))
   stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
-  # Convert categorical scores to numeric for thresholding
-
-  gr.av.stress.scores1 <- as.numeric(meta[, stress.ident1])
-  gr.av.stress.scores2 <- as.numeric(meta[, stress.ident2])
-  gr.av.notstress.scores3 <- as.numeric(meta[, notstress.ident3])
-  gr.av.notstress.scores4 <- as.numeric(meta[, notstress.ident4])
+  # Filter (repeated) per-cell scores to per-granule scores for filtering
+  gr.av.stress.scores1 <- unique(as.numeric(meta[, stress.ident1]))
+  # Using unique is an approximation, numeric equivalence is theoretically possible.
+  gr.av.stress.scores2 <- unique(as.numeric(meta[, stress.ident2]))
+  gr.av.notstress.scores3 <- unique(as.numeric(meta[, notstress.ident3]))
+  gr.av.notstress.scores4 <- unique(as.numeric(meta[, notstress.ident4]))
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
   app_env$"thresh.stress.ident1" <- PlotNormAndSkew(gr.av.stress.scores1, q = quantile, tresholding = proposed.method, plot.hist = FALSE)
@@ -981,11 +995,12 @@ FindThresholdsAuto <- function(
   stopifnot(notstress.ident3 %in% colnames(meta) | is.null(notstress.ident3))
   stopifnot(notstress.ident4 %in% colnames(meta) | is.null(notstress.ident4))
 
-  # Convert categorical scores to numeric for thresholding
-  gr.av.stress.scores1 <- as.numeric(meta[, stress.ident1])
-  gr.av.stress.scores2 <- as.numeric(meta[, stress.ident2])
-  gr.av.notstress.scores3 <- as.numeric(meta[, notstress.ident3])
-  gr.av.notstress.scores4 <- as.numeric(meta[, notstress.ident4])
+  # Filter (repeated) per-cell scores to per-granule scores for filtering
+  gr.av.stress.scores1 <- unique(as.numeric(meta[, stress.ident1]))
+  # Using unique is an approximation, numeric equivalence is theoretically possible.
+  gr.av.stress.scores2 <- unique(as.numeric(meta[, stress.ident2]))
+  gr.av.notstress.scores3 <- unique(as.numeric(meta[, notstress.ident3]))
+  gr.av.notstress.scores4 <- unique(as.numeric(meta[, notstress.ident4]))
   iprint("gr.av.notstress.scores4", gr.av.notstress.scores4)
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
@@ -994,6 +1009,12 @@ FindThresholdsAuto <- function(
   thresh.stress.ident2 <- .round(PlotNormAndSkew(gr.av.stress.scores2, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
   thresh.notstress.ident3 <- .round(PlotNormAndSkew(gr.av.notstress.scores3, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
   thresh.notstress.ident4 <- .round(PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
+
+  # Output assertions
+  stopifnot("Some threshold values are NA" =
+              !anyNA(c(thresh.stress.ident1, thresh.stress.ident2,
+                       thresh.notstress.ident3, thresh.notstress.ident4))
+  )
 
   # Store computed thresholds in the Seurat object's misc slot for later reference
   if (!is.null(stress.ident1)) obj@misc$gruffi$"thresh.stress.ident1" <- thresh.stress.ident1
@@ -1060,7 +1081,7 @@ FindThresholdsAuto <- function(
 
   if (plot.results) {
     message("plot.results is not yet fully implemented. May contain errors.")
-    StressUMAP(obj = obj)
+    StressUMAP(obj)
 
     GrScoreUMAP(obj = obj, colname = stress.ident1, miscname = "thresh.stress.ident1")
     GrScoreUMAP(obj = obj, colname = stress.ident2, miscname = "thresh.stress.ident2")
@@ -1302,7 +1323,6 @@ PlotNormAndSkew <- function(x, q,
 #' @param ... Additional arguments to be passed to `clUMAP`.
 #'
 #' @importFrom Seurat.utils clUMAP
-#' @importFrom CodeAndRoll2 as.numeric.wNames.character
 #'
 #' @examples
 #' # Assuming combined.obj is available and properly formatted
@@ -1371,15 +1391,15 @@ GrScoreUMAP <- function(obj = combined.obj,
 #' Typically something like is `'RNA_snn_res.6.reassigned_cl.av_GO:0042063'`.
 #' @param miscname The key within `obj@misc$gruffi` for retrieving the threshold value.
 #' Default is `'thresh.stress.ident1'`.
+#' @param per_granule Show granule- or cell count on the Y axis? Default is granules (TRUE).
 #' @param auto A logical flag indicating whether to automatically invert the filtering logic
 #' for a specific `miscname` condition. Default is TRUE.
 #' @param show.q90 Show 90th quantile of the distribution
 #' @param ... Additional parameters to be passed to `ggExpress::qhistogram`.
 #'
 #' @details The function first verifies the structure and content of the provided `obj`, ensuring it
-#' contains the necessary components for threshold retrieval and score extraction. It then retrieves
-#' the threshold and uses `CodeAndRoll2::as.numeric.wNames.character` to convert the specified granule
-#' scores to numeric. The histogram is plotted using `ggExpress::qhistogram`, with customization options
+#' contains the necessary components for threshold retrieval and score extraction.
+#' The histogram is plotted using `ggExpress::qhistogram`, with customization options
 #' available through additional arguments. The `auto` parameter's effect is noted, particularly for the
 #' `thresh.notstress.ident3` condition, although it primarily impacts plotting logic interpretation.
 #'
@@ -1392,13 +1412,12 @@ GrScoreUMAP <- function(obj = combined.obj,
 #'   colname = "RNA_snn_res.6.reassigned_cl.av_GO:0042063",
 #'   miscname = "thresh.stress.ident1"
 #' )
-#' @export
-#'
-#' @importFrom CodeAndRoll2 as.numeric.wNames.character
 #' @importFrom ggExpress qhistogram
+#' @export
 GrScoreHistogram <- function(obj = combined.obj,
                              colname = i1,
                              miscname = "thresh.stress.ident1",
+                             per_granule = TRUE,
                              auto = TRUE,
                              show.q90 = TRUE,
                              w = 8, h = 5,
@@ -1418,9 +1437,19 @@ GrScoreHistogram <- function(obj = combined.obj,
   # Retrieve threshold from object
   thr <- obj@misc$gruffi[[miscname]]
 
-  # Convert granule scores to numeric
-  granule_scores <- CodeAndRoll2::as.numeric.wNames.character(obj@meta.data[[colname]], verbose = FALSE)
+  granule_scores <- obj@meta.data[[colname]]
+  if (per_granule) granule_scores <- unique(granule_scores) # This is an approximation, numeric equivalence is theoretically possible.
 
+  nr.granule.scores <- length(unique(granule_scores))
+  nr.granules.re <- length(levels(obj@meta.data[[GetGruffiClusteringName(obj)]]))
+  if(nr.granule.scores!= nr.granules.re) {
+    MSG <- paste("Nr. of granules / granule-scores not matching:",nr.granule.scores , "/" ,
+                 nr.granules.re)
+    # This can be bc of numeric equivalence or, or the use of non-reassigned gr. res.
+    warning(MSG, immediate. = T)
+  }
+
+  YLB <- if (per_granule) "Nr. of Granules" else "Nr. of Cells"
 
   # Apply threshold to create a logical vector for identification
   obj[["pass"]] <- (granule_scores < thr)
@@ -1441,7 +1470,7 @@ GrScoreHistogram <- function(obj = combined.obj,
   pobj <- ggExpress::qhistogram(granule_scores,
                                 sub = subt, palette_use = "npg",
                                 plotname = paste("Granule Thresholding", make.names(components[2])),
-                                xlab = "Granule Median Score", ylab = "Nr. of Granules",
+                                xlab = "Granule Median Score", ylab = YLB,
                                 vline = thr, filtercol = colX,
                                 w = w, h = h,
                                 ...)
@@ -1451,10 +1480,10 @@ GrScoreHistogram <- function(obj = combined.obj,
   }
   print(pobj)
 
-  # Optionally, handle the 'auto' and 'miscname' parameters for additional logic
-  if (miscname == "thresh.notstress.ident3" & auto) {
-    message("Note: 'thresh.notstress.ident3' condition detected, but it affects UMAP plotting logic, not histogram.")
-  }
+  # # Optionally, handle the 'auto' and 'miscname' parameters for additional logic
+  # if (miscname == "thresh.notstress.ident3" & auto) {
+  #   message("Note: 'thresh.notstress.ident3' condition detected, but it affects UMAP plotting logic, not histogram.")
+  # }
 }
 
 
@@ -1522,7 +1551,6 @@ ClusterUMAPthresholding <- function(
 #' @param ... Additional arguments to be passed to `clUMAP`.
 #'
 #' @importFrom Seurat.utils clUMAP
-#' @importFrom CodeAndRoll2 as.numeric.wNames.character
 #'
 #' @examples
 #' StressUMAP(combined.obj)
@@ -1575,7 +1603,7 @@ StressBarplotPerCluster <- function(obj = combined.obj, fill.by = 'is.Stressed',
                                     custom_col_palette = TRUE, ...) {
 
   scBarplot.CellFractions( obj = obj, fill.by = fill.by, group.by = group.by,
-                          color_scale = color_scale, custom_col_palette = custom_col_palette, ...)
+                           color_scale = color_scale, custom_col_palette = custom_col_palette, ...)
 }
 
 
