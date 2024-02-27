@@ -669,9 +669,9 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
     split_by = clustering
   )
 
+  # browser()
   # Remove 'cl.' prefix from cluster average score names, if present
-  names(cl.av) <- gsub("cl.", "", names(cl.av))
-
+  # names(cl.av) <- gsub("cl.", "", names(cl.av))
 
   # Store cluster average scores in the metadata under a new column
   ColNameAverageScore <- paste0(clustering, "_cl.av_", make.names(GO_term))
@@ -684,8 +684,11 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
   # obj@meta.data[ColNameAverageScore] <- Seurat::Idents(obj)
 
   # Check nr of granules in output
-  nr.granule.scores <- length(unique(obj@meta.data[ColNameAverageScore]))
-  nr.granules <- length(unique(obj@meta.data[clustering]))
+  nr.granule.scores <- length(unique(obj@meta.data[ ,ColNameAverageScore]))
+  nr.granules <- length(unique(obj@meta.data[ ,clustering]))
+
+  iprint('nr.granule.scores', nr.granule.scores, 'nr.granules', nr.granules)
+
   if(nr.granule.scores != nr.granules) {
     MSG <- paste("Nr. of granules / granule-scores not matching:", nr.granule.scores , "/" ,
                  nr.granules.re)
