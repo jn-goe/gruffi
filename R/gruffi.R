@@ -1060,7 +1060,7 @@ FindThresholdsAuto <- function(
 
   if (plot.results) {
     message("plot.results is not yet fully implemented. May contain errors.")
-    StressUMAP(combined.obj)
+    StressUMAP(obj = obj)
 
     GrScoreUMAP(obj = obj, colname = stress.ident1, miscname = "thresh.stress.ident1")
     GrScoreUMAP(obj = obj, colname = stress.ident2, miscname = "thresh.stress.ident2")
@@ -1346,7 +1346,6 @@ GrScoreUMAP <- function(obj = combined.obj,
   }
 
   components <- strsplit(colname, "_cl\\.av_")[[1]]
-
   subt <- paste(
     "threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[["pass"]]), " | ",
     ncol(obj), "cells.")
@@ -1538,12 +1537,10 @@ StressUMAP <- function(obj = combined.obj,
             colname %in% names(obj@meta.data) )
 
   components <- strsplit(colname, "_cl\\.av_")[[1]]
-  nr.clust <- NaN
-  try(nr.clust <- length(unique(obj@meta.data[[components[1]]])), silent = TRUE)
 
   subt <- paste(
     pc_TRUE(obj@meta.data[[colname]]), "stressed cells | ",
-    ncol(obj), "cells |", nr.clust, "clusters."
+    ncol(obj), "cells."
   )
 
   # Call clUMAP with the thresholded identification and any additional arguments
