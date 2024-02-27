@@ -156,8 +156,7 @@ Example code for filtering cells high in glycolytic process and ER stress but lo
 combined.obj <- FindThresholdsShiny(obj = combined.obj,
                                 stress.ident1 = i1,
                                 stress.ident2 = i2,
-                                notstress.ident3 = i3,
-                                plot.cluster.shiny = "orig.ident")
+                                notstress.ident3 = i3)
 
 "Dont forget to click the button in the app: Save New Thresholds"
 
