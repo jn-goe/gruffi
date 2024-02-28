@@ -1181,6 +1181,8 @@ FeaturePlotSaveGO <- function(
     h = 7, PNG = TRUE,
     ...) {
 
+  message("Running FeaturePlotSaveGO()...")
+
   if (is.null(GO.score)) {
     message("GO.score is NULL")
     return(NULL)
@@ -1583,7 +1585,8 @@ StressUMAP <- function(obj = combined.obj,
     cols = rev(scales::hue_pal()(2)),
     title = paste("Stress identifcation"),
     prefix = colname, sub = subt,
-    caption = paste("meta.data:", colname, "| based on", Stringendo::kpps(GO.terms))
+    caption = paste("meta.data:", colname, "| possibly based on", Stringendo::kpps(GO.terms))
+    # Why possibly? Bc names(obj@misc$gruffi$GO) can contain more GO-terms then it was used
     , ... )
 }
 
@@ -1876,16 +1879,15 @@ CalcClusterAverages_Gruffi <- function(
 #' @importFrom Stringendo iprint
 GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
                                     granule.res.slot = "optimal.granule.res") {
+
+  # Retrieve all clustering stored in @misc slot
   res <- obj@misc$gruffi[[granule.res.slot]]
+
+  # Retrieve all clustering runs that match the given pattern
+  matchingRuns <- Seurat.utils::GetClusteringRuns(obj, pat = pattern)
 
   if (is.null(res)) {
     message("obj@misc$gruffi$optimal.granule.res not found. Searching for pattern in meta.data: *", pattern)
-
-    # Retrieve all clustering runs from the Seurat object
-    matchingRuns <- Seurat.utils::GetClusteringRuns(obj, pat = pattern)
-
-    # Check for clustering runs that match the given pattern
-    # matchingRuns <- clusteringRuns[grepl(pattern, clusteringRuns)]
 
     # Return the first matching run if any exist, otherwise return the first clustering run
     if (length(matchingRuns) == 1) {
@@ -1894,13 +1896,23 @@ GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
         Stringendo::iprint(matchingRuns)
       }
       res <- matchingRuns[1]
-    } else {
       warning("No matching clustering runs found. Returning the last one.", immediate. = TRUE)
-      res <- clusteringRuns[length(clusteringRuns)]
+
+    } else {
+      warning("gruffi granule res is not found in @misc Returning the last clustering.", immediate. = TRUE)
+      res <- matchingRuns[length(matchingRuns)]
+    }
+  } else { # obj@misc$gruffi[[granule.res.slot]] exists
+    if ( !(res %in% colnames(obj@meta.data)) ) {
+      MSG <- p0('obj@misc$gruffi[[', granule.res.slot,']] contains: ', res, ", which is not found in obj@meta.data!")
+      imessage('matchingRuns:', matchingRuns)
+      imessage('misc slot:', res)
+      stop(MSG)
     }
   }
   return(res)
 }
+
 
 
 # _________________________________________________________________________________________________
