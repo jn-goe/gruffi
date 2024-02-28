@@ -6,7 +6,7 @@
 \usage{
 .parse.GO(
   ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
-  pattern = "_cl\\\\.av_",
+  pattern = "_cl\\\\.av_|^Score.",
   ...
 )
 }

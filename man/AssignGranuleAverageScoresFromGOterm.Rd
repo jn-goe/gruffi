@@ -12,7 +12,7 @@ AssignGranuleAverageScoresFromGOterm(
   save.UMAP = FALSE,
   plot.each.gene = FALSE,
   assay = "RNA",
-  description = NULL,
+  description = (if (!is.null(names(GO_term))) names(GO_term) else NULL),
   mirror = NULL,
   stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
   overwrite.misc.GO_genes = FALSE,

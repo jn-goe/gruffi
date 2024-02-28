@@ -546,9 +546,9 @@ CalculateAndPlotGoTermScores <- function(
   # Backup the current default assay to restore it later
   backup.assay <- Seurat::DefaultAssay(obj)
 
+  # browser()
   # Check if the GO parameter is a valid GO term format
   if (grepl(x = GO, pattern = "^GO:", perl = TRUE)) {
-    # stopif(condition = grepl(pattern = "Score.", x = GO), message = print("Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096"))
     stopifnot(
       "Provide a simple GO-term, like: GO:0009651 - not Score.GO.0006096" =
         !grepl(pattern = "Score.", x = GO)
@@ -559,8 +559,8 @@ CalculateAndPlotGoTermScores <- function(
     ScoreName <- paste0("Score.", GO.wDot)
     print(ScoreName)
   } else {
-    message("Assuming you provided direclty a score name in the 'GO' parameter: ", ScoreName)
     ScoreName <- GO
+    message("Assuming you provided direclty a score name in the 'GO' parameter: ", ScoreName)
   }
 
   # Set assay to RNA for GO score computation if not already set
@@ -644,11 +644,12 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
                                                  save.UMAP = FALSE,
                                                  plot.each.gene = FALSE,
                                                  assay = "RNA",
-                                                 description = NULL,
+                                                 description = (if (!is.null(names(GO_term))) names(GO_term) else NULL),
                                                  mirror = NULL,
                                                  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                                  overwrite.misc.GO_genes = FALSE,
                                                  ...) {
+
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
 
   if(!grepl("reassigned", clustering)) {
@@ -1768,9 +1769,12 @@ CalcClusterAverages_Gruffi <- function(
       )
     },
     ...) {
+  message("Running CalcClusterAverages_Gruffi().." )
   Stringendo::iprint(substitute(obj), "split by", split_by)
 
+  # browser()
   # Calculate mean, mediand and CV of each granule (specified in split_by) .
+  col_name <- as.character(col_name)
   df.summary <-
     obj@meta.data %>%
     dplyr::select_at(c(col_name, split_by)) %>%
