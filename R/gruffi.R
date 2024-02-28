@@ -378,7 +378,6 @@ CalculateMedianClusterSize <- function(
 #' @importFrom AnnotationDbi select
 #' @importFrom org.Hs.eg.db org.Hs.eg.db
 #' @importFrom Stringendo kollapse
-#' @importFrom DOSE geneInCategory
 
 GetGOTerms <- function(obj = combined.obj,
                        GO = "GO:0034976",
@@ -392,14 +391,14 @@ GetGOTerms <- function(obj = combined.obj,
                        mirror = NULL) {
   message("Running GetGOTerms()")
 
-  GO.gene.symbol.slot <- obj@misc$gruffi$GO[[make.names(GO)]]
-  # GO.gene.symbol.slot <- obj@misc$gruffi$"GO_genes"[[assay]]
+  GO.gene.set <- make.names(GO)
+  GO.gene.symbol.slot <- obj@misc$gruffi$GO[[GO.gene.set]]
 
   iprint("overwrite.misc.GO_genes", overwrite.misc.GO_genes)
   if (overwrite.misc.GO_genes) GO.gene.symbol.slot <- NULL # so it will be recomputed and overwritten
 
   if (is.null(GO.gene.symbol.slot)) {
-    message("No pre-existing GO_genes results found in obj@misc$gruffi$GO[[make.names(GO)]].")
+    message("No pre-existing GO_genes results found in obj@misc$gruffi$GO[[GO.gene.set]].")
 
     if (data.base.access == "biomaRt") { # If using biomaRt to access Ensembl database
 
@@ -424,10 +423,12 @@ GetGOTerms <- function(obj = combined.obj,
       stop("Choose either AnnotationDbi or biomaRt for gene list retrieval.")
     }
   } else {
-    message("Pre-existing GO_genes results found in obj@misc$gruffi$GO[[make.names(GO)]].")
+    message("Pre-existing GO_genes results found in obj@misc$gruffi$GO[[GO.gene.set]].")
     iprint("GO.gene.symbol.slot", head(GO.gene.symbol.slot))
-    genes <- unlist(DOSE::geneInCategory(GO.gene.symbol.slot)[GO])
-    message("Gene symbols taken from GO_genes.")
+
+    # genes <- unlist(DOSE::geneInCategory(x = GO.gene.symbol.slot)[GO])
+    genes <- GO.gene.symbol.slot
+    message("Gene symbols taken from misc$gruffi$GO")
   }
   message("\n", length(genes), " gene symbols used: ", Stringendo::kppws(head(genes, n = genes.shown)))
 
@@ -436,8 +437,8 @@ GetGOTerms <- function(obj = combined.obj,
 
   # Save the result in the Seurat object for later access
   if (is.null(obj@misc$gruffi$"GO")) obj@misc$gruffi$GO <- list()
-  obj@misc$gruffi$GO[[make.names(GO)]] <- genes
-  message("Genes in ", GO, " are saved under obj@misc$gruffi$GO$", make.names(GO))
+  obj@misc$gruffi$GO[[GO.gene.set]] <- genes
+  message("Genes in ", GO, " are saved under obj@misc$gruffi$GO$", GO.gene.set)
 
   # Open the GO term web page if requested
   if (web.open) system(paste0("open https://www.ebi.ac.uk/QuickGO/search/", GO))
@@ -541,6 +542,7 @@ CalculateAndPlotGoTermScores <- function(
     return.plot = FALSE,
     overwrite.misc.GO_genes = FALSE,
     ...) {
+
   # Backup the current default assay to restore it later
   backup.assay <- Seurat::DefaultAssay(obj)
 
@@ -669,10 +671,6 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
     split_by = clustering
   )
 
-  # browser()
-  # Remove 'cl.' prefix from cluster average score names, if present
-  # names(cl.av) <- gsub("cl.", "", names(cl.av))
-
   # Store cluster average scores in the metadata under a new column
   ColNameAverageScore <- paste0(clustering, "_cl.av_", make.names(GO_term))
 
@@ -680,8 +678,6 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
 
   # New way to store as numeric
   obj@meta.data[ColNameAverageScore] <- as.numeric(as.character(Seurat::Idents(obj)))
-  # Old way to store as factor
-  # obj@meta.data[ColNameAverageScore] <- Seurat::Idents(obj)
 
   # Check nr of granules in output
   nr.granule.scores <- length(unique(obj@meta.data[ ,ColNameAverageScore]))
@@ -1181,14 +1177,20 @@ FeaturePlotSaveGO <- function(
     name_desc = NULL,
     save.plot = TRUE,
     title_ = paste(GO.score, name_desc),
-    h = 7, PNG = TRUE, ...) {
+    h = 7, PNG = TRUE,
+    ...) {
+
   if (is.null(GO.score)) {
     message("GO.score is NULL")
     return(NULL)
   }
 
   proper.GO <- .parse.GO(GO.score)
+  stopif(is.na(proper.GO))
+  stopifnot(make.names(proper.GO) %in% names(obj@misc$gruffi$"GO"))
+
   (genes.GO <- obj@misc$gruffi$GO[[make.names(proper.GO)]])
+  stopifnot(length(genes.GO) > 1)
 
   CPT <- paste(
     "Score calc. from", length(genes.GO), "expr. genes from @misc$gruffi$GO.",
@@ -2096,9 +2098,11 @@ ClearGruffi <- function(obj,
 #' @examples
 #' .parse.GO(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096")
 .parse.GO <- function(ident = "RNA_snn_res.6.reassigned_cl.av_GO:0006096",
-                      pattern = "_cl\\.av_", ...) {
-  dot_sep_term <- strsplit(x = ident, split = pattern, ...)[[1]][2]
-  gsub(x = dot_sep_term, pattern = "GO.", replacement = "GO:")
+                      pattern = "_cl\\.av_|^Score.", ...) {
+  sep_terms <- strsplit(x = ident, split = pattern, ...)[[1]]
+  dot_sep_term <- sep_terms[length(sep_terms)]
+  out <- gsub(x = dot_sep_term, pattern = "GO.", replacement = "GO:")
+  return(out)
 }
 
 
