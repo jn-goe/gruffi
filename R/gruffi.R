@@ -690,7 +690,7 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
       nr.granules.re
     )
     # This can be bc of numeric equivalence or, or the use of non-reassigned gr. res.
-    warning(MSG, immediate. = T)
+    warning(MSG, immediate. = TRUE)
   }
 
   stopifnot(is.numeric(obj@meta.data[, ColNameAverageScore]))
@@ -1456,7 +1456,7 @@ GrScoreHistogram <- function(obj = combined.obj,
       nr.granules.re
     )
     # This can be bc of numeric equivalence or, or the use of non-reassigned gr. res.
-    warning(MSG, immediate. = T)
+    warning(MSG, immediate. = TRUE)
   }
 
   YLB <- if (per_granule) "Nr. of Granules" else "Nr. of Cells"
@@ -1910,7 +1910,7 @@ GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
     }
   } else { # obj@misc$gruffi[[granule.res.slot]] exists
     if (!(res %in% colnames(obj@meta.data))) {
-      MSG <- p0("obj@misc$gruffi[[", granule.res.slot, "]] contains: ", res, ", which is not found in obj@meta.data!")
+      MSG <- paste0("obj@misc$gruffi[[", granule.res.slot, "]] contains: ", res, ", which is not found in obj@meta.data!")
       imessage("matchingRuns:", matchingRuns)
       imessage("misc slot:", res)
       stop(MSG)
