@@ -125,8 +125,8 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     message("\nSearch between resolutions: ", r.lower, " & ", r.upper, ", starting at: ", r.current)
     tictoc::tic()
     obj <- Seurat::FindClusters(obj,
-                                resolution = r.current, method = clust.method,
-                                verbose = FALSE
+      resolution = r.current, method = clust.method,
+      verbose = FALSE
     )
     tictoc::toc()
 
@@ -542,7 +542,6 @@ CalculateAndPlotGoTermScores <- function(
     return.plot = FALSE,
     overwrite.misc.GO_genes = FALSE,
     ...) {
-
   # Backup the current default assay to restore it later
   backup.assay <- Seurat::DefaultAssay(obj)
 
@@ -649,10 +648,9 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
                                                  stat.av = c("mean", "median", "normalized.mean", "normalized.median")[3],
                                                  overwrite.misc.GO_genes = FALSE,
                                                  ...) {
-
   Seurat::Idents(obj) <- obj@meta.data[[clustering]]
 
-  if(!grepl("reassigned", clustering)) {
+  if (!grepl("reassigned", clustering)) {
     warning("Non-reassigned granules are used in 'clustering'. Are you sure?", immediate. = TRUE)
   }
 
@@ -681,14 +679,16 @@ AssignGranuleAverageScoresFromGOterm <- function(obj = combined.obj,
   obj@meta.data[ColNameAverageScore] <- as.numeric(as.character(Seurat::Idents(obj)))
 
   # Check nr of granules in output
-  nr.granule.scores <- length(unique(obj@meta.data[ ,ColNameAverageScore]))
-  nr.granules <- length(unique(obj@meta.data[ ,clustering]))
+  nr.granule.scores <- length(unique(obj@meta.data[, ColNameAverageScore]))
+  nr.granules <- length(unique(obj@meta.data[, clustering]))
 
-  iprint('nr.granule.scores', nr.granule.scores, 'nr.granules', nr.granules)
+  iprint("nr.granule.scores", nr.granule.scores, "nr.granules", nr.granules)
 
-  if(nr.granule.scores != nr.granules) {
-    MSG <- paste("Nr. of granules / granule-scores not matching:", nr.granule.scores , "/" ,
-                 nr.granules.re)
+  if (nr.granule.scores != nr.granules) {
+    MSG <- paste(
+      "Nr. of granules / granule-scores not matching:", nr.granule.scores, "/",
+      nr.granules.re
+    )
     # This can be bc of numeric equivalence or, or the use of non-reassigned gr. res.
     warning(MSG, immediate. = T)
   }
@@ -939,14 +939,14 @@ FindThresholdsShiny <- function(
   # Launch the Shiny app
   app_dir <- system.file("shiny", "GO.thresh", package = "gruffi")
   app_ui <- source(file.path(app_dir, "ui.R"),
-                   local = new.env(parent = app_env),
-                   echo = FALSE, keep.source = TRUE
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
   )$value
 
   # Call the server.R file
   app_server <- source(file.path(app_dir, "server.R"),
-                       local = new.env(parent = app_env),
-                       echo = FALSE, keep.source = TRUE
+    local = new.env(parent = app_env),
+    echo = FALSE, keep.source = TRUE
   )$value
 
   obj <- shiny::runApp(shiny::shinyApp(app_ui, app_server))
@@ -987,7 +987,6 @@ FindThresholdsAuto <- function(
     step.size = 0.001,
     plot.results = TRUE,
     ...) {
-
   meta <- obj@meta.data
   # Ensure that provided GO term identifiers exist in the metadata
   stopifnot(stress.ident1 %in% colnames(meta) | is.null(stress.ident1))
@@ -1010,9 +1009,12 @@ FindThresholdsAuto <- function(
   thresh.notstress.ident4 <- .round(PlotNormAndSkew(gr.av.notstress.scores4, q = quantile, tresholding = proposed.method, plot.hist = FALSE), digits = dgt)
 
   # Output assertions
-  stopifnot("Some threshold values are NA" =
-              !anyNA(c(thresh.stress.ident1, thresh.stress.ident2,
-                       thresh.notstress.ident3, thresh.notstress.ident4))
+  stopifnot(
+    "Some threshold values are NA" =
+      !anyNA(c(
+        thresh.stress.ident1, thresh.stress.ident2,
+        thresh.notstress.ident3, thresh.notstress.ident4
+      ))
   )
 
   # Store computed thresholds in the Seurat object's misc slot for later reference
@@ -1100,7 +1102,7 @@ FindThresholdsAuto <- function(
 
   message("Seurat object now contains:")
   message(" --  A new metadata column: `is.Stressed`:")
-  message(" --  Threshold values for granule average scores: `obj@misc$gruffi$...`:")
+  message(" --  Threshold values for granule average scores are under: `obj@misc$gruffi$...`:")
   print(pc_TRUE(obj$is.Stressed, suffix = "stressed cells", NumberAndPC = TRUE))
   print(obj@misc$"gruffi")
 
@@ -1179,7 +1181,6 @@ FeaturePlotSaveGO <- function(
     title_ = paste(GO.score, name_desc),
     h = 7, PNG = TRUE,
     ...) {
-
   message("Running FeaturePlotSaveGO()...")
 
   if (is.null(GO.score)) {
@@ -1200,8 +1201,8 @@ FeaturePlotSaveGO <- function(
   )
   ggplot.obj <-
     Seurat::FeaturePlot(obj,
-                        features = GO.score, min.cutoff = "q05", max.cutoff = "q95",
-                        reduction = "umap", ...
+      features = GO.score, min.cutoff = "q05", max.cutoff = "q95",
+      reduction = "umap", ...
     ) +
     ggplot2::labs(title = title_, caption = CPT) +
     Seurat::NoAxes()
@@ -1243,9 +1244,9 @@ PlotClustSizeDistr <- function(obj = combined.obj,
 
   if (length(clust.size.distr) < thr.hist) {
     ggExpress::qbarplot(clust.size.distr,
-                        plotname = Stringendo::ppp("clust.size.distr", (category)),
-                        subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
-                        ...
+      plotname = Stringendo::ppp("clust.size.distr", (category)),
+      subtitle = paste("Nr.clusters at res.", resX, ":", length(clust.size.distr), " | CV:", percentage_formatter(CodeAndRoll2::cv(clust.size.distr))),
+      ...
     )
   } else {
     ggExpress::qhistogram(
@@ -1301,8 +1302,8 @@ PlotNormAndSkew <- function(x, q,
         signif(thresh, digits = 3), "\nValues above thr:", CodeAndRoll2::pc_TRUE(x > thresh)
       ))
       ggExpress::qhistogram(Score.threshold.estimate,
-                            vline = thresh, subtitle = sb, xlab = "Score",
-                            plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
+        vline = thresh, subtitle = sb, xlab = "Score",
+        plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
       )
     }
     return(thresh)
@@ -1345,7 +1346,6 @@ GrScoreUMAP <- function(obj = combined.obj,
                         miscname = "thresh.stress.ident1",
                         auto = TRUE,
                         ...) {
-
   if (is.null(colname)) {
     message("Score is NULL")
     return(NULL)
@@ -1361,7 +1361,7 @@ GrScoreUMAP <- function(obj = combined.obj,
 
   # # Convert granule scores to numeric with names
   # granule_scores <- CodeAndRoll2::as.numeric.wNames.character(obj@meta.data[[colname]], verbose = FALSE)
-  granule_scores <- obj@meta.data[ , colname ]
+  granule_scores <- obj@meta.data[, colname]
 
   # Apply threshold to create a logical vector for identification
   obj[["pass"]] <- (granule_scores < thr)
@@ -1375,7 +1375,8 @@ GrScoreUMAP <- function(obj = combined.obj,
   components <- strsplit(colname, "_cl\\.av_")[[1]]
   subt <- paste(
     "threshold:", thr, " | Pass: ", pc_TRUE(obj@meta.data[["pass"]]), " | ",
-    ncol(obj), "cells.")
+    ncol(obj), "cells."
+  )
 
   # Call clUMAP with the thresholded identification and any additional arguments
   Seurat.utils::clUMAP(
@@ -1449,9 +1450,11 @@ GrScoreHistogram <- function(obj = combined.obj,
 
   nr.granule.scores <- length(unique(granule_scores))
   nr.granules.re <- length(levels(obj@meta.data[[GetGruffiClusteringName(obj)]]))
-  if(nr.granule.scores!= nr.granules.re) {
-    MSG <- paste("Nr. of granules / granule-scores not matching:",nr.granule.scores , "/" ,
-                 nr.granules.re)
+  if (nr.granule.scores != nr.granules.re) {
+    MSG <- paste(
+      "Nr. of granules / granule-scores not matching:", nr.granule.scores, "/",
+      nr.granules.re
+    )
     # This can be bc of numeric equivalence or, or the use of non-reassigned gr. res.
     warning(MSG, immediate. = T)
   }
@@ -1475,14 +1478,15 @@ GrScoreHistogram <- function(obj = combined.obj,
 
   # Plot histogram with ggExpress::qhistogram
   pobj <- ggExpress::qhistogram(granule_scores,
-                                sub = subt, palette_use = "npg",
-                                plotname = paste("Granule Thresholding", make.names(components[2])),
-                                xlab = "Granule Median Score", ylab = YLB,
-                                vline = thr, filtercol = colX,
-                                w = w, h = h,
-                                ...)
-  if(show.q90) {
-    pobj <- pobj + geom_vline(xintercept = quantile(granule_scores, 0.9), linetype = "dashed" ) +
+    sub = subt, palette_use = "npg",
+    plotname = paste("Granule Thresholding", make.names(components[2])),
+    xlab = "Granule Median Score", ylab = YLB,
+    vline = thr, filtercol = colX,
+    w = w, h = h,
+    ...
+  )
+  if (show.q90) {
+    pobj <- pobj + geom_vline(xintercept = quantile(granule_scores, 0.9), linetype = "dashed") +
       labs(caption = "Dashed marks the 90th quantile of the data.")
   }
   print(pobj)
@@ -1518,7 +1522,6 @@ ClusterUMAPthresholding <- function(
     obj = combined.obj, plot.barplot = FALSE,
     subt = "response to ER stress", plotUMAP = TRUE,
     ...) {
-
   clusters.keep <- Seurat.utils::calc.cluster.averages(
     col_name = q.meta.col, split_by = c.meta.col, absolute.thr = absolute.cutoff,
     quantile.thr = quantile, plotit = plot.barplot
@@ -1568,10 +1571,11 @@ StressUMAP <- function(obj = combined.obj,
                        GO.terms = names(obj@misc$gruffi$GO),
                        suffix = NULL,
                        ...) {
-
-  stopifnot(inherits(obj, "Seurat"),
-            !is.null(obj@misc$gruffi),
-            colname %in% names(obj@meta.data) )
+  stopifnot(
+    inherits(obj, "Seurat"),
+    !is.null(obj@misc$gruffi),
+    colname %in% names(obj@meta.data)
+  )
 
   components <- strsplit(colname, "_cl\\.av_")[[1]]
 
@@ -1589,7 +1593,8 @@ StressUMAP <- function(obj = combined.obj,
     suffix = suffix,
     caption = paste("meta.data:", colname, "| possibly based on", Stringendo::kpps(GO.terms))
     # Why possibly? Bc names(obj@misc$gruffi$GO) can contain more GO-terms then it was used
-    , ... )
+    , ...
+  )
 }
 
 
@@ -1608,13 +1613,14 @@ StressUMAP <- function(obj = combined.obj,
 #' @return A bar plot visualizing the cell fractions per cluster, filled by the specified fill criteria.
 #' @importFrom scales hue_pal
 #' @export
-StressBarplotPerCluster <- function(obj = combined.obj, fill.by = 'is.Stressed',
+StressBarplotPerCluster <- function(obj = combined.obj, fill.by = "is.Stressed",
                                     group.by = GetClusteringRuns()[1],
                                     color_scale = rev(scales::hue_pal()(2)),
                                     custom_col_palette = TRUE, ...) {
-
-  scBarplot.CellFractions( obj = obj, fill.by = fill.by, group.by = group.by,
-                           color_scale = color_scale, custom_col_palette = custom_col_palette, ...)
+  scBarplot.CellFractions(
+    obj = obj, fill.by = fill.by, group.by = group.by,
+    color_scale = color_scale, custom_col_palette = custom_col_palette, ...
+  )
 }
 
 
@@ -1750,7 +1756,7 @@ CalcStandDevSkewedDistr <- function(x, mean_x = mean(x),
 CalcClusterAverages_Gruffi <- function(
     col_name = "Score.GO.0006096",
     obj = combined.obj,
-    split_by = Seurat.utils::GetClusteringRuns(obj)[1],
+    split_by = GetGruffiClusteringName(obj),
     stat = c("mean", "median", "normalized.mean", "normalized.median")[3],
     scale.zscore = FALSE,
     quantile.thr = 0.99,
@@ -1774,7 +1780,7 @@ CalcClusterAverages_Gruffi <- function(
       )
     },
     ...) {
-  message("Running CalcClusterAverages_Gruffi().." )
+  message("Running CalcClusterAverages_Gruffi()..")
   Stringendo::iprint(substitute(obj), "split by", split_by)
 
   # browser()
@@ -1881,7 +1887,6 @@ CalcClusterAverages_Gruffi <- function(
 #' @importFrom Stringendo iprint
 GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
                                     granule.res.slot = "optimal.granule.res") {
-
   # Retrieve all clustering stored in @misc slot
   res <- obj@misc$gruffi[[granule.res.slot]]
 
@@ -1899,16 +1904,15 @@ GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
       }
       res <- matchingRuns[1]
       warning("No matching clustering runs found. Returning the last one.", immediate. = TRUE)
-
     } else {
       warning("gruffi granule res is not found in @misc Returning the last clustering.", immediate. = TRUE)
       res <- matchingRuns[length(matchingRuns)]
     }
   } else { # obj@misc$gruffi[[granule.res.slot]] exists
-    if ( !(res %in% colnames(obj@meta.data)) ) {
-      MSG <- p0('obj@misc$gruffi[[', granule.res.slot,']] contains: ', res, ", which is not found in obj@meta.data!")
-      imessage('matchingRuns:', matchingRuns)
-      imessage('misc slot:', res)
+    if (!(res %in% colnames(obj@meta.data))) {
+      MSG <- p0("obj@misc$gruffi[[", granule.res.slot, "]] contains: ", res, ", which is not found in obj@meta.data!")
+      imessage("matchingRuns:", matchingRuns)
+      imessage("misc slot:", res)
       stop(MSG)
     }
   }
@@ -1946,7 +1950,6 @@ ParseGruffiGranuleScoreName <- function(goID, obj = combined.obj, granuleRes = G
 #' @importFrom CodeAndRoll2 grepv
 #' @importFrom Stringendo iprint
 CleanDuplicateScorenames <- function(obj = obj) {
-
   cn <- colnames(obj@meta.data)
 
   # Filter out GO score names using a regex pattern, retaining non-GO columns
@@ -1991,12 +1994,13 @@ CleanDuplicateScorenames <- function(obj = obj) {
 #' @importFrom Stringendo iprint
 
 IntersectWithExpressed <- function(genes, obj = combined.obj, genes.shown = 10) {
-
   message("Running IntersectWithExpressed()")
   diff <- setdiff(genes, rownames(obj))
-  Stringendo::iprint(length(diff), "genes (of", length(genes),
-                     ") are MISSING from the Seurat object:",
-                     head(diff, genes.shown))
+  Stringendo::iprint(
+    length(diff), "genes (of", length(genes),
+    ") are MISSING from the Seurat object:",
+    head(diff, genes.shown)
+  )
   return(intersect(rownames(obj), genes))
 }
 
@@ -2027,7 +2031,6 @@ ClearGruffi <- function(obj,
                         pattern.granule.score = ".*_snn_res\\..*\\_cl\\.av_GO\\.[0-9]+",
                         stress.assignment = "is.Stressed",
                         remove.granules = FALSE) {
-
   message("@misc$GO$... gene lists are not removed.")
 
   # Find and remove columns matching the pattern
@@ -2170,7 +2173,7 @@ GOscoreEvaluation <- function() .Deprecated("gruffi::AssignGranuleAverageScoresF
 GO_score_evaluation <- function() .Deprecated("gruffi::AssignGranuleAverageScoresFromGOterm()")
 Shiny.GO.thresh <- function() .Deprecated("gruffi::FindThresholdsShiny()")
 Auto.GO.thresh <- function() .Deprecated("gruffi::FindThresholdsAuto()")
-PlotGoTermScores <- function() .Deprecated("gruffi::CalculateAndCalculateAndPlotGoTermScores()")
+PlotGoTermScores <- function() .Deprecated("gruffi::CalculateAndPlotGoTermScores()")
 
 stand_dev_skewed <- function() .Deprecated("gruffi::CalcStandDevSkewedDistr()")
 GetAllGOTerms <- function() .Deprecated("gruffi::GetAllGOTerms()")

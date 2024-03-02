@@ -149,7 +149,8 @@ UMAP3Dcubes <- function(obj = combined.obj,
 #' @importFrom MarkdownHelpers filter_HP llprint
 #' @importFrom Seurat.utils clUMAP calc.cluster.averages isave.RDS
 #' @importFrom Stringendo iprint percentage_formatter
-FilterStressedCells <- function(obj = combined.obj,
+FilterStressedCells <- function(
+    obj = combined.obj,
     res = "integrated_snn_res.30",
     quantile.thr = 0.9,
     GOterms = c("glycolytic process" = "GO:0006096", "response to endoplasmic reticulum stress" = "GO:0034976"),
