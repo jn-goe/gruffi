@@ -53,7 +53,7 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
                                       clust.method = NULL, # "matrix" or "igraph"
                                       n.threads = 1) {
   message(
-    ncol(combined.obj), " cells in object. Searching for optimal resolution between res: ",
+    ncol(obj), " cells in object. Searching for optimal resolution between res: ",
     min.res, " & ", max.res, "...\nGranule Size Requirements: ",
     min.med.granule.size, " >X> ", max.med.granule.size
   )
@@ -1001,7 +1001,6 @@ FindThresholdsAuto <- function(
   gr.av.stress.scores2 <- unique(as.numeric(meta[, stress.ident2]))
   gr.av.notstress.scores3 <- unique(as.numeric(meta[, notstress.ident3]))
   gr.av.notstress.scores4 <- unique(as.numeric(meta[, notstress.ident4]))
-  iprint("gr.av.notstress.scores4", gr.av.notstress.scores4)
 
   # Compute threshold proposals for each "granule average GO-score" using PlotNormAndSkew function
   dgt <- nchar(step.size) - 2
@@ -1556,6 +1555,7 @@ ClusterUMAPthresholding <- function(
 #' @param colname Name of the column containing granule scores.
 #' Default is `'RNA_snn_res.6.reassigned_cl.av_GO:0042063'`.
 #' @param GO.terms used for the computation
+#' @param suffix Suffix to append to the plot/file name. Default: NULL.
 #' @param ... Additional arguments to be passed to `clUMAP`.
 #'
 #' @importFrom Seurat.utils clUMAP
@@ -1566,6 +1566,7 @@ ClusterUMAPthresholding <- function(
 StressUMAP <- function(obj = combined.obj,
                        colname = "is.Stressed",
                        GO.terms = names(obj@misc$gruffi$GO),
+                       suffix = NULL,
                        ...) {
 
   stopifnot(inherits(obj, "Seurat"),
@@ -1585,6 +1586,7 @@ StressUMAP <- function(obj = combined.obj,
     cols = rev(scales::hue_pal()(2)),
     title = paste("Stress identifcation"),
     prefix = colname, sub = subt,
+    suffix = suffix,
     caption = paste("meta.data:", colname, "| possibly based on", Stringendo::kpps(GO.terms))
     # Why possibly? Bc names(obj@misc$gruffi$GO) can contain more GO-terms then it was used
     , ... )
@@ -1935,7 +1937,7 @@ ParseGruffiGranuleScoreName <- function(goID, obj = combined.obj, granuleRes = G
 
 # _________________________________________________________________________________________________
 #' @title CleanDuplicateScorenames
-#' @description Remove duplicate scorenames from obj@mata.data.
+#' @description Remove duplicate scorenames from obj meta.data (same score, different numeric suffix).
 #' @param obj Seurat single cell object, Default: obj
 #' @seealso
 #'  \code{\link[CodeAndRoll2]{grepv}}
@@ -1943,16 +1945,26 @@ ParseGruffiGranuleScoreName <- function(goID, obj = combined.obj, granuleRes = G
 #' @export
 #' @importFrom CodeAndRoll2 grepv
 #' @importFrom Stringendo iprint
-CleanDuplicateScorenames <- function(obj = obj) { # Helper. When AddGOScore(), a '1' is added to the end of the column name. It is hereby removed.
-  obj <- combined.obj
+CleanDuplicateScorenames <- function(obj = obj) {
+
   cn <- colnames(obj@meta.data)
 
+  # Filter out GO score names using a regex pattern, retaining non-GO columns
   nonGO <- sort(CodeAndRoll2::grepv(x = cn, pattern = paste0("^Score.GO.[0-9]{7}.*"), invert = TRUE))
+
+  # Identify clean GO-score-names without suffixes
   clean <- CodeAndRoll2::grepv(x = cn, pattern = paste0("^Score.GO.[0-9]{7}$"))
 
+  # Identify GO score names with suffixes (e.g., .1, .2)
   appended <- CodeAndRoll2::grepv(x = cn, pattern = paste0("^Score.GO.[0-9]{7}\\.[0-9]$"))
+
+  # Remove suffixes from appended GO score names
   fixed <- gsub(x = appended, pattern = paste0("\\.[0-9]$"), replacement = "")
+
+  # Keep only unique GO scores not present in the clean list
   fixed.keep <- which(!(fixed %in% clean))
+
+  # Combine clean and unique suffixed GO scores
   uniqueGO <- c(clean, fixed.keep)
   obj@meta.data <- obj@meta.data[, c(nonGO, uniqueGO)]
 

@@ -8,6 +8,7 @@ StressUMAP(
   obj = combined.obj,
   colname = "is.Stressed",
   GO.terms = names(obj@misc$gruffi$GO),
+  suffix = NULL,
   ...
 )
 }
@@ -19,6 +20,8 @@ Default is \code{combined.obj}.}
 Default is \code{'RNA_snn_res.6.reassigned_cl.av_GO:0042063'}.}
 
 \item{GO.terms}{used for the computation}
+
+\item{suffix}{Suffix to append to the plot/file name. Default: NULL.}
 
 \item{...}{Additional arguments to be passed to \code{clUMAP}.}
 }
