@@ -7,7 +7,7 @@
 CalcClusterAverages_Gruffi(
   col_name = "Score.GO.0006096",
   obj = combined.obj,
-  split_by = Seurat.utils::GetClusteringRuns(obj)[1],
+  split_by = GetGruffiClusteringName(obj),
   stat = c("mean", "median", "normalized.mean", "normalized.median")[3],
   scale.zscore = FALSE,
   quantile.thr = 0.99,
