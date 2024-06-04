@@ -13,7 +13,7 @@ The Gruffi R package helps you (1) to identify stressed cells in single-cell RNA
 
 ## News
 
-- `v1.5.*` is released, that fixes critical problems which arose with changes in dependencies and made the installation / pipeline break.  Additionally it contains 
+- `v1.5.*` is released, that fixes critical problems which arose with changes in dependencies and made the installation / pipeline break.  Additionally it contains updates necessary to work with Seurat v5 objects.
 - Now it is more explicit that GO-annotation can either be obtained via `BioMart` or `AnnotationDbi`, which is helpful, as BioMart connection is not always working. For the same reason, it now allows the usage of alternative mirrors for BioMart (thanks to `@zuzkamat`).
 - Major consistency update in function names, see below.
 - Consistency update in variable names (in @misc and @meta.data), for the latter, this update is not backward compatible, meaning earlier results needs manual adjustments in those names to run. Recommended is to rerun the new version.
