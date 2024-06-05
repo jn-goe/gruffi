@@ -9,7 +9,7 @@ ReassignSmallClusters(
   ident = obj@misc$gruffi$optimal.granule.res,
   cell.num = 30,
   reduction = c("pca", "3d_umap")[2],
-  PCA_dim.recompution.umap.3d = ncol(obj@reductions$pca@cell.embeddings)
+  nr.of.PCs.for.3D.umap.computation = ncol(obj@reductions$pca@cell.embeddings)
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ ReassignSmallClusters(
 
 \item{reduction}{Dim. reduction used to estimate closest cluster center when reassigning. Default: c("pca", "3d_umap")\link{2}}
 
-\item{PCA_dim.recompution.umap.3d}{If 3D umap need to be recomputed, how many PCA-dimensions to be used?, Default: ncol(obj@reductions$pca@cell.embeddings)}
+\item{nr.of.PCs.for.3D.umap.computation}{If 3D umap need to be recomputed, how many PCA-dimensions to be used?, Default: ncol(obj@reductions$pca@cell.embeddings)}
 }
 \description{
 Reassign granules (clusters) smaller than X to nearby granules based on 3D UMAP coordinates.

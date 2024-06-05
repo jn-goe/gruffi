@@ -8,7 +8,11 @@ GrScoreHistogram(
   obj = combined.obj,
   colname = i1,
   miscname = "thresh.stress.ident1",
+  per_granule = TRUE,
   auto = TRUE,
+  show.q90 = TRUE,
+  w = 8,
+  h = 5,
   ...
 )
 }
@@ -22,8 +26,12 @@ Typically something like is \code{'RNA_snn_res.6.reassigned_cl.av_GO:0042063'}.}
 \item{miscname}{The key within \code{obj@misc$gruffi} for retrieving the threshold value.
 Default is \code{'thresh.stress.ident1'}.}
 
+\item{per_granule}{Show granule- or cell count on the Y axis? Default is granules (TRUE).}
+
 \item{auto}{A logical flag indicating whether to automatically invert the filtering logic
 for a specific \code{miscname} condition. Default is TRUE.}
+
+\item{show.q90}{Show 90th quantile of the distribution}
 
 \item{...}{Additional parameters to be passed to \code{ggExpress::qhistogram}.}
 }
@@ -38,9 +46,8 @@ inversion of filtering logic based on the \code{miscname} and \code{auto} parame
 }
 \details{
 The function first verifies the structure and content of the provided \code{obj}, ensuring it
-contains the necessary components for threshold retrieval and score extraction. It then retrieves
-the threshold and uses \code{CodeAndRoll2::as.numeric.wNames.character} to convert the specified granule
-scores to numeric. The histogram is plotted using \code{ggExpress::qhistogram}, with customization options
+contains the necessary components for threshold retrieval and score extraction.
+The histogram is plotted using \code{ggExpress::qhistogram}, with customization options
 available through additional arguments. The \code{auto} parameter's effect is noted, particularly for the
 \code{thresh.notstress.ident3} condition, although it primarily impacts plotting logic interpretation.
 }

@@ -12,7 +12,7 @@ GetAllGOTermNames(obj = combined.obj, return.obj = TRUE)
 \item{return.obj}{Logical indicating whether to return the modified Seurat object.}
 }
 \value{
-A modified Seurat object with GO terms annotated in \code{misc$GO.Lookup} or
+A modified Seurat object with GO terms annotated in \code{misc$gruffi$GO.Lookup} or
 a vector of GO term names.
 }
 \description{

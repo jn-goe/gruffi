@@ -10,7 +10,7 @@ CleanDuplicateScorenames(obj = obj)
 \item{obj}{Seurat single cell object, Default: obj}
 }
 \description{
-Remove duplicate scorenames from obj@mata.data.
+Remove duplicate scorenames from obj meta.data (same score, different numeric suffix).
 }
 \seealso{
 \code{\link[CodeAndRoll2]{grepv}}

@@ -2,44 +2,56 @@
 % Please edit documentation in R/gruffi.R
 \name{GetGOTerms}
 \alias{GetGOTerms}
-\title{GetGOTerms}
+\title{Retrieve Gene Ontology (GO) Terms and Associated Genes}
 \usage{
 GetGOTerms(
   obj = combined.obj,
   GO = "GO:0034976",
-  use.ensemble = TRUE,
   assay = "RNA",
-  web.open = FALSE,
+  data.base.access = c("biomaRt", "AnnotationDbi")[1],
   version = NULL,
   GRCh = NULL,
   genes.shown = 10,
+  web.open = FALSE,
+  overwrite.misc.GO_genes = FALSE,
   mirror = NULL
 )
 }
 \arguments{
-\item{obj}{Seurat single cell object, Default: combined.obj}
+\item{obj}{A Seurat object potentially containing precomputed GO_genes results. Default: combined.obj}
 
-\item{GO}{GO-term; Default: 'GO:0034976'}
+\item{GO}{The GO term identifier for which to fetch associated genes. Default: 'GO:0034976'}
 
-\item{use.ensemble}{Use ensemble database, Default: TRUE}
+\item{assay}{Assay to consider when retrieving precomputed GO_genes results.}
 
-\item{web.open}{Open weblink for GO-term?, Default: FALSE}
+\item{data.base.access}{Which tool to use to access gene list databases? Options:
+biomaRt (deault) or AnnotationDbi.}
 
-\item{version}{= Def: NULL, Ensembl version to connect to when wanting to connect to an archived Ensembl version (via useEnsembl())}
+\item{version}{Ensembl version, useful if wanting to connect to an archived Ensembl version.}
 
-\item{GRCh}{= Def: NULL, GRCh version to connect to if not the current GRCh38, currently this can only be 37 (via useEnsembl())}
+\item{GRCh}{GRCh version if not using the current GRCh38, currently this can only be 37 (via useEnsembl())}
 
 \item{genes.shown}{Number of genes shown, Default: 10}
 
-\item{mirror}{Which Ensembl mirror to use in biomaRt::useEnsembl()? If connection to Ensembl
-fails with default settings, mirror can be specified. Default: 'NULL'}
+\item{web.open}{Logical; if TRUE, opens the web page for the specified GO term.}
+
+\item{overwrite.misc.GO_genes}{Overwrite preexisting gene set in \code{misc$gruffi$GO[[make.names(GO)]]}.}
+
+\item{mirror}{Ensembl mirror to use, helpful if the default connection fails with
+default settings, mirror can be specified. Default: 'NULL'}
+}
+\value{
+The input Seurat object with the retrieved genes associated with the
+specified GO term stored in \code{obj@misc$gruffi$GO}.
 }
 \description{
-Get GO Terms
+Fetches genes associated with a specified Gene Ontology (GO) term and optionally
+opens the GO term page. The genes are retrieved using either the Ensembl database via biomaRt or
+from precomputed GO_genes results stored in the Seurat object.
 }
 \seealso{
 \code{\link[biomaRt]{useEnsembl}}, \code{\link[biomaRt]{getBM}}
 \code{\link[AnnotationDbi]{AnnotationDb-objects}}
 \code{\link[org.Hs.eg.db]{org.Hs.eg.db}}
-\code{\link[Stringendo]{iprint}}
+\code{\link[Stringendo]{kollapse}}
 }

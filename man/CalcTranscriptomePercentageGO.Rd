@@ -12,7 +12,8 @@ CalcTranscriptomePercentageGO(obj = combined.obj, GO.score = "GO.0061621")
 \item{GO.score}{GO Term. String of form "GO:xxxxxxx", Default: 'GO.0061621'}
 }
 \description{
-Calculate the percentage of transcriptome, for a given GO-term gene set already stored`in obj@misc$GO[\link{GO.score}].
+Calculate the percentage of transcriptome, for a given GO-term gene set
+already stored`in obj@misc$gruffi$GO[\link{GO.score}].
 }
 \seealso{
 \code{\link[Matrix]{colSums}}
