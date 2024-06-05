@@ -16,9 +16,9 @@ DESCRIPTION <- list(
 
   license = "GPL-3 + file LICENSE",
   depends = "Seurat, magrittr, Stringendo (>= 0.5.0), MarkdownReports, DOSE",
-  imports = "cowplot, dplyr, ggplot2
+  imports = "cowplot, dplyr, ggplot2, raster, rgl
                     , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr
                     , IRanges, Matrix, biomaRt, clipr, rlang, shiny, tictoc, viridis, org.Hs.eg.db, AnnotationDbi",
-  suggests = "raster, rgl, htmlwidgets, sm",
+  suggests = "htmlwidgets, sm",
   bug.reports = "https://github.com/jn-goe/gruffi/issues/"
 )
