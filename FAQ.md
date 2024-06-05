@@ -54,6 +54,11 @@ combined.obj <- CustomScoreEvaluation(obj = combined.obj, custom.score.name = 'S
 Finally continue with the Gruffi pipeline as normal, by calling the Shiny app. This extension of the Gruffi workflow is less tested, so if you find bugs / encounter an error, [please let us know](https://github.com/jn-goe/gruffi/issues).
 
 
+## 4. Does it work with Seurat v5+?
 
+Yes, it should. Please  raise an `issue` if you experience problems.
 
+## 5. Does it install and run work with R v4.4.X?
 
+Yes, it should. You may need to manually install `terra` and `rgl` dependencies.
+Please  raise an `issue` if you experience problems.

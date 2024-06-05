@@ -9,6 +9,29 @@ The Gruffi R package helps you (1) to identify stressed cells in single-cell RNA
 `Gruffi` integrates into any `Seurat` analysis pipelione & it comes with a graphical user interface.
 
 
+
+
+## News
+
+- `v1.5.*` is released, that fixes critical problems which arose with changes in dependencies and made the installation / pipeline break.  Additionally it contains updates necessary to work with Seurat v5 objects.
+- Now it is more explicit that GO-annotation can either be obtained via `BioMart` or `AnnotationDbi`, which is helpful, as BioMart connection is not always working. For the same reason, it now allows the usage of alternative mirrors for BioMart (thanks to `@zuzkamat`).
+- Major consistency update in function names, see below.
+- Consistency update in variable names (in @misc and @meta.data), for the latter, this update is not backward compatible, meaning earlier results needs manual adjustments in those names to run. Recommended is to rerun the new version.
+- Major cleanup and of the codebase. Granule average scores are now stored as numeric rather than factor.
+
+<u>*Added  functionality*</u>
+
+- `FindThresholdsAuto()` that is a shiny free version  `FindThresholdsShiny()`, which allows an automated workflow without the need for graphical output (thanks to `@heyfl`).  We still strongly recommend the shiny based workflow that enforces users to look at the results and intermediate steps instead of blidnly taking a TRUE / FALSE column.
+- New visualization functions, incuding:
+  ```r
+  GrScoreUMAP(obj = combined.obj, colname = 'RNA_snn_res.6_cl.av_GO.0042063', miscname = 'thresh.stress.ident1')
+  GrScoreHistogram(obj = combined.obj, colname = 'RNA_snn_res.6_cl.av_GO.0042063', miscname = 'thresh.stress.ident1')
+  ```
+- New helper functions that allow a simpler workflow and shorter codebase.
+
+
+
+
 ## Installation
 
 You can install dependencies from **CRAN, Bioconductor and GitHub** via **devtools**:
@@ -21,6 +44,8 @@ BiocManager::install("DOSE")
 BiocManager::install("org.Hs.eg.db")
 BiocManager::install("sparseMatrixStats")
 BiocManager::install("biomaRt")
+BiocManager::install("raster")
+BiocManager::install("rgl")
 
 
 # Install custom dependencies
@@ -63,12 +88,9 @@ If you want to store multiple UMAP's, you have to keep them in backup slot (in c
 Prepare GO-terms and gene-sets
 
 ```r
-ensembl <- biomaRt::useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
-
 go1 <- "GO:0006096" # Glycolysis
 go2 <- "GO:0034976" # ER-stress
 go3 <- "GO:0042063" # Gliogenesis, negative filtering
-
 ```
 
 ### 2. <u>Granule partitioning</u>
@@ -82,19 +104,19 @@ combined.obj <- AutoFindGranuleResolution(obj = combined.obj)
 The optimal resolution found is stored in:
 
 ```r
-granule.res.4.gruffi <- combined.obj@misc$gruffi$'optimal.granule.res'	
+(granule.res.4.gruffi <- GetGruffiClusteringName(combined.obj)) # Recalled from @misc$gruffi$'optimal.granule.res.
 ```
 
 Some granules have too few cells, therfore their scoring is not robust statistically. Use `ReassignSmallClusters` to assign these cells to the nearest large-enough granule:
 
 ```R
-combined.obj <- ReassignSmallClusters(combined.obj, ident = granule.res.4.gruffi) # will be stored in meta data column as "seurat_clusters.reassigned"
+combined.obj <- ReassignSmallClusters(combined.obj, ident = granule.res.4.gruffi) # Will be stored in meta data column as "seurat_clusters.reassigned".
 ````
 
 Above, granules with <30 cells are cell-by-cell re-assigned to a neighboring granule (by default based on Euclidean distance between the mean of cell groups in 3dim UMAP space). The reassigned granules are suffixed as :
 
 ```r
-granule.res.4.gruffi <- paste0(granule.res.4.gruffi, '.reassigned')
+(granule.res.4.gruffi <- GetGruffiClusteringName(combined.obj))
 ```
 
 
@@ -105,13 +127,13 @@ After finding the right granule resolution, first GO scores per cells, then aver
 
 ```R
 # Glycolytic process	GO:0006096
-combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- AssignGranuleAverageScoresFromGOterm(obj = combined.obj, GO_term = go1, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # ER stress 	GO:0034976
-combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- AssignGranuleAverageScoresFromGOterm(obj = combined.obj, GO_term = go2, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 
 # Gliogenesis		GO:0042063
-combined.obj <- GOscoreEvaluation(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
+combined.obj <- AssignGranuleAverageScoresFromGOterm(obj = combined.obj, GO_term = go3, save.UMAP = TRUE, new_GO_term_computation = T, clustering = granule.res.4.gruffi, plot.each.gene = F)
 ```
 
 These functions store the resulting scores in `combined.obj@meta.data`.
@@ -120,7 +142,7 @@ These functions store the resulting scores in `combined.obj@meta.data`.
 
 ### 4. <u>Stress filtering</u>
 
-We will now call a Shiny Interface to auto-estimate and/or manually adjust the stress assignment threeholds via `Shiny.GO.thresh()`.
+We will now call a Shiny Interface to auto-estimate and/or manually adjust the stress assignment threeholds via `FindThresholdsShiny()`.
 
 - The first 2 scores are for features to filter out (e.g.: cells with high ER stress and glycolysis), 
 - and the last 2 scores are for features we want to keep  (e.g.: cells with high gliogenesis). 
@@ -128,39 +150,42 @@ We will now call a Shiny Interface to auto-estimate and/or manually adjust the s
 Example code for filtering cells high in glycolytic process and ER stress but low in gliogenesis: 
 ```R
 # Create score names:
-(i1 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go1))
-(i2 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go2))
-(i3 <- Stringendo::kppu(granule.res.4.gruffi, 'cl.av', go3))
+(i1 <- ParseGruffiGranuleScoreName(goID = go1))
+(i2 <- ParseGruffiGranuleScoreName(goID = go2))
+(i3 <- ParseGruffiGranuleScoreName(goID = go3))
 
 # Call Shiny app
-combined.obj <- Shiny.GO.thresh(obj = combined.obj,
+combined.obj <- FindThresholdsShiny(obj = combined.obj,
                                 stress.ident1 = i1,
                                 stress.ident2 = i2,
-                                notstress.ident3 = i3,
-                                plot.cluster.shiny = "orig.ident")
+                                notstress.ident3 = i3)
 
 "Dont forget to click the button in the app: Save New Thresholds"
 
 ```
-The interfacte allows automatic estimation and manual adjustment of thresholds for stress scores: 
+The interface allows automatic estimation and manual adjustment of thresholds for stress scores: 
 
 <img width="396" alt="ShinyInterface_Vel Org7 d90 ImpV" src="https://user-images.githubusercontent.com/72695751/156938645-d80fd987-36b1-46dd-b350-4fc26f62035e.png">
 
 
 
-After pushing the **<u>Save new thresholds</u>** button in the Shiny graphical user interface, thresholds are saved in `combined.obj@misc$gruffi` and the stress assignment is stored as a new meta data column `is.Stressed`. Check results as:
+After pushing the **<u>Save new thresholds</u>** button in the Shiny graphical user interface, thresholds are saved in `combined.obj@misc$gruffi` and the stress assignment is stored as a new `@meta.data` column, `is.Stressed`. Check results with:
 
+### 5. <u>Visualize results</u>
 ```r
-Seurat.utils::clUMAP('is.Stressed', label =F)
+StressUMAP(combined.obj)
+StressBarplotPerCluster(combined.obj,  group.by = GetClusteringRuns()[1])
+GrScoreHistogram(combined.obj, colname = i1, miscname = "thresh.stress.ident1")
+# and more
 ```
 
-### 5. <u>Remove stressed cells</u>
+### 6. <u>Remove stressed cells</u>
 
 ```R
 cellIDs.keep <- which_names(!combined.obj$'is.Stressed')
 subset.obj <- subset(x = combined.obj, cells = cellIDs.keep)  
 
-Seurat.utils::clUMAP('is.Stressed', label = F, obj = subset.obj)
+StressUMAP(combined.obj)
 ```
 
 
