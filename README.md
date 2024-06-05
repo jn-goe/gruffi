@@ -45,6 +45,7 @@ BiocManager::install("org.Hs.eg.db")
 BiocManager::install("sparseMatrixStats")
 BiocManager::install("biomaRt")
 BiocManager::install("raster")
+BiocManager::install("rgl")
 
 
 # Install custom dependencies
