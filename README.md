@@ -185,7 +185,7 @@ GrScoreHistogram(combined.obj, colname = i1, miscname = "thresh.stress.ident1")
 cellIDs.keep <- which_names(!combined.obj$'is.Stressed')
 subset.obj <- subset(x = combined.obj, cells = cellIDs.keep)  
 
-StressUMAP(combined.obj)
+StressUMAP(subset.obj, title = "No Stressed Cells Remain After Gruffi", suffix = "after.cleanup")
 ```
 
 
