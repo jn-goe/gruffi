@@ -15,10 +15,10 @@ DESCRIPTION <- list(
   github.user = "vertesy",
 
   license = "GPL-3 + file LICENSE",
-  depends = "Seurat, magrittr, Stringendo (>= 0.5.0), MarkdownReports",
-  imports = "cowplot, dplyr, ggplot2, DOSE
-                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr, AnnotationDbi
-                    , IRanges, Matrix, biomaRt, clipr, org.Hs.eg.db, rlang, shiny, tictoc, viridis",
-  suggests = "raster, viridis, rgl, htmlwidgets, sm",
+  depends = "Seurat, magrittr, Stringendo (>= 0.5.0), MarkdownReports, DOSE",
+  imports = "cowplot, dplyr, ggplot2
+                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr
+                    , IRanges, Matrix, biomaRt, clipr, rlang, shiny, tictoc, viridis, org.Hs.eg.db, AnnotationDbi",
+  suggests = "raster, rgl, htmlwidgets, sm",
   bug.reports = "https://github.com/jn-goe/gruffi/issues/"
 )
