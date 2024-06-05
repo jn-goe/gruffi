@@ -127,7 +127,7 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     obj <- Seurat::FindClusters(obj,
                                 resolution = r.current, method = clust.method,
                                 verbose = FALSE
-    )
+                                )
     tictoc::toc()
 
     # Recalculate the median cluster size
@@ -135,10 +135,7 @@ AutoFindGranuleResolution <- function(obj = combined.obj,
     m <- CalculateMedianClusterSize(obj, assay, res = r.current)
 
     loop.count <- loop.count + 1
-    if (loop.count > max.iter) {
-      # next
-      break # Exit loop if max iterations reached
-    }
+    if (loop.count > max.iter) break # Exit loop if max iterations reached
   } # while
 
 
@@ -591,13 +588,14 @@ CalculateAndPlotGoTermScores <- function(
 
   # Plot GO term score
   plot <- FeaturePlotSaveGO(obj = obj, GO.score = ScoreName, save.plot = save.UMAP, name_desc = desc, ...)
+  print(plot)
+
   if (plot.each.gene) Seurat.utils::multiFeaturePlot.A4(obj = obj, list.of.genes = GO.genes, foldername = Stringendo::ppp(GO.wDot, "UMAPs"))
 
   # Restore the original default assay
   Seurat::DefaultAssay(obj) <- backup.assay
 
   if (return.plot) {
-    print(plot)
     return(plot)
   } else {
     message("Object updated, meta.data now has GO-score: ", ScoreName)
@@ -1204,7 +1202,7 @@ FeaturePlotSaveGO <- function(
     Seurat::FeaturePlot(obj,
                         features = GO.score, min.cutoff = "q05", max.cutoff = "q95",
                         reduction = "umap", ...
-    ) +
+                        ) +
     ggplot2::labs(title = title_, caption = CPT) +
     Seurat::NoAxes()
 
@@ -1305,7 +1303,7 @@ PlotNormAndSkew <- function(x, q,
       ggExpress::qhistogram(Score.threshold.estimate,
                             vline = thresh, subtitle = sb, xlab = "Score",
                             plotname = Stringendo::ppp("Score.threshold.est", substitute(x), tresholding), suffix = Stringendo::ppp("q", q)
-      )
+                            )
     }
     return(thresh)
   } # else
@@ -1484,8 +1482,7 @@ GrScoreHistogram <- function(obj = combined.obj,
                                 xlab = "Granule Median Score", ylab = YLB,
                                 vline = thr, filtercol = colX,
                                 w = w, h = h,
-                                ...
-  )
+                                ...)
   if (show.q90) {
     pobj <- pobj + geom_vline(xintercept = quantile(granule_scores, 0.9), linetype = "dashed") +
       labs(caption = "Dashed marks the 90th quantile of the data.")
@@ -1601,6 +1598,31 @@ StressUMAP <- function(obj = combined.obj,
   )
 }
 
+
+# _________________________________________________________________________________________________
+#' @title Stress Barplot Per Cluster
+#'
+#' @description This function generates a bar plot for cell fractions, filled by stress status across clusters.
+#' It utilizes the first clustering run for grouping and applies a custom color scale.
+#'
+#' @param fill.by A character string indicating the column to use for fill. Default is 'is.Stressed'.
+#' @param group.by A character string or a vector indicating the column(s) to use for grouping.
+#'                 If NULL, uses the first clustering run.
+#' @param color_scale A color scale to use for the plot. Defaults to the reverse of the hue palette.
+#' @param custom_col_palette A logical value indicating whether to use a custom color palette. Default is TRUE.
+#'
+#' @return A bar plot visualizing the cell fractions per cluster, filled by the specified fill criteria.
+#' @importFrom scales hue_pal
+#' @export
+StressBarplotPerCluster <- function(obj = combined.obj, fill.by = "is.Stressed",
+                                    group.by = GetClusteringRuns()[1],
+                                    color_scale = rev(scales::hue_pal()(2)),
+                                    custom_col_palette = TRUE, ...) {
+  scBarplot.CellFractions(
+    obj = obj, fill.by = fill.by, group.by = group.by,
+    color_scale = color_scale, custom_col_palette = custom_col_palette, ...
+  )
+}
 
 # _________________________________________________________________________________________________
 #' @title Stress Barplot Per Cluster
@@ -1922,7 +1944,6 @@ GetGruffiClusteringName <- function(obj, pattern = ".reassigned$",
   }
   return(res)
 }
-
 
 
 # _________________________________________________________________________________________________
