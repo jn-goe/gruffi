@@ -8,7 +8,7 @@ DESCRIPTION <- list(
     GO-term defined gene set's pathway activity. Gruffi integrates into single-cell analysis with
     Seurat and comes with a graphical user interface.",
 
-  # THIS PASRT NEEDS TO BE CORRECTED MANUALLY TO INCLUDE JULIA BC PACKAGE TOOLS BREAKS WITH 2 AUTHORS
+  # THIS PART NEEDS TO BE CORRECTED MANUALLY TO INCLUDE JULIA BC PACKAGE TOOLS BREAKS WITH 2 AUTHORS
   author.given = "Abel",
   author.family = "Vertesy",
   author.email = "abel.vertesy@imba.oeaw.ac.at",
