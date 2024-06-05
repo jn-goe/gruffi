@@ -1,23 +1,24 @@
 # Configuration for the Package
 DESCRIPTION <- list(
-  package.name = "gruffi"
-  , version = "1.2.6"
-  , title = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets."
-  , "Author" = c(
-    person(given = "Julia", family = "Naas", email = "julia.naas@meduniwien.ac.at", role =  c("aut", "cre") ),
-    person(given = "Abel", family = "Vertesy", email = "abel.vertesy@imba.oeaw.ac.at", role =  c("aut", "cre") )
-  )
-  , "Description" = "The Gruffi R package helps you (1) to identify stressed cells in single-cell
+  package.name = "gruffi",
+  version = "1.5.6",
+  title = "Gruffi identifies and removes stressed cells from brain organoid single-cell datasets.",
+  description = "The Gruffi R package helps you (1) to identify stressed cells in single-cell
     RNA-seq datasets using  *granular funcitonal filtering*, and (2) you can use it to calculate any
     GO-term defined gene set's pathway activity. Gruffi integrates into single-cell analysis with
-    Seurat and comes with a graphical user interface."
-  , "License" = "GPL-3 + file LICENSE"
-  , "Packaged" =  Sys.time()
-  , "Depends" =  "Seurat, magrittr, Stringendo (>= 0.5.0), MarkdownReports"
-  , "Imports" = "cowplot, dplyr, ggplot2, raster, DOSE
-                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr, sm, AnnotationDbi
-                    , IRanges, Matrix, biomaRt, clipr, htmlwidgets, org.Hs.eg.db, rgl, rlang, shiny, tictoc, viridis"
-  # , "Suggests" = ""
-  , "BugReports"= "https://github.com/jn-goe/gruffi/issues/"
-)
+    Seurat and comes with a graphical user interface.",
 
+  # THIS PART NEEDS TO BE CORRECTED MANUALLY TO INCLUDE JULIA BC PACKAGE TOOLS BREAKS WITH 2 AUTHORS
+  author.given = "Abel",
+  author.family = "Vertesy",
+  author.email = "abel.vertesy@imba.oeaw.ac.at",
+  github.user = "vertesy",
+
+  license = "GPL-3 + file LICENSE",
+  depends = "Seurat, magrittr, Stringendo (>= 0.5.0), MarkdownReports, DOSE",
+  imports = "cowplot, dplyr, ggplot2, raster, rgl
+                    , MarkdownHelpers (>= 1.0.1), CodeAndRoll2, Seurat.utils, ggExpress, stringr
+                    , IRanges, Matrix, biomaRt, clipr, rlang, shiny, tictoc, viridis, org.Hs.eg.db, AnnotationDbi",
+  suggests = "htmlwidgets, sm",
+  bug.reports = "https://github.com/jn-goe/gruffi/issues/"
+)
