@@ -44,6 +44,7 @@ BiocManager::install("DOSE")
 BiocManager::install("org.Hs.eg.db")
 BiocManager::install("sparseMatrixStats")
 BiocManager::install("biomaRt")
+BiocManager::install("raster")
 
 
 # Install custom dependencies
