@@ -151,7 +151,7 @@ Example code for filtering cells high in glycolytic process and ER stress but lo
 ```R
 # Create score names:
 (i1 <- ParseGruffiGranuleScoreName(goID = go1))
-(i2 <- ParseGruffiGranuleScoreName(goID = go3))
+(i2 <- ParseGruffiGranuleScoreName(goID = go2))
 (i3 <- ParseGruffiGranuleScoreName(goID = go3))
 
 # Call Shiny app
