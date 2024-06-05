@@ -12,6 +12,15 @@ StressBarplotPerCluster(
   custom_col_palette = TRUE,
   ...
 )
+
+StressBarplotPerCluster(
+  obj = combined.obj,
+  fill.by = "is.Stressed",
+  group.by = GetClusteringRuns()[1],
+  color_scale = rev((scales::hue_pal())(2)),
+  custom_col_palette = TRUE,
+  ...
+)
 }
 \arguments{
 \item{fill.by}{A character string indicating the column to use for fill. Default is 'is.Stressed'.}
@@ -25,8 +34,13 @@ If NULL, uses the first clustering run.}
 }
 \value{
 A bar plot visualizing the cell fractions per cluster, filled by the specified fill criteria.
+
+A bar plot visualizing the cell fractions per cluster, filled by the specified fill criteria.
 }
 \description{
+This function generates a bar plot for cell fractions, filled by stress status across clusters.
+It utilizes the first clustering run for grouping and applies a custom color scale.
+
 This function generates a bar plot for cell fractions, filled by stress status across clusters.
 It utilizes the first clustering run for grouping and applies a custom color scale.
 }

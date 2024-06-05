@@ -1,12 +1,11 @@
 Package: gruffi
 Title: Gruffi identifies and removes stressed cells from brain organoid
     single-cell datasets.
-Version: 1.5.5
-Authors@R:
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Author: Julia Naas <julia.naas@meduniwien.ac.at> [aut, cre]; Abel Vertesy
-    <abel.vertesy@imba.oeaw.ac.at> [aut, cre]
+Version: 1.5.6
+Authors@R: 
+    person("Abel", "Vertesy", , "abel.vertesy@imba.oeaw.ac.at", role = c("aut", "cre"));
+    person("Julia", "Naas", , "julia.naas@meduniwien.ac.at", role = c("aut", "cre"))
+Author:  Julia Naas <julia.naas@meduniwien.ac.at> [aut, cre]; Abel Vertesy <abel.vertesy@imba.oeaw.ac.at> [aut, cre]
 Description: The Gruffi R package helps you (1) to identify stressed cells
     in single-cell RNA-seq datasets using *granular funcitonal filtering*,
     and (2) you can use it to calculate any GO-term defined gene set's
@@ -14,18 +13,18 @@ Description: The Gruffi R package helps you (1) to identify stressed cells
     Seurat and comes with a graphical user interface.
 License: GPL-3 + file LICENSE
 BugReports: https://github.com/jn-goe/gruffi/issues/
-Depends:
+Depends: 
+    DOSE,
     magrittr,
     MarkdownReports,
     Seurat,
     Stringendo (>= 0.5.0)
-Imports:
+Imports: 
     AnnotationDbi,
     biomaRt,
     clipr,
     CodeAndRoll2,
     cowplot,
-    DOSE,
     dplyr,
     ggExpress,
     ggplot2,
@@ -33,19 +32,18 @@ Imports:
     MarkdownHelpers (>= 1.0.1),
     Matrix,
     org.Hs.eg.db,
+    raster,
+    rgl,
     rlang,
     Seurat.utils,
     shiny,
     stringr,
     tictoc,
     viridis
-Suggests:
+Suggests: 
     htmlwidgets,
-    raster,
-    rgl,
-    sm,
-    viridis
+    sm
 Encoding: UTF-8
-Packaged: 2024-03-04 10:20:40.271269
+Packaged: 2024-06-05 20:27:49.660854
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
